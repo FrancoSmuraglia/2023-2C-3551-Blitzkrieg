@@ -22,7 +22,6 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 Legajo       |  Apellido, Nombre
 ------------ | -------------
-2039187      | Ortiz, Dante Ariel
 1636777      | Mio, Diego
 1636066      | Singereisky, Ariel Gustavo
 1774098      | Watson, Tomás Manuel
