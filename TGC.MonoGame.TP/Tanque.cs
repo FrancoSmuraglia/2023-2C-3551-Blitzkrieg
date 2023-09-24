@@ -140,6 +140,31 @@ namespace TGC.MonoGame.TP
                     Sentido = 0;
                     CurrentAcceleration = 0;
                 } 
+            }
+
+            if(key.IsKeyDown(Keys.U)){
+                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+                TorretaMatrix = Torreta.Transform;
+                var torretaRotacion = Matrix.CreateRotationZ(0.03f);
+                Torreta.Transform = torretaRotacion * TorretaMatrix;
+                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
+            }
+            if(key.IsKeyDown(Keys.I)){
+                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+                TorretaMatrix = Torreta.Transform;
+                var torretaRotacion = Matrix.CreateRotationZ(-0.03f);
+                Torreta.Transform = torretaRotacion * TorretaMatrix;
+                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
+            }
+            if(key.IsKeyDown(Keys.O)){
+                CannonMatrix = Cannon.Transform;
+                var cañonRotacion = Matrix.CreateRotationX(-0.03f);
+                Cannon.Transform = cañonRotacion * CannonMatrix;
+            }
+            if(key.IsKeyDown(Keys.L)){
+                CannonMatrix = Cannon.Transform;
+                var cañonRotacion = Matrix.CreateRotationX(0.03f);
+                Cannon.Transform = cañonRotacion * CannonMatrix;
             } 
 
             Moving = false;
