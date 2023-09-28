@@ -25,7 +25,12 @@ namespace TGC.MonoGame.TP
         private ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
-        
+
+        private float yaw = 0f;
+        private float pitch = 0f;
+
+        private MouseState estadoAnteriorDelMouse;
+
 
 
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura){
@@ -142,30 +147,78 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
-            if(key.IsKeyDown(Keys.U)){
-                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-                TorretaMatrix = Torreta.Transform;
-                var torretaRotacion = Matrix.CreateRotationZ(0.03f);
-                Torreta.Transform = torretaRotacion * TorretaMatrix;
-                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
-            }
-            if(key.IsKeyDown(Keys.I)){
-                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-                TorretaMatrix = Torreta.Transform;
-                var torretaRotacion = Matrix.CreateRotationZ(-0.03f);
-                Torreta.Transform = torretaRotacion * TorretaMatrix;
-                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
-            }
-            if(key.IsKeyDown(Keys.O)){
-                CannonMatrix = Cannon.Transform;
-                var cañonRotacion = Matrix.CreateRotationX(-0.03f);
-                Cannon.Transform = cañonRotacion * CannonMatrix;
-            }
-            if(key.IsKeyDown(Keys.L)){
-                CannonMatrix = Cannon.Transform;
-                var cañonRotacion = Matrix.CreateRotationX(0.03f);
-                Cannon.Transform = cañonRotacion * CannonMatrix;
-            } 
+            Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+            MouseState estadoActualDelMouse = Mouse.GetState();
+            Vector2 mouseDelta = new Vector2(estadoActualDelMouse.X - estadoAnteriorDelMouse.X, estadoActualDelMouse.Y - estadoAnteriorDelMouse.Y);
+            estadoAnteriorDelMouse = estadoActualDelMouse;
+
+
+            //sensibilidad?
+            float velocidadDeRotacion = 0.01f;
+            yaw = estadoActualDelMouse.X * -velocidadDeRotacion + MathHelper.PiOver2;
+            pitch = mouseDelta.Y * velocidadDeRotacion;
+
+            Torreta.Transform = Matrix.CreateRotationZ(yaw);
+
+            pitch = MathHelper.Clamp(pitch, -MathHelper.Pi /16 + 0.01f, MathHelper.Pi / 16 - 0.01f);
+
+            // Aplica la rotación a la torreta
+            Torreta.Transform = Matrix.CreateRotationZ(yaw);
+            Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
+
+            // Calcula la matriz de transformación relativa para el cañón
+            transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+
+            // Aplica la rotación vertical al cañón
+            CannonMatrix = Matrix.CreateRotationX(pitch);
+            //Cannon.Transform = transformacionRelativaDelCañon * CannonMatrix * Torreta.Transform;
+
+
+
+
+
+            //            MouseState estadoActualMouse = Mouse.GetState();
+            //            Vector2 mouseDelta = new Vector2(estadoActualMouse.X - estadoAnteriorMouse.X, estadoActualMouse.Y - estadoAnteriorMouse.Y);
+            //
+            //            estadoAnteriorMouse = Mouse.GetState();
+            //
+            //            float velocidadDeRotacion = 0.01f;
+            //            yaw += mouseDelta.X * velocidadDeRotacion;
+            //            pitch += mouseDelta.Y * velocidadDeRotacion;
+            //
+            //
+            //            TorretaMatrix = Matrix.CreateRotationZ(yaw) * TorretaMatrix;
+            //
+            //            Torreta.Transform = Matrix.CreateRotationZ(yaw) * TorretaMatrix;
+            //
+            //            Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+            //            Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
+
+
+            //            if(key.IsKeyDown(Keys.U)){
+            //                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+            //                TorretaMatrix = Torreta.Transform;
+            //                var torretaRotacion = Matrix.CreateRotationZ(0.03f);
+            //                Torreta.Transform = torretaRotacion * TorretaMatrix;
+            //                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
+            //            }
+            //            if(key.IsKeyDown(Keys.I)){
+            //                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+            //                TorretaMatrix = Torreta.Transform;
+            //                var torretaRotacion = Matrix.CreateRotationZ(-0.03f);
+            //                Torreta.Transform = torretaRotacion * TorretaMatrix;
+            //                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
+            //            }
+            //            if(key.IsKeyDown(Keys.O)){
+            //                CannonMatrix = Cannon.Transform;
+            //                var cañonRotacion = Matrix.CreateRotationX(-0.03f);
+            //                Cannon.Transform = cañonRotacion * CannonMatrix;
+            //            }
+            //            if(key.IsKeyDown(Keys.L)){
+            //                CannonMatrix = Cannon.Transform;
+            //                var cañonRotacion = Matrix.CreateRotationX(0.03f);
+            //                Cannon.Transform = cañonRotacion * CannonMatrix;
+            //            } 
 
             Moving = false;
 
