@@ -160,17 +160,17 @@ namespace TGC.MonoGame.TP
 
             Torreta.Transform = Matrix.CreateRotationZ(yaw);
 
-            pitch = MathHelper.Clamp(pitch, -MathHelper.Pi /16 + 0.01f, MathHelper.Pi / 16 - 0.01f);
+            //pitch = MathHelper.Clamp(pitch, -MathHelper.Pi /16 + 0.01f, MathHelper.Pi / 16 - 0.01f);
 
             // Aplica la rotación a la torreta
             Torreta.Transform = Matrix.CreateRotationZ(yaw);
             Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
 
             // Calcula la matriz de transformación relativa para el cañón
-            transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+            //transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
 
             // Aplica la rotación vertical al cañón
-            CannonMatrix = Matrix.CreateRotationX(pitch);
+            //CannonMatrix = Matrix.CreateRotationX(pitch);
             //Cannon.Transform = transformacionRelativaDelCañon * CannonMatrix * Torreta.Transform;
 
 
