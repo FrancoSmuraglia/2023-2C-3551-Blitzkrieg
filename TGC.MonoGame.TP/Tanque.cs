@@ -26,6 +26,8 @@ namespace TGC.MonoGame.TP
         public ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
+        private Matrix _initial;
+
 
         private float yaw = 0f;
         private float pitch = 0f;
@@ -34,11 +36,11 @@ namespace TGC.MonoGame.TP
         int mouseX = 0;
         float mouseY = 0f;
 
-        private MouseState estadoAnteriorDelMouse;
+        private Vector2 estadoAnteriorDelMouse;
 
 
 
-        public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura){
+        public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse){
             this.Position = Position;
 
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
@@ -57,6 +59,11 @@ namespace TGC.MonoGame.TP
 
             
             TankVelocity = Vector3.Zero;
+
+            estadoAnteriorDelMouse = estadoInicialMouse;
+
+            _initial = Cannon.Transform;
+            TorretaMatrix = Torreta.Transform;
         }
 
         public void LoadContent(){
@@ -159,7 +166,7 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
-            updateTorret();
+            updateTorret(gameTime);
             
 
             Moving = false;
@@ -171,15 +178,20 @@ namespace TGC.MonoGame.TP
 
         }
 
-        public void updateTorret()
-        {
-            updateHorizontal();
-            updateVertical();
-        }
-
-        public void updateHorizontal()
+        public void updateTorret(GameTime gameTime)
         {
             MouseState currentMouseState = Mouse.GetState();
+
+            updateHorizontal(currentMouseState);
+            updateVertical(currentMouseState,gameTime);
+
+            // Actualiza el estado anterior del mouse para el próximo ciclo
+            estadoAnteriorDelMouse = new Vector2(currentMouseState.X,currentMouseState.Y);
+        }
+
+        public void updateHorizontal(MouseState currentMouseState)
+        {
+            
 
 
             // Obtén la posición actual del mouse
@@ -204,40 +216,44 @@ namespace TGC.MonoGame.TP
             // Aplica la misma rotación al cañón
             Cannon.Transform *= torretaRotacion;
 
+            TorretaMatrix = Torreta.Transform;
+
             // Actualiza la matriz de transformación relativa del cañón
             Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
 
             // Aplica la transformación relativa al cañón
             Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
 
-            // Actualiza el estado anterior del mouse para el próximo ciclo
-            estadoAnteriorDelMouse = currentMouseState;
+
         }
 
-        public void updateVertical() {  
-            MouseState currentMouseState = Mouse.GetState();
+        public void updateVertical(MouseState currentMouseState, GameTime gameTime) {
+
+
+            
             float rotationSpeed = 0.01f;
-            CannonMatrix = Cannon.Transform;
+            mouseY = currentMouseState.Y;
+            var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
 
-            primero = currentMouseState.ScrollWheelValue;
-            var Dif = Math.Sign(primero - segundo);
+            var cannonRotacion = Matrix.Identity;
+            Console.WriteLine("angulo: " + anguloActual);
+            if(currentMouseState.RightButton.Equals(ButtonState.Pressed)){
+                float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 
-            if (Dif != 0)
-            {
-                acumulacion += Dif;
-                Console.WriteLine("Dif " + Dif);
-                Console.WriteLine(acumulacion);
-                if (acumulacion >= -10 && acumulacion <= 0)
-                {
-                    var cannonRotacion = Matrix.CreateRotationX(Dif * rotationSpeed * 10f);
-                    Cannon.Transform = cannonRotacion * Cannon.Transform;
-                }
-                acumulacion = Math.Clamp(acumulacion, -10, 0);
+                anguloActual += elapsedTime * deltaY;
+                anguloActual = Math.Clamp(anguloActual, -MathHelper.PiOver2, 0);
+
             }
+            cannonRotacion = Matrix.CreateRotationX(anguloActual);
+
+            Cannon.Transform = cannonRotacion * _initial;
+
+       
 
 
 
-            segundo = primero;
+
+
         }
     }
 }

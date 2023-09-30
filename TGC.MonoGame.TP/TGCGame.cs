@@ -51,11 +51,11 @@ namespace TGC.MonoGame.TP
         private Model T90A { get; set; }
         private Model T90B { get; set; }
         private Model T90C { get; set; }
-        private Model Panzer{ get; set; }
+        private Model Panzer { get; set; }
         private Effect Effect { get; set; }
         private float Rotation { get; set; }
 
-        private List<Object> Tanques { get; set; }  
+        private List<Object> Tanques { get; set; }
 
         private Object Prueba { get; set; }
         private Texture2D Textura { get; set; }
@@ -63,16 +63,18 @@ namespace TGC.MonoGame.TP
 
         //private Suelo Suelo {get; set;}
         private QuadPrimitive Quad { get; set; }
-        private Matrix FloorWorld {get;set;}
-        
-        private Model roca {get; set;}
-        private Object Roca {get;set;}
-        private Effect EffectRoca {get;set;}
-        private Texture2D TexturaRoca {get;set;}
+        private Matrix FloorWorld { get; set; }
 
-        private List<Object> Ambiente {get;set;}
+        private Model roca { get; set; }
+        private Object Roca { get; set; }
+        private Effect EffectRoca { get; set; }
+        private Texture2D TexturaRoca { get; set; }
 
-        private Tanque MainTanque {get;set;}
+        private List<Object> Ambiente { get; set; }
+
+        private Tanque MainTanque { get; set; }
+
+        private Vector2 estadoInicialMouse { get; set; }
         
 
         /// <summary>
@@ -96,6 +98,8 @@ namespace TGC.MonoGame.TP
             Graphics.ApplyChanges();
 
             Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+
 
 
 
@@ -129,7 +133,8 @@ namespace TGC.MonoGame.TP
                     new Vector3(0f, 150, 0f), 
                     T90, 
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
-                    Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA")
+                    Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"),
+                    estadoInicialMouse
                     );
             MainTanque.LoadContent();
             
