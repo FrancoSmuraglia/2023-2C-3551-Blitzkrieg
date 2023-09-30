@@ -11,7 +11,7 @@ namespace TGC.MonoGame.TP
     /// </summary>
     class FollowCamera
     {
-        private const float AxisDistanceToTarget = 2000f;
+        private const float AxisDistanceToTarget = 3000f;
 
         private const float AngleFollowSpeed = 0.015f;
 
@@ -72,7 +72,7 @@ namespace TGC.MonoGame.TP
             pitch += mouseDelta.Y * velocidadDeRotacion;
 
             //limitacion de la camara
-            pitch = MathHelper.Clamp(pitch, -MathHelper.PiOver2 + 0.01f, 0.07f);
+            pitch = MathHelper.Clamp(pitch, -MathHelper.PiOver2 + 0.01f, 0.05f);
 
             //vector direccion de la camara
             Vector3 direccionCamara = new Vector3(MathF.Cos(yaw) * MathF.Cos(pitch), MathF.Sin(pitch),MathF.Sin(yaw) * MathF.Cos(pitch));
@@ -88,6 +88,8 @@ namespace TGC.MonoGame.TP
             // y no esta rotada en el eje X (Roll)
 
             View = Matrix.CreateLookAt(posicionCamara, followedPosition, Vector3.Up);
+
+            Console.WriteLine("pitch: " + pitch);
 
 
         }

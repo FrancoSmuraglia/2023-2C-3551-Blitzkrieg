@@ -159,26 +159,44 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
+            updateTorret();
+            
+
+            Moving = false;
+
+            System.Console.WriteLine(Position);
+
+            //El auto en el world
+            World = RotationMatrix * Matrix.CreateTranslation(Position) ;
+
+        }
+
+        public void updateTorret()
+        {
+            updateHorizontal();
+            updateVertical();
+        }
+
+        public void updateHorizontal()
+        {
             MouseState currentMouseState = Mouse.GetState();
-    
+
 
             // Obtén la posición actual del mouse
             mouseX = currentMouseState.X;
-            mouseY = currentMouseState.Y;
 
             // Calcula la diferencia entre la posición del mouse actual y la posición anterior
             float deltaX = mouseX - estadoAnteriorDelMouse.X;
 
-            float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 
             // Ajusta la velocidad de rotación según tus preferencias
             float rotationSpeed = 0.01f;
             Matrix torretaRotacion = Matrix.Identity;
             // Calcula la rotación en función de la diferencia del mouse
-            if(currentMouseState.RightButton.Equals(ButtonState.Pressed))
+            if (currentMouseState.RightButton.Equals(ButtonState.Pressed))
                 torretaRotacion = Matrix.CreateRotationZ(-deltaX * rotationSpeed);
-            
-                
+
+
 
             // Aplica la rotación a la torreta
             Torreta.Transform *= torretaRotacion;
@@ -194,109 +212,32 @@ namespace TGC.MonoGame.TP
 
             // Actualiza el estado anterior del mouse para el próximo ciclo
             estadoAnteriorDelMouse = currentMouseState;
+        }
 
+        public void updateVertical() {  
+            MouseState currentMouseState = Mouse.GetState();
+            float rotationSpeed = 0.01f;
             CannonMatrix = Cannon.Transform;
-            //deltaY = MathHelper.Clamp(deltaY, -0.25f, 0.25f);
-
-            //anguloDelCañon += MathHelper.ToRadians(deltaY * rotationSpeed);
-
-            //anguloDelCañon = Math.Clamp(anguloDelCañon,-MathHelper.PiOver4,MathHelper.PiOver4);
 
             primero = currentMouseState.ScrollWheelValue;
             var Dif = Math.Sign(primero - segundo);
 
-            if(Dif != 0){
+            if (Dif != 0)
+            {
                 acumulacion += Dif;
                 Console.WriteLine("Dif " + Dif);
                 Console.WriteLine(acumulacion);
-                if(acumulacion >= -10 && acumulacion <= 0){    
+                if (acumulacion >= -10 && acumulacion <= 0)
+                {
                     var cannonRotacion = Matrix.CreateRotationX(Dif * rotationSpeed * 10f);
                     Cannon.Transform = cannonRotacion * Cannon.Transform;
                 }
                 acumulacion = Math.Clamp(acumulacion, -10, 0);
             }
-            
-            
+
+
 
             segundo = primero;
-
-            //var cannonRotacion = Matrix.CreateRotationX(anguloActual * rotationSpeed);
-            
-            //Cannon.Transform = cannonRotacion * Cannon.Transform;
-
-
-            /*anguloActual += deltaY * rotationSpeed;
-            if(anguloActual >= 0 && anguloActual <= MathHelper.PiOver4) {
-                var cannonRotacion = Matrix.CreateRotationX(-deltaY * rotationSpeed);
-                Cannon.Transform = cannonRotacion * Cannon.Transform;
-            }
-            
-            anguloActual = Math.Clamp(anguloActual, 0, MathHelper.PiOver4);
-            Console.WriteLine("Angulo del cañón: " + anguloActual);
-            */
-
-            
-            //if(radianes > MathHelper.PiOver4 && radianes < 0){
-
-            //}
-
-            
-            
-
-
-
-
-
-            //            MouseState estadoActualMouse = Mouse.GetState();
-            //            Vector2 mouseDelta = new Vector2(estadoActualMouse.X - estadoAnteriorMouse.X, estadoActualMouse.Y - estadoAnteriorMouse.Y);
-            //
-            //            estadoAnteriorMouse = Mouse.GetState();
-            //
-            //            float velocidadDeRotacion = 0.01f;
-            //            yaw += mouseDelta.X * velocidadDeRotacion;
-            //            pitch += mouseDelta.Y * velocidadDeRotacion;
-            //
-            //
-            //            TorretaMatrix = Matrix.CreateRotationZ(yaw) * TorretaMatrix;
-            //
-            //            Torreta.Transform = Matrix.CreateRotationZ(yaw) * TorretaMatrix;
-            //
-            //            Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-            //            Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
-
-
-            //            if(key.IsKeyDown(Keys.U)){
-            //                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-            //                TorretaMatrix = Torreta.Transform;
-            //                var torretaRotacion = Matrix.CreateRotationZ(0.03f);
-            //                Torreta.Transform = torretaRotacion * TorretaMatrix;
-            //                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
-            //            }
-            //            if(key.IsKeyDown(Keys.I)){
-            //                Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-            //                TorretaMatrix = Torreta.Transform;
-            //                var torretaRotacion = Matrix.CreateRotationZ(-0.03f);
-            //                Torreta.Transform = torretaRotacion * TorretaMatrix;
-            //                Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
-            //            }
-            //            if(key.IsKeyDown(Keys.O)){
-            //                CannonMatrix = Cannon.Transform;
-            //                var cañonRotacion = Matrix.CreateRotationX(-0.03f);
-            //                Cannon.Transform = cañonRotacion * CannonMatrix;
-            //            }
-            //            if(key.IsKeyDown(Keys.L)){
-            //                CannonMatrix = Cannon.Transform;
-            //                var cañonRotacion = Matrix.CreateRotationX(0.03f);
-            //                Cannon.Transform = cañonRotacion * CannonMatrix;
-            //            } 
-
-            Moving = false;
-
-            System.Console.WriteLine(Position);
-
-            //El auto en el world
-            World = RotationMatrix * Matrix.CreateTranslation(Position) ;
-
         }
     }
 }
