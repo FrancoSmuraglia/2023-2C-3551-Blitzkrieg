@@ -65,7 +65,7 @@ namespace TGC.MonoGame.TP
             Vector2 mouseDelta = new Vector2(estadoActualMouse.X - estadoAnteriorMouse.X, estadoActualMouse.Y - estadoAnteriorMouse.Y);
 
             //guardo la posicion actual del mouse para el siguiente
-            estadoAnteriorMouse = Mouse.GetState();
+            estadoAnteriorMouse = estadoActualMouse;
 
             float velocidadDeRotacion = 0.01f;
             yaw += mouseDelta.X * velocidadDeRotacion;
@@ -79,6 +79,13 @@ namespace TGC.MonoGame.TP
 
             //calculo la posicion con la direccion de la camara
             Vector3 posicionCamara = followedPosition - direccionCamara * AxisDistanceToTarget;
+
+            //
+
+
+
+            // Obtengo el vector Derecha asumiendo que la camara tiene el vector Arriba apuntando hacia arriba
+            // y no esta rotada en el eje X (Roll)
 
             View = Matrix.CreateLookAt(posicionCamara, followedPosition, Vector3.Up);
 

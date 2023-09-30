@@ -95,6 +95,8 @@ namespace TGC.MonoGame.TP
             Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
             Graphics.ApplyChanges();
 
+            
+
             Tanques = new List<Object>();
 
             // Configuramos nuestras matrices de la escena, en este caso se realiza en el objeto FollowCamara

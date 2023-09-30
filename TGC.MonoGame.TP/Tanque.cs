@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,13 +22,17 @@ namespace TGC.MonoGame.TP
         protected float Rotation{ get; set; }
         protected Effect Effect { get; set; }
 
-        private ModelBone Torreta;
-        private ModelBone Cannon;
+        public ModelBone Torreta;
+        public ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
 
         private float yaw = 0f;
         private float pitch = 0f;
+
+        float anguloDelCañon = 0.0f;
+        int mouseX = 0;
+        float mouseY = 0f;
 
         private MouseState estadoAnteriorDelMouse;
 
@@ -103,6 +108,13 @@ namespace TGC.MonoGame.TP
         int Sentido;
         float Acceleration = 7f;
         float CurrentAcceleration = 0;
+
+        float anguloActual = 0;
+
+        float primero = 0;
+        float segundo = 0;
+        float acumulacion = 0; 
+        bool frenada = true;
         public void Update(GameTime gameTime, KeyboardState key){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
@@ -147,31 +159,89 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
-            Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-            MouseState estadoActualDelMouse = Mouse.GetState();
-            Vector2 mouseDelta = new Vector2(estadoActualDelMouse.X - estadoAnteriorDelMouse.X, estadoActualDelMouse.Y - estadoAnteriorDelMouse.Y);
-            estadoAnteriorDelMouse = estadoActualDelMouse;
+            MouseState currentMouseState = Mouse.GetState();
+    
 
+            // Obtén la posición actual del mouse
+            mouseX = currentMouseState.X;
+            mouseY = currentMouseState.Y;
 
-            //sensibilidad?
-            float velocidadDeRotacion = 0.01f;
-            yaw = estadoActualDelMouse.X * -velocidadDeRotacion + MathHelper.PiOver2;
-            pitch = mouseDelta.Y * velocidadDeRotacion;
+            // Calcula la diferencia entre la posición del mouse actual y la posición anterior
+            float deltaX = mouseX - estadoAnteriorDelMouse.X;
 
-            Torreta.Transform = Matrix.CreateRotationZ(yaw);
+            float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 
-            //pitch = MathHelper.Clamp(pitch, -MathHelper.Pi /16 + 0.01f, MathHelper.Pi / 16 - 0.01f);
+            // Ajusta la velocidad de rotación según tus preferencias
+            float rotationSpeed = 0.01f;
+            Matrix torretaRotacion = Matrix.Identity;
+            // Calcula la rotación en función de la diferencia del mouse
+            if(currentMouseState.RightButton.Equals(ButtonState.Pressed))
+                torretaRotacion = Matrix.CreateRotationZ(-deltaX * rotationSpeed);
+            
+                
 
             // Aplica la rotación a la torreta
-            Torreta.Transform = Matrix.CreateRotationZ(yaw);
+            Torreta.Transform *= torretaRotacion;
+
+            // Aplica la misma rotación al cañón
+            Cannon.Transform *= torretaRotacion;
+
+            // Actualiza la matriz de transformación relativa del cañón
+            Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+
+            // Aplica la transformación relativa al cañón
             Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
 
-            // Calcula la matriz de transformación relativa para el cañón
-            //transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
+            // Actualiza el estado anterior del mouse para el próximo ciclo
+            estadoAnteriorDelMouse = currentMouseState;
 
-            // Aplica la rotación vertical al cañón
-            //CannonMatrix = Matrix.CreateRotationX(pitch);
-            //Cannon.Transform = transformacionRelativaDelCañon * CannonMatrix * Torreta.Transform;
+            CannonMatrix = Cannon.Transform;
+            //deltaY = MathHelper.Clamp(deltaY, -0.25f, 0.25f);
+
+            //anguloDelCañon += MathHelper.ToRadians(deltaY * rotationSpeed);
+
+            //anguloDelCañon = Math.Clamp(anguloDelCañon,-MathHelper.PiOver4,MathHelper.PiOver4);
+
+            primero = currentMouseState.ScrollWheelValue;
+            var Dif = Math.Sign(primero - segundo);
+
+            if(Dif != 0){
+                acumulacion += Dif;
+                Console.WriteLine("Dif " + Dif);
+                Console.WriteLine(acumulacion);
+                if(acumulacion >= -10 && acumulacion <= 0){    
+                    var cannonRotacion = Matrix.CreateRotationX(Dif * rotationSpeed * 10f);
+                    Cannon.Transform = cannonRotacion * Cannon.Transform;
+                }
+                acumulacion = Math.Clamp(acumulacion, -10, 0);
+            }
+            
+            
+
+            segundo = primero;
+
+            //var cannonRotacion = Matrix.CreateRotationX(anguloActual * rotationSpeed);
+            
+            //Cannon.Transform = cannonRotacion * Cannon.Transform;
+
+
+            /*anguloActual += deltaY * rotationSpeed;
+            if(anguloActual >= 0 && anguloActual <= MathHelper.PiOver4) {
+                var cannonRotacion = Matrix.CreateRotationX(-deltaY * rotationSpeed);
+                Cannon.Transform = cannonRotacion * Cannon.Transform;
+            }
+            
+            anguloActual = Math.Clamp(anguloActual, 0, MathHelper.PiOver4);
+            Console.WriteLine("Angulo del cañón: " + anguloActual);
+            */
+
+            
+            //if(radianes > MathHelper.PiOver4 && radianes < 0){
+
+            //}
+
+            
+            
 
 
 
