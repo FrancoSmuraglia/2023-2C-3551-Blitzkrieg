@@ -56,6 +56,9 @@ namespace TGC.MonoGame.TP
         private Effect Effect { get; set; }
         private float Rotation { get; set; }
 
+        private Model BulletModel { get; set; }
+        private List<Bullet> bullets;
+        
         private List<TanqueEnemigo> Tanques { get; set; }  
 
         private Object Prueba { get; set; }
@@ -124,6 +127,7 @@ namespace TGC.MonoGame.TP
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
+            BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f), 
                     T90, 

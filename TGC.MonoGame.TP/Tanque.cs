@@ -163,7 +163,7 @@ namespace TGC.MonoGame.TP
                     CurrentAcceleration = 0;
                 } 
             } 
-
+    
             Moving = false;
 
             //System.Console.WriteLine(Position);
