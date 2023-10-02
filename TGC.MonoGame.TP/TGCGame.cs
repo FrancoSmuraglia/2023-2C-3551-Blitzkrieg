@@ -56,6 +56,7 @@ namespace TGC.MonoGame.TP
         private float Rotation { get; set; }
 
         private List<Object> Tanques { get; set; }
+        private List<Bala> BalasMain { get; set; }
 
         private Object Prueba { get; set; }
         private Texture2D Textura { get; set; }
@@ -136,7 +137,8 @@ namespace TGC.MonoGame.TP
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"),
                     estadoInicialMouse
                     );
-            MainTanque.LoadContent();
+
+            MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null);
             
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
             
@@ -148,6 +150,8 @@ namespace TGC.MonoGame.TP
             Roca.LoadContent();
 
             Roca.World = Matrix.CreateScale(50f) * Roca.World;
+
+            BalasMain = new List<Bala>();
             
             InitializeAmbient();
             InitializeTanks();
@@ -326,7 +330,9 @@ namespace TGC.MonoGame.TP
             //MainTanque.World = Matrix.CreateTranslation(MainTanque.Position);
 
             // Lógica del juego acá (por ahora solo renderiza un mundo y controlamos al jugador con wasd)
-            MainTanque.Update(gameTime, Keyboard.GetState());
+            MainTanque.Update(gameTime, Keyboard.GetState(), BalasMain);
+
+            BalasMain.ForEach(o => o.Update(gameTime));
             
 
             base.Update(gameTime);
@@ -344,6 +350,7 @@ namespace TGC.MonoGame.TP
             //Prueba.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             Tanques.ForEach(a => a.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
             Ambiente.ForEach(a => a.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
+            BalasMain.ForEach(o => o.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
             //FollowCamera.Update(gameTime, objetos3D[3].World);
 
             //Suelo.Draw(gameTime,GraphicsDevice, FollowCamera.View, FollowCamera.Projection);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -10,6 +11,10 @@ namespace TGC.MonoGame.TP
 {    
     public class Tanque
     {
+        Model Bullet;
+        
+        Texture2D BulletTexture;
+
         private float Speed { get; set; }
         
         Matrix RotationMatrix = Matrix.Identity;
@@ -38,6 +43,8 @@ namespace TGC.MonoGame.TP
         float mouseY = 0f;
 
         private Vector2 estadoAnteriorDelMouse;
+
+        private const float tiempoEntreDisparoLimite = 1.3f;
 
 
 
@@ -68,7 +75,7 @@ namespace TGC.MonoGame.TP
             TorretaMatrix = Torreta.Transform;
         }
 
-        public void LoadContent(){
+        public void LoadContent(Model bala, Texture2D texturaBala){
 
             // Asigno el efecto que cargue a cada parte del mesh.
             // Un modelo puede tener mas de 1 mesh internamente.
@@ -76,6 +83,18 @@ namespace TGC.MonoGame.TP
             //Effect.Parameters["ModelTexture"].SetValue(Texture);
 
             // Al mesh le asigno el Effect (solo textura por ahora)
+            Bullet = bala;
+
+            BulletTexture = texturaBala;
+
+            foreach (var mesh in Bullet.Meshes)
+            {
+                foreach (var meshPart in mesh.MeshParts)
+                {
+                    meshPart.Effect = Effect;
+                }
+            }
+
             foreach (var mesh in Model.Meshes)
             {
                 foreach (var meshPart in mesh.MeshParts)
@@ -118,17 +137,22 @@ namespace TGC.MonoGame.TP
         float Acceleration = 7f;
         float CurrentAcceleration = 0;
 
-        float anguloActual = 0;
-        float anguloTorreta = 0;
+        float anguloVertical = 0;
+        float anguloHorizontalTorreta = 0;
+        float anguloHorizontalTanque = 0;
 
         float primero = 0;
         float segundo = 0;
         float acumulacion = 0; 
         bool frenada = true;
-        public void Update(GameTime gameTime, KeyboardState key){
+        float tiempoEntreDisparo = 0;
+        public void Update(GameTime gameTime, KeyboardState key, List<Bala> balas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
+            if(tiempoEntreDisparo < tiempoEntreDisparoLimite)
+                tiempoEntreDisparo += deltaTime;
+
             if(key.IsKeyDown(Keys.W)){ //adeltante
                 Moving = true;
                 CurrentAcceleration = 1;
@@ -143,11 +167,26 @@ namespace TGC.MonoGame.TP
                 RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix); 
                 TankVelocity = TankDirection * moduloVelocidadXZ * Sentido + new Vector3(0f, TankVelocity.Y, 0f); 
+                anguloHorizontalTanque += .03f;
             }                
             if(key.IsKeyDown(Keys.D) && Moving){
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix); 
                 TankVelocity = TankDirection * moduloVelocidadXZ * Sentido + new Vector3(0f, TankVelocity.Y, 0f); 
+                anguloHorizontalTanque -= .03f;
+            }
+            if(key.IsKeyDown(Keys.Space) && tiempoEntreDisparo > tiempoEntreDisparoLimite){
+                var anguloHorizontaTotal = anguloHorizontalTorreta - anguloHorizontalTanque;
+                var b = new Vector3(
+                    (float)Math.Cos(anguloHorizontaTotal - MathHelper.PiOver2), 
+                    (float)Math.Sin(-anguloVertical), 
+                    (float)Math.Sin(anguloHorizontaTotal - MathHelper.PiOver2));
+                
+                b *= 5;
+
+                var a = new Bala(Position, b, Bullet, Effect, BulletTexture);
+                tiempoEntreDisparo = 0;
+                balas.Add(a);
             }
 
             Position += TankVelocity;                               // Actualizo la posición en función de la velocidad actual
@@ -241,9 +280,9 @@ namespace TGC.MonoGame.TP
             {
                 float deltaX = mouseX - estadoAnteriorDelMouse.X;
 
-                anguloTorreta += elapsedTime * deltaX;
+                anguloHorizontalTorreta += elapsedTime * deltaX;
             }
-            return torretaRotacion = Matrix.CreateRotationZ(-anguloTorreta);
+            return torretaRotacion = Matrix.CreateRotationZ(-anguloHorizontalTorreta);
 
             //Cannon.Transform = torretaRotacion * _initialCannon;
             //Torreta.Transform = torretaRotacion * _initialTorret;
@@ -260,11 +299,11 @@ namespace TGC.MonoGame.TP
             if(currentMouseState.RightButton.Equals(ButtonState.Pressed)){
                 float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 
-                anguloActual += elapsedTime * deltaY;
-                anguloActual = Math.Clamp(anguloActual, -MathHelper.PiOver4, 0);
+                anguloVertical += elapsedTime * deltaY;
+                anguloVertical = Math.Clamp(anguloVertical, -MathHelper.PiOver4, 0);
 
             }
-            return Matrix.CreateRotationX(anguloActual);
+            return Matrix.CreateRotationX(anguloVertical);
 
         }
     }
