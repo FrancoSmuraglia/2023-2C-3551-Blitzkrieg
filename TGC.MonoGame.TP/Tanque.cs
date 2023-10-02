@@ -169,7 +169,7 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
-            updateTorret(gameTime);
+            updateTurret(gameTime);
             
 
             Moving = false;
@@ -181,7 +181,7 @@ namespace TGC.MonoGame.TP
 
         }
 
-        public void updateTorret(GameTime gameTime)
+        public void updateTurret(GameTime gameTime)
         {
             MouseState currentMouseState = Mouse.GetState();
 
@@ -190,9 +190,9 @@ namespace TGC.MonoGame.TP
             Matrix anguloV = updateVertical(currentMouseState,gameTime);
 
 
-            Cannon.Transform = anguloH * _initialCannon;
+            Cannon.Transform = _initialCannon * anguloH;
             Cannon.Transform = anguloV * Cannon.Transform;
-            Torreta.Transform = anguloH * _initialTorret;
+            Torreta.Transform = _initialTorret * anguloH;
 
             // Actualiza el estado anterior del mouse para el próximo ciclo
             estadoAnteriorDelMouse = new Vector2(currentMouseState.X,currentMouseState.Y);
@@ -247,43 +247,24 @@ namespace TGC.MonoGame.TP
 
             //Cannon.Transform = torretaRotacion * _initialCannon;
             //Torreta.Transform = torretaRotacion * _initialTorret;
-            
-
-
-
-
-
-
-
-
         }
 
         public Matrix updateVertical(MouseState currentMouseState, GameTime gameTime) {
 
-
-            
             float rotationSpeed = 0.01f;
             mouseY = currentMouseState.Y;
             var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
 
             var cannonRotacion = Matrix.Identity;
-            Console.WriteLine("angulo: " + anguloActual);
+            //Console.WriteLine("angulo: " + anguloActual);
             if(currentMouseState.RightButton.Equals(ButtonState.Pressed)){
                 float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 
                 anguloActual += elapsedTime * deltaY;
-                anguloActual = Math.Clamp(anguloActual, -MathHelper.PiOver2, 0);
+                anguloActual = Math.Clamp(anguloActual, -MathHelper.PiOver4, 0);
 
             }
-            return cannonRotacion = Matrix.CreateRotationX(anguloActual);
-
-            //Cannon.Transform = cannonRotacion * _initialCannon;
-
-       
-
-
-
-
+            return Matrix.CreateRotationX(anguloActual);
 
         }
     }

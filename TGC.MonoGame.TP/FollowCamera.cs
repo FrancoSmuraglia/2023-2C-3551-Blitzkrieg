@@ -89,7 +89,7 @@ namespace TGC.MonoGame.TP
 
             View = Matrix.CreateLookAt(posicionCamara, followedPosition, Vector3.Up);
 
-            Console.WriteLine("pitch: " + pitch);
+            //Console.WriteLine("pitch: " + pitch);
 
 
         }
