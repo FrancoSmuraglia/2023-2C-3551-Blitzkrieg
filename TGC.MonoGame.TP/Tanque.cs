@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Collisions;
 
 
 namespace TGC.MonoGame.TP
 {    
     public class Tanque
     {
+        // Colisión
+        public OrientedBoundingBox TankBox { get; set; }
         Model Bullet;
         
         Texture2D BulletTexture;
@@ -24,6 +28,7 @@ namespace TGC.MonoGame.TP
 
         protected Texture2D Texture { get; set; }
         public Vector3 Position{ get; set; }
+        public Vector3 OldPosition{ get; set; }
         protected float Rotation{ get; set; }
         protected Effect Effect { get; set; }
 
@@ -31,6 +36,18 @@ namespace TGC.MonoGame.TP
         public ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
+        
+
+        
+        public Vector3 TankVelocity  { get; set; }
+        private Vector3 TankDirection  { get; set; }
+        
+        private Boolean Moving  { get; set; }
+        int Sentido;
+        float Acceleration = 7f;
+        float CurrentAcceleration = 0;
+
+
         private Matrix _initialCannon;
         private Matrix _initialTorret;
 
@@ -55,6 +72,11 @@ namespace TGC.MonoGame.TP
             
             Model = modelo;
 
+            var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
+            TankBox = OrientedBoundingBox.FromAABB(AABB);
+            TankBox.Center = Position;
+            TankBox.Orientation = RotationMatrix;
+
             Effect = efecto;
 
             Texture = textura;
@@ -64,6 +86,9 @@ namespace TGC.MonoGame.TP
 
             Cannon = modelo.Bones["Cannon"];
             CannonMatrix = Cannon.Transform;
+
+            TankDirection = Vector3.Forward;
+
 
             
             TankVelocity = Vector3.Zero;
@@ -129,14 +154,7 @@ namespace TGC.MonoGame.TP
         }
 
         
-        private Vector3 TankVelocity  { get; set; }
-        private Vector3 TankDirection  { get; set; }
         
-        private Boolean Moving  { get; set; }
-        int Sentido;
-        float Acceleration = 7f;
-        float CurrentAcceleration = 0;
-
         float anguloVertical = 0;
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
@@ -146,7 +164,7 @@ namespace TGC.MonoGame.TP
         float acumulacion = 0; 
         bool frenada = true;
         float tiempoEntreDisparo = 0;
-        public void Update(GameTime gameTime, KeyboardState key, List<Bala> balas){
+        public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
@@ -166,13 +184,15 @@ namespace TGC.MonoGame.TP
             if(key.IsKeyDown(Keys.A) && Moving){ 
                 RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix); 
-                TankVelocity = TankDirection * moduloVelocidadXZ * Sentido + new Vector3(0f, TankVelocity.Y, 0f); 
+                TankVelocity = TankDirection * moduloVelocidadXZ * Sentido; 
+                TankBox.Rotate(Matrix.CreateRotationY(.03f));
                 anguloHorizontalTanque += .03f;
             }                
             if(key.IsKeyDown(Keys.D) && Moving){
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix); 
-                TankVelocity = TankDirection * moduloVelocidadXZ * Sentido + new Vector3(0f, TankVelocity.Y, 0f); 
+                TankVelocity = TankDirection * moduloVelocidadXZ * Sentido; 
+                TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 anguloHorizontalTanque -= .03f;
             }
             if(key.IsKeyDown(Keys.Space) && tiempoEntreDisparo > tiempoEntreDisparoLimite){
@@ -189,9 +209,13 @@ namespace TGC.MonoGame.TP
                 balas.Add(a);
             }
 
+            AnalisisDeColision(ambiente, enemigos, moduloVelocidadXZ);
+
             Position += TankVelocity;                               // Actualizo la posición en función de la velocidad actual
             CurrentAcceleration *= Acceleration;                    // Decido la aceleración
 
+            TankBox.Center = Position;
+            
 
             // **** Manejo de aceleración y renderizado del auto en el world **** //
 
@@ -213,11 +237,51 @@ namespace TGC.MonoGame.TP
 
             Moving = false;
 
-            System.Console.WriteLine(Position);
+            //System.Console.WriteLine(Position);
 
             //El auto en el world
             World = RotationMatrix * Matrix.CreateTranslation(Position) ;
+            OldPosition = Position;
+        }
+        public void agregarVelocidad(Vector3 velocidad){
+            TankVelocity = velocidad;
+        }
 
+        public bool Intersecta(TanqueEnemigo tanqueEnemigo){
+            return TankBox.Intersects(tanqueEnemigo.TankBox);
+        }
+
+        public bool Intersecta(Object objeto){
+            return TankBox.Intersects(objeto.Box);
+        }
+
+        public void AnalisisDeColision(List<Object> ambiente, List<TanqueEnemigo> enemigos, float rapidez){
+            foreach (Object itemEspecifico in ambiente){
+                if(Intersecta(itemEspecifico)){
+                    if(itemEspecifico.esEliminable){
+                        itemEspecifico.esVictima = true;
+                    }                        
+                    else{
+                        //Console.WriteLine("Velocidad del tanque: " + TankVelocity);
+                        Sentido *= -1;
+                        TankVelocity = - Vector3.Normalize(TankVelocity) * 20;
+                        //Console.WriteLine("Velocidad contraria: " + TankVelocity);
+                        
+                        //Vector3.Clamp()
+                    }
+                        
+                }
+            }
+
+            foreach (TanqueEnemigo enemigoEspecifico in enemigos){
+                if(Intersecta(enemigoEspecifico)){
+                    var velocidadMain = TankVelocity;
+                    TankVelocity -= enemigoEspecifico.TankVelocity;
+                    enemigoEspecifico.TankVelocity += velocidadMain/3;
+                    
+                    TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque
+                }
+            }
         }
 
         public void updateTurret(GameTime gameTime)
