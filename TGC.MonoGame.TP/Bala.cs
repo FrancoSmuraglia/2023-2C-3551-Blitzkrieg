@@ -1,61 +1,103 @@
 using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using TGC.MonoGame.Samples.Collisions;
+
 
 namespace TGC.MonoGame.TP
-{
-    
-    public class Bullet
-    {   
-        private Model bullet { get; set; }
-        private Tanque tanque{ get; set; }
-        private TanqueEnemigo tanqueEnemigo { get; set; }
-        public OrientedBoundingBox BulletBallBox { get; set; }
-        private float Scale0;
-        private Vector3 Position0 { get; set; }
-        private Vector3 Position1 { get; set; }
-        private Vector3 PositionActual { get; set; }
-        private Vector3 PositionAnterior { get; set; }
-        private Vector3 Velocidad { get; set; }
-        protected Effect Effect { get; set; }
-
-        public Bullet(Vector3 initialPosition, Vector3 endPosition, Model model, Tanque tanque, TanqueEnemigo tanqueEnemigo){
+{    
+    public class Bala
+    {
         
-        Position0 = initialPosition;
-        Scale0 = (float)0.5;
-        Position1 = endPosition;
-        PositionActual = Position0;
-        PositionAnterior = PositionActual;
-        var distancia = Position1 - Position0;
-        var duracion = distancia.Length()*0.001;
-            Velocidad = (distancia + new Vector3(0, (float) 9.8 + 1000, 0) * (float) duracion * (float) duracion) /
-                          (float) duracion;
+        Matrix RotationMatrix = Matrix.Identity;
 
-        var temporaryCubeAABB = BoundingVolumesExtensions.CreateAABBFrom(model);
+        protected Model Model { get; set; }
+        public Matrix World { get; set; }
+
+        protected Texture2D Texture { get; set; }
+        public Vector3 Position{ get; set; }
+        public Vector3 Velocity{ get; set; }
+        protected Effect Effect { get; set; }
+        protected float Angulo{ get; set; }
+
+
+        private const float tiempoLimiteDeVida = 3000f;
+        private float tiempoDeVida;
+
+        float anguloDelCañon = 0.0f;
+        int mouseX = 0;
+        float mouseY = 0f;
+
+        private Vector2 estadoAnteriorDelMouse;
+
+
+
+        public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura){
+            this.Position = Position;
+
+            World = Matrix.CreateScale(5f) * Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
-            temporaryCubeAABB = BoundingVolumesExtensions.Scale(temporaryCubeAABB, Scale0);
-            
-            BulletBallBox = OrientedBoundingBox.FromAABB(temporaryCubeAABB);
+            Model = modelo;
 
-            BulletBallBox.Center = PositionActual;
-            this.tanque = tanque;
-            this.tanqueEnemigo = tanqueEnemigo;
+            Effect = efecto;
 
+            Texture = textura;
+
+            Velocity = velocidad;
         }
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection){
+        public void LoadContent(){
+
+            // Asigno el efecto que cargue a cada parte del mesh.
+            // Un modelo puede tener mas de 1 mesh internamente.
+
+            //Effect.Parameters["ModelTexture"].SetValue(Texture);
+
+            // Al mesh le asigno el Effect (solo textura por ahora)
+            tiempoDeVida = 0;
+            foreach (var mesh in Model.Meshes)
+            {
+                foreach (var meshPart in mesh.MeshParts)
+                {
+                    meshPart.Effect = Effect;
+                }
+            }
+        }
+
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
             Effect.Parameters["View"].SetValue(view);
             Effect.Parameters["Projection"].SetValue(projection);
+            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+
+            
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+            
+            // forma de girar la torreta con cañón
+            // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
+            // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
+            
+            World = Matrix.CreateScale(5f) * Matrix.CreateTranslation(Position);
+            foreach (var mesh in Model.Meshes)
+            {
+                var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
+                Effect.Parameters["World"].SetValue(meshWorld*World);
+                mesh.Draw();
+            }
         }
 
-        public void Update(){
 
+        public void Update(GameTime gameTime){
+            if(tiempoDeVida <= tiempoLimiteDeVida){
+                tiempoDeVida += (float)gameTime.ElapsedGameTime.Milliseconds;
+                Position += Velocity * (float)gameTime.ElapsedGameTime.Milliseconds;
+            }
+                
         }
-
+        
     }
 }

@@ -52,14 +52,15 @@ namespace TGC.MonoGame.TP
         private Model T90A { get; set; }
         private Model T90B { get; set; }
         private Model T90C { get; set; }
-        private Model Panzer{ get; set; }
+        private Model Panzer { get; set; }
         private Effect Effect { get; set; }
         private float Rotation { get; set; }
 
         private Model BulletModel { get; set; }
-        private List<Bullet> bullets;
+        private List<Bala> bullets;
         
-        private List<TanqueEnemigo> Tanques { get; set; }  
+        private List<TanqueEnemigo> Tanques { get; set; }
+        private List<Bala> BalasMain { get; set; }
 
         private Object Prueba { get; set; }
         private Texture2D Textura { get; set; }
@@ -67,16 +68,18 @@ namespace TGC.MonoGame.TP
 
         //private Suelo Suelo {get; set;}
         private QuadPrimitive Quad { get; set; }
-        private Matrix FloorWorld {get;set;}
-        
-        private Model roca {get; set;}
-        private Object Roca {get;set;}
-        private Effect EffectRoca {get;set;}
-        private Texture2D TexturaRoca {get;set;}
+        private Matrix FloorWorld { get; set; }
 
-        private List<Object> Ambiente {get;set;}
+        private Model roca { get; set; }
+        private Object Roca { get; set; }
+        private Effect EffectRoca { get; set; }
+        private Texture2D TexturaRoca { get; set; }
 
-        private Tanque MainTanque {get;set;}
+        private List<Object> Ambiente { get; set; }
+
+        private Tanque MainTanque { get; set; }
+
+        private Vector2 estadoInicialMouse { get; set; }
         
 
         /// <summary>
@@ -100,6 +103,18 @@ namespace TGC.MonoGame.TP
             Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100;
             Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
             Graphics.ApplyChanges();
+
+            Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+
+
+
+
+            Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+
+
+
 
             Tanques = new List<TanqueEnemigo>();
 
@@ -127,14 +142,16 @@ namespace TGC.MonoGame.TP
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
-            BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
+            //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f), 
                     T90, 
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
-                    Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA")
+                    Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"),
+                    estadoInicialMouse
                     );
-            MainTanque.LoadContent();
+
+            MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null);
             
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
             
@@ -146,9 +163,11 @@ namespace TGC.MonoGame.TP
             //Roca.LoadContent();
 
             //Roca.World = Matrix.CreateScale(50f) * Roca.World;
-            
+
             
             InitializeTanks();
+            BalasMain = new List<Bala>();
+            
             InitializeAmbient();
             
             Tanques.ForEach(o => o.LoadContent());
@@ -359,7 +378,7 @@ namespace TGC.MonoGame.TP
             }
 
             // Control del jugador
-            MainTanque.Update(gameTime, Keyboard.GetState(), Ambiente, Tanques);
+            MainTanque.Update(gameTime, Keyboard.GetState(), Ambiente, Tanques, BalasMain);
 
             // Colisión del MainTanque con el tanque principal
             /*Tanques.ForEach(TanqueEnemigoDeLista => {
@@ -378,6 +397,12 @@ namespace TGC.MonoGame.TP
             // Se eliminan los ambientes que hayan chocado
             Ambiente.RemoveAll(O => O.esVictima);
             
+            //MainTanque.Position += Vector3.UnitY * 5;
+            //MainTanque.World = Matrix.CreateTranslation(MainTanque.Position);
+
+            // Lógica del juego acá (por ahora solo renderiza un mundo y controlamos al jugador con wasd)
+
+            BalasMain.ForEach(o => o.Update(gameTime));
             
 
             base.Update(gameTime);
@@ -395,6 +420,7 @@ namespace TGC.MonoGame.TP
             //Prueba.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             Tanques.ForEach(a => a.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
             Ambiente.ForEach(a => a.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
+            BalasMain.ForEach(o => o.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
             //FollowCamera.Update(gameTime, objetos3D[3].World);
 
             //Suelo.Draw(gameTime,GraphicsDevice, FollowCamera.View, FollowCamera.Projection);
