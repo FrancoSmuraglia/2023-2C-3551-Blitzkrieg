@@ -13,8 +13,11 @@ Proyecto plantilla para los trabajos prácticos de la asignatura electiva [Técn
 ## Controles
 
 Mouse: Control de la cámara
+
 WASD: Controles de movilidad del tanque principal
+
 Click derecho: disparar
+
 Click izquierdo y rotar la cámara: gira la torreta y el cañón del tanque principal 
 
 ## Integrantes
