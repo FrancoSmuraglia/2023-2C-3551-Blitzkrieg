@@ -20,6 +20,8 @@ namespace TGC.MonoGame.TP
         Texture2D BulletTexture;
 
         private float Speed { get; set; }
+
+        private float PuntoMedio {get; set;}
         
         Matrix RotationMatrix = Matrix.Identity;
 
@@ -51,13 +53,10 @@ namespace TGC.MonoGame.TP
         private Matrix _initialCannon;
         private Matrix _initialTorret;
 
+        private float mouseX = 0;
+        private float mouseY = 0f;
 
-        private float yaw = 0f;
-        private float pitch = 0f;
-
-        float anguloDelCañon = 0.0f;
-        int mouseX = 0;
-        float mouseY = 0f;
+        private float coolDownChoque = 0;
 
         private Vector2 estadoAnteriorDelMouse;
 
@@ -74,7 +73,8 @@ namespace TGC.MonoGame.TP
 
             var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             TankBox = OrientedBoundingBox.FromAABB(AABB);
-            TankBox.Center = Position;
+            PuntoMedio = AABB.Max.Y/2;
+            TankBox.Center = Position + Vector3.Up * PuntoMedio;
             TankBox.Orientation = RotationMatrix;
 
             Effect = efecto;
@@ -158,15 +158,13 @@ namespace TGC.MonoGame.TP
         float anguloVertical = 0;
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
-
-        float primero = 0;
-        float segundo = 0;
-        float acumulacion = 0; 
-        bool frenada = true;
         float tiempoEntreDisparo = 0;
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
+            Console.WriteLine(coolDownChoque);
+            if(coolDownChoque > 0)
+                coolDownChoque -= deltaTime;
             
             if(tiempoEntreDisparo < tiempoEntreDisparoLimite)
                 tiempoEntreDisparo += deltaTime;
@@ -181,21 +179,21 @@ namespace TGC.MonoGame.TP
                 CurrentAcceleration = -1;
                 Sentido = -1;
             }
-            if(key.IsKeyDown(Keys.A) && Moving){ 
+            if(key.IsKeyDown(Keys.A) && Moving && coolDownChoque <= 0){ 
                 RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix); 
                 TankVelocity = TankDirection * moduloVelocidadXZ * Sentido; 
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
                 anguloHorizontalTanque += .03f;
             }                
-            if(key.IsKeyDown(Keys.D) && Moving){
+            if(key.IsKeyDown(Keys.D) && Moving && coolDownChoque <= 0){
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix); 
                 TankVelocity = TankDirection * moduloVelocidadXZ * Sentido; 
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 anguloHorizontalTanque -= .03f;
             }
-            if(key.IsKeyDown(Keys.Space) && tiempoEntreDisparo > tiempoEntreDisparoLimite){
+            if(Mouse.GetState().LeftButton.Equals(ButtonState.Pressed) && tiempoEntreDisparo > tiempoEntreDisparoLimite){
                 var anguloHorizontaTotal = anguloHorizontalTorreta - anguloHorizontalTanque;
                 var b = new Vector3(
                     (float)Math.Cos(anguloHorizontaTotal - MathHelper.PiOver2), 
@@ -214,7 +212,8 @@ namespace TGC.MonoGame.TP
             Position += TankVelocity;                               // Actualizo la posición en función de la velocidad actual
             CurrentAcceleration *= Acceleration;                    // Decido la aceleración
 
-            TankBox.Center = Position;
+            TankBox.Center =  Position + Vector3.Up * PuntoMedio;
+
             
 
             // **** Manejo de aceleración y renderizado del auto en el world **** //
@@ -254,7 +253,7 @@ namespace TGC.MonoGame.TP
         public bool Intersecta(Object objeto){
             return TankBox.Intersects(objeto.Box);
         }
-
+        
         public void AnalisisDeColision(List<Object> ambiente, List<TanqueEnemigo> enemigos, float rapidez){
             foreach (Object itemEspecifico in ambiente){
                 if(Intersecta(itemEspecifico)){
@@ -262,24 +261,29 @@ namespace TGC.MonoGame.TP
                         itemEspecifico.esVictima = true;
                     }                        
                     else{
-                        //Console.WriteLine("Velocidad del tanque: " + TankVelocity);
+                        var vector = Vector3.Normalize(TankVelocity);
+                        var salto = vector * 15;
+                        do{ // forma "rústica" de evitar que siga perforado
+                            TankBox.Center -= salto;
+                            Position -= salto;
+                        }
+                        while(Intersecta(itemEspecifico));
+                        coolDownChoque = .3f; //segundos
                         Sentido *= -1;
-                        TankVelocity = - Vector3.Normalize(TankVelocity) * 20;
-                        //Console.WriteLine("Velocidad contraria: " + TankVelocity);
-                        
-                        //Vector3.Clamp()
+                        TankVelocity = - vector * 20;
                     }
-                        
                 }
             }
 
             foreach (TanqueEnemigo enemigoEspecifico in enemigos){
                 if(Intersecta(enemigoEspecifico)){
                     var velocidadMain = TankVelocity;
+                    if(velocidadMain.Equals(Vector3.Zero))
+                        velocidadMain = -enemigoEspecifico.TankVelocity/2;
                     TankVelocity -= enemigoEspecifico.TankVelocity;
-                    enemigoEspecifico.TankVelocity += velocidadMain/3;
-                    
-                    TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque
+                    Console.WriteLine(TankVelocity.X + " y " + TankVelocity.Z);
+                    enemigoEspecifico.agregarVelocidad(velocidadMain);
+                    TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
                 }
             }
         }
@@ -303,63 +307,23 @@ namespace TGC.MonoGame.TP
 
         public Matrix updateHorizontal(MouseState currentMouseState, GameTime gameTime)
         {
-
-
-
-            // Obtén la posición actual del mouse
-            //mouseX = currentMouseState.X;
-            //
-            //// Calcula la diferencia entre la posición del mouse actual y la posición anterior
-            //float deltaX = mouseX - estadoAnteriorDelMouse.X;
-            //
-            //
-            //// Ajusta la velocidad de rotación según tus preferencias
-            //float rotationSpeed = 0.01f;
-            //Matrix torretaRotacion = Matrix.Identity;
-            //// Calcula la rotación en función de la diferencia del mouse
-            //if (currentMouseState.RightButton.Equals(ButtonState.Pressed))
-            //    torretaRotacion = Matrix.CreateRotationZ(-deltaX * rotationSpeed);
-            //
-            //
-            //
-            // Aplica la rotación a la torreta
-            //Torreta.Transform *= torretaRotacion;
-            //
-            //// Aplica la misma rotación al cañón
-            //Cannon.Transform *= torretaRotacion;
-            //
-            //TorretaMatrix = Torreta.Transform;
-            //
-            //// Actualiza la matriz de transformación relativa del cañón
-            //Matrix transformacionRelativaDelCañon = Cannon.Transform * Matrix.Invert(Torreta.Transform);
-            //
-            //// Aplica la transformación relativa al cañón
-            //Cannon.Transform = transformacionRelativaDelCañon * Torreta.Transform;
-
             float rotationSpeed = 0.01f;
             mouseX = currentMouseState.X;
             var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
-            Matrix torretaRotacion = Matrix.Identity;
             if (currentMouseState.RightButton.Equals(ButtonState.Pressed))
             {
                 float deltaX = mouseX - estadoAnteriorDelMouse.X;
 
                 anguloHorizontalTorreta += elapsedTime * deltaX;
             }
-            return torretaRotacion = Matrix.CreateRotationZ(-anguloHorizontalTorreta);
+            return Matrix.CreateRotationZ(-anguloHorizontalTorreta);
 
-            //Cannon.Transform = torretaRotacion * _initialCannon;
-            //Torreta.Transform = torretaRotacion * _initialTorret;
         }
 
         public Matrix updateVertical(MouseState currentMouseState, GameTime gameTime) {
-
-            float rotationSpeed = 0.01f;
             mouseY = currentMouseState.Y;
             var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
 
-            var cannonRotacion = Matrix.Identity;
-            //Console.WriteLine("angulo: " + anguloActual);
             if(currentMouseState.RightButton.Equals(ButtonState.Pressed)){
                 float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 

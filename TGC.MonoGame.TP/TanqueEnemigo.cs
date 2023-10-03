@@ -15,6 +15,8 @@ namespace TGC.MonoGame.TP
         public OrientedBoundingBox TankBox { get; set; }
         private float Speed { get; set; }
         
+        private float PuntoMedio {get; set;}
+
         Matrix RotationMatrix = Matrix.Identity;
 
         protected Model Model { get; set; }
@@ -42,6 +44,7 @@ namespace TGC.MonoGame.TP
             
             var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             TankBox = OrientedBoundingBox.FromAABB(AABB);
+            PuntoMedio = AABB.Max.Y / 3;
             TankBox.Center = Position;
             TankBox.Orientation = RotationMatrix;
 
@@ -49,15 +52,7 @@ namespace TGC.MonoGame.TP
 
             Texture = textura;
 
-            Torreta = modelo.Bones["Turret"];
-            TorretaMatrix = Torreta.Transform;
-
-            Cannon = modelo.Bones["Cannon"];
-            CannonMatrix = Cannon.Transform;
-
             TankDirection = Vector3.Forward;
-
-
             
             TankVelocity = Vector3.Zero;
         }

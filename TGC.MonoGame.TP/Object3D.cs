@@ -24,25 +24,27 @@ namespace TGC.MonoGame.TP
 
         public OrientedBoundingBox Box { get; set; }
 
-        public Object(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, bool esConstante){
+        public Object(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, bool esDestruible){
             this.Position = Position;
 
-            World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
+            World =  Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
             Model = modelo;
 
+            //Box = BoundingVolumesExtensions.FromMatrix(World);
             var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             Box = OrientedBoundingBox.FromAABB(AABB);
-            Box.Center = Position;
+             // Le sumo a la posición el eje Y máximo de la figura divido dos para que esté en en centro del modelo
+            Box.Center = Position + Vector3.Up * (AABB.Max.Y/2); 
             Box.Orientation = Matrix.Identity;
             
             //Box = new OrientedBoundingBox(Position, new Vector3(25,0,25));
-
+            
             Effect = efecto;
 
             Texture = textura;
 
-            esEliminable = esConstante;
+            esEliminable = esDestruible;
         }
 
         public void LoadContent(){

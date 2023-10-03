@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Collisions;
 
 
 namespace TGC.MonoGame.TP
@@ -12,6 +14,10 @@ namespace TGC.MonoGame.TP
     {
         
         Matrix RotationMatrix = Matrix.Identity;
+
+        public Boolean esVictima { get; set; }
+
+        private OrientedBoundingBox BalaBox { get; set; }
 
         protected Model Model { get; set; }
         public Matrix World { get; set; }
@@ -41,29 +47,17 @@ namespace TGC.MonoGame.TP
             
             Model = modelo;
 
+            var AABB = BoundingVolumesExtensions.FromMatrix(World);
+            BalaBox = OrientedBoundingBox.FromAABB(AABB);
+            BalaBox.Center = Position + Vector3.Up * AABB.Max.Y / 2 ;
+
             Effect = efecto;
 
             Texture = textura;
 
             Velocity = velocidad;
-        }
-
-        public void LoadContent(){
-
-            // Asigno el efecto que cargue a cada parte del mesh.
-            // Un modelo puede tener mas de 1 mesh internamente.
-
-            //Effect.Parameters["ModelTexture"].SetValue(Texture);
-
-            // Al mesh le asigno el Effect (solo textura por ahora)
-            tiempoDeVida = 0;
-            foreach (var mesh in Model.Meshes)
-            {
-                foreach (var meshPart in mesh.MeshParts)
-                {
-                    meshPart.Effect = Effect;
-                }
-            }
+            
+            esVictima = false;
         }
 
         public void Draw(GameTime gameTime, Matrix view, Matrix projection)
@@ -81,7 +75,7 @@ namespace TGC.MonoGame.TP
             // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
             // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
             
-            World = Matrix.CreateScale(5f) * Matrix.CreateTranslation(Position);
+            World = Matrix.CreateScale(5f)  * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
@@ -90,12 +84,35 @@ namespace TGC.MonoGame.TP
             }
         }
 
+        public bool recorridoCompleto(){
+            return tiempoDeVida >= tiempoLimiteDeVida;
+        }
+        public void Update(GameTime gameTime, List<TanqueEnemigo> enemigos, List<Object> ambientaciones){
+            //BalaBox = BoundingVolumesExtensions.FromMatrix(World);
+            BalaBox.Center = Position;
+            if(!recorridoCompleto() && !esVictima){
+                var delta = (float)gameTime.ElapsedGameTime.Milliseconds;
+                tiempoDeVida += delta;
+                Position += Velocity * delta;
+            }       
 
-        public void Update(GameTime gameTime){
-            if(tiempoDeVida <= tiempoLimiteDeVida){
-                tiempoDeVida += (float)gameTime.ElapsedGameTime.Milliseconds;
-                Position += Velocity * (float)gameTime.ElapsedGameTime.Milliseconds;
-            }
+            foreach (var tanqueEnemigo in enemigos)
+            {
+                if(BalaBox.Intersects(tanqueEnemigo.TankBox)){
+                    tanqueEnemigo.agregarVelocidad(new Vector3(Velocity.X, 0, Velocity.Z));
+                    esVictima = true;   
+                }
+            }   
+
+            foreach (var ambiente in ambientaciones){
+                if(BalaBox.Intersects(ambiente.Box)){
+                    if(ambiente.esEliminable){
+                        ambiente.esVictima = true;
+                    }
+                    esVictima = true;   
+                }
+            }   
+
                 
         }
         

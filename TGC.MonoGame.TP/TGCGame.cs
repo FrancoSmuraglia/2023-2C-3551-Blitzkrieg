@@ -21,11 +21,11 @@ namespace TGC.MonoGame.TP
         public const string ContentFolderSounds = "Sounds/";
         public const string ContentFolderSpriteFonts = "SpriteFonts/";
         public const string ContentFolderTextures = "Textures/";
-        private const int DistanciaParaArboles = 250;
+        private const int DistanciaParaArboles = 350;
         private const int DistanciaParaArbustos = 15;
         private const int DistanciaParaFlores = 15;
         private const int DistanciaParaHongos = 15;
-        private const int CantidadDeArboles = 300;
+        private const int CantidadDeArboles = 75;
         private const int CantidadDeArbustos = 500;
         private const int CantidadDeFlores = 250;
         private const int CantidadDeHongos = 250;
@@ -175,6 +175,7 @@ namespace TGC.MonoGame.TP
 
             base.LoadContent();
         }
+
         private void InitializeAmbient()
         {
             List<String> posiblesArboles = new(){
@@ -211,7 +212,7 @@ namespace TGC.MonoGame.TP
             // Árboles
             for (int i = 0; i < CantidadDeArboles; i++)
             {
-                posicionAmbiente = SelectNewPosition(DistanciaParaArboles, 6800);
+                posicionAmbiente = SelectNewPosition(DistanciaParaArboles, 1500);
                 String arbol = posiblesArboles[new Random().Next(0, 3)];
                 Ambiente.Add(
                     new Object(
@@ -225,7 +226,7 @@ namespace TGC.MonoGame.TP
             }
             
             // Anillo de árboles
-            for (int i = 0; i < 500; i++)
+            /*for (int i = 0; i < 500; i++)
             {
                 float angle = new Random().Next(0, 360);
                 float delta = new Random().Next(-150, 150);
@@ -238,10 +239,10 @@ namespace TGC.MonoGame.TP
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + arbol),
                         Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
-                        arbol.Equals("Tree") 
+                        false
                         )
                     );
-            }
+            }*/
 
             // Arbustos
             for (int i = 0; i < CantidadDeArbustos; i++)
@@ -344,10 +345,10 @@ namespace TGC.MonoGame.TP
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
             }*/
-            Tanques.Add(new TanqueEnemigo(new Vector3(1000f, 150, 0), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA")));
-            Tanques.Add(new TanqueEnemigo(new Vector3(-1000f, 150, 0), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
-            Tanques.Add(new TanqueEnemigo(new Vector3(1000f, 150, 1000f), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC")));
-            Tanques.Add(new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask")));
+            Tanques.Add(new TanqueEnemigo(new Vector3(1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA")));
+            Tanques.Add(new TanqueEnemigo(new Vector3(-1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
+            Tanques.Add(new TanqueEnemigo(new Vector3(1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC")));
+            Tanques.Add(new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask")));
         }
 
         /// <summary>
@@ -360,14 +361,16 @@ namespace TGC.MonoGame.TP
         float tiempo = 0;
         protected override void Update(GameTime gameTime)
         {
-            tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
+            /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
             Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));
-            /*if(tiempo >= 1){
+            
+            if(tiempo >= 1){
                 Console.WriteLine("Frames: " + frames);
                 frames = 0;
                 tiempo = 0;
-            }*/
+            }
+            */
             // Aca deberiamos poner toda la logica de actualizacion del juego.
 
             // Capturar Input teclado
@@ -395,15 +398,19 @@ namespace TGC.MonoGame.TP
             });*/
 
             // Se eliminan los ambientes que hayan chocado
-            Ambiente.RemoveAll(O => O.esVictima);
+            
             
             //MainTanque.Position += Vector3.UnitY * 5;
             //MainTanque.World = Matrix.CreateTranslation(MainTanque.Position);
 
             // Lógica del juego acá (por ahora solo renderiza un mundo y controlamos al jugador con wasd)
 
-            BalasMain.ForEach(o => o.Update(gameTime));
+            BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));
             
+            BalasMain.RemoveAll(O => O.esVictima || O.recorridoCompleto());
+
+            if(Ambiente.Exists(O => O.esVictima))
+                Ambiente.RemoveAll(O => O.esVictima);
 
             base.Update(gameTime);
         }
