@@ -16,9 +16,11 @@ Mouse: Control de la cámara
 
 WASD: Controles de movilidad del tanque principal
 
-Click derecho: disparar
+Click derecho y rotar la cámara: gira la torreta y el cañón del tanque principal 
 
-Click izquierdo y rotar la cámara: gira la torreta y el cañón del tanque principal 
+Click izquierdo: disparar
+
+
 
 ## Integrantes
 
