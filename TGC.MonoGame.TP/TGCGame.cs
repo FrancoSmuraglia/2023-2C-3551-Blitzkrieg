@@ -392,18 +392,6 @@ namespace TGC.MonoGame.TP
             Tanques.ForEach(TanqueEnemigoDeLista => {
                 TanqueEnemigoDeLista.Update(gameTime, Ambiente);
                 });
-            // Colisión del MainTanque con el ambiente (plantas y rocas)
-            /*Ambiente.ForEach(o => {
-                MainTanque.Intersecta(o);
-            });*/
-
-            // Se eliminan los ambientes que hayan chocado
-            
-            
-            //MainTanque.Position += Vector3.UnitY * 5;
-            //MainTanque.World = Matrix.CreateTranslation(MainTanque.Position);
-
-            // Lógica del juego acá (por ahora solo renderiza un mundo y controlamos al jugador con wasd)
 
             BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));
             
@@ -421,22 +409,18 @@ namespace TGC.MonoGame.TP
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            // Aca deberiamos poner toda la logia de renderizado del juego.
             GraphicsDevice.Clear(Color.BlueViolet);
 
-            //Prueba.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-            Tanques.ForEach(a => a.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
-            Ambiente.ForEach(a => a.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
-            BalasMain.ForEach(o => o.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
-            //FollowCamera.Update(gameTime, objetos3D[3].World);
+            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+            Tanques.ForEach(tanquesEnemigos => tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
+            Ambiente.ForEach(ambientes => ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
+            BalasMain.ForEach(balas => balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
 
-            //Suelo.Draw(gameTime,GraphicsDevice, FollowCamera.View, FollowCamera.Projection);
-            Quad.Draw(FloorWorld, FollowCamera.View, FollowCamera.Projection);
+
+            Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
            
 
-            //Roca.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
 
-            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             
             FollowCamera.Update(gameTime, MainTanque.World);
             

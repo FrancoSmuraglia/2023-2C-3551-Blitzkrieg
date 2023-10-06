@@ -9,6 +9,7 @@ namespace TGC.MonoGame.TP
     /// </summary>
     public class QuadPrimitive
     {
+        public Texture2D Textura;
         /// <summary>
         ///     Create a textured quad.
         /// </summary>
@@ -22,6 +23,7 @@ namespace TGC.MonoGame.TP
             Effect.TextureEnabled = true;
             Effect.EnableDefaultLighting();
             Effect.Texture = textura;
+            Textura = textura;
         }
 
         /// <summary>
@@ -113,6 +115,29 @@ namespace TGC.MonoGame.TP
             var graphicsDevice = effect.GraphicsDevice;
 
             // Set our vertex declaration, vertex buffer, and index buffer.
+            
+            graphicsDevice.SetVertexBuffer(Vertices);
+            graphicsDevice.Indices = Indices;
+
+            foreach (var effectPass in effect.CurrentTechnique.Passes)
+            {
+                effectPass.Apply();
+                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Indices.IndexCount / 3);
+            }
+        }
+
+        public void Draw(Effect effect, Matrix world, Matrix view, Matrix projection)
+        {
+            effect.Parameters["World"].SetValue(world);
+            effect.Parameters["View"].SetValue(view);
+            effect.Parameters["Projection"].SetValue(projection);
+            effect.Parameters["ModelTexture"]?.SetValue(Textura);
+
+            var graphicsDevice = effect.GraphicsDevice;
+
+            
+            // Set our vertex declaration, vertex buffer, and index buffer.
+            
             graphicsDevice.SetVertexBuffer(Vertices);
             graphicsDevice.Indices = Indices;
 
