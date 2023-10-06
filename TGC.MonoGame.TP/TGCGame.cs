@@ -5,6 +5,7 @@ using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Viewer.Gizmos;
 
 namespace TGC.MonoGame.TP
 {
@@ -44,6 +45,7 @@ namespace TGC.MonoGame.TP
             // Hace que el mouse sea visible.
             IsMouseVisible = true;
         }
+        public Gizmos Gizmos { get; set; }
 
         private GraphicsDeviceManager Graphics { get; }
         private SpriteBatch SpriteBatch { get; set; }
@@ -104,6 +106,12 @@ namespace TGC.MonoGame.TP
             Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
             Graphics.ApplyChanges();
 
+            Gizmos = new Gizmos
+            {
+                Enabled = true
+            };
+
+
             Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
             estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
 
@@ -137,6 +145,8 @@ namespace TGC.MonoGame.TP
         {
             // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
             SpriteBatch = new SpriteBatch(GraphicsDevice);
+            Gizmos.LoadContent(GraphicsDevice, Content);
+
 
             // Cargo el modelo, efecto y textura del tanque que controla el jugador.
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
@@ -372,6 +382,8 @@ namespace TGC.MonoGame.TP
             }
             */
             // Aca deberiamos poner toda la logica de actualizacion del juego.
+            Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
+
 
             // Capturar Input teclado
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -412,14 +424,29 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.Clear(Color.BlueViolet);
 
             MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-            Tanques.ForEach(tanquesEnemigos => tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
-            Ambiente.ForEach(ambientes => ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
-            BalasMain.ForEach(balas => balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection));
+            Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
+
+            Tanques.ForEach(tanquesEnemigos => {
+                tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+            });
+
+            Ambiente.ForEach(ambientes => {
+                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
+            });
+            
+            
+            BalasMain.ForEach(balas => {
+                balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
+            });
+
+            //Gizmos.Draw();
 
 
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
            
-
 
             
             FollowCamera.Update(gameTime, MainTanque.World);

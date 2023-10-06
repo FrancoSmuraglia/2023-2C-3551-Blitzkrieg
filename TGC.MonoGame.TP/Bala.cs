@@ -17,7 +17,7 @@ namespace TGC.MonoGame.TP
 
         public Boolean esVictima { get; set; }
 
-        private OrientedBoundingBox BalaBox { get; set; }
+        public OrientedBoundingBox BalaBox { get; set; }
 
         protected Model Model { get; set; }
         public Matrix World { get; set; }
