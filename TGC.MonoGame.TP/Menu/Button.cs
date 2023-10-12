@@ -1,0 +1,110 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Collisions;
+
+
+namespace TGC.MonoGame.TP
+{    
+    public class Button
+    {
+        
+        public const float Scale = 0.2f;
+        private Texture2D Texture;
+
+        protected Color Colour = Color.Red;
+
+        public Action Click;
+
+        public bool Clicked { get; protected set; }
+
+        public bool IsSelected { get; set; }
+
+        public Vector2 Position { get; set; }
+
+        public Rectangle Rectangle
+        {
+            get
+            {
+                return new Rectangle((int)Position.X, (int)Position.Y, (int)(Texture.Width * Scale), (int)(Texture.Height * Scale));
+            }
+        }
+        public Button(Texture2D texture, Vector2 position, string texto = null)
+        {
+            Texture = texture;
+
+            Position = position - new Vector2(texture.Width*Scale/2, texture.Height*Scale/2);
+
+            Text = texto;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, SpriteFont fuente = null)
+        {
+            if (IsSelected)
+                Colour = Color.DarkGray;
+            else
+                Colour = Color.White;
+            
+            Rectangle a = this.Rectangle;
+            spriteBatch.Draw(Texture, Position, null, Colour, 0f, Origin, Scale, SpriteEffects.None, 0);
+
+            DrawText(spriteBatch, fuente);
+        }
+
+        protected void DrawText(SpriteBatch spriteBatch, SpriteFont fuente = null)
+        {
+            if (string.IsNullOrEmpty(Text) || fuente  == null)
+                return;
+
+            if (IsSelected)
+                PenColour = Color.White;
+            else
+                PenColour = Color.Black;
+
+            float x = ((Rectangle.X + (Rectangle.Width / 2)) - (fuente.MeasureString(Text).X / 2)) - Origin.X;
+            float y = ((Rectangle.Y + (Rectangle.Height / 2)) - (fuente.MeasureString(Text).Y / 2)) - Origin.Y;
+
+
+            spriteBatch.DrawString(fuente, Text, new Vector2(x, y), PenColour, 0, new Vector2(0, 0), 1f, SpriteEffects.None, 0.1f);
+        }
+        public void Update(GameTime gameTime, Rectangle mouse)
+        {
+            Colour = Color.White;
+
+            Clicked = false;
+
+            if (mouse.Intersects(Rectangle)) // si está sobre el botón
+            {
+                Colour = Color.Yellow;
+
+                if (Mouse.GetState().RightButton.Equals(ButtonState.Pressed))
+                {
+                    Clicked = true;
+                    OnClick();
+                }
+            }
+
+            //if (IsHovering)
+            //  OnHover();
+            //else OffHover();
+        }
+
+        public virtual void OnClick()
+        {
+            Click?.Invoke();
+
+            IsSelected = true;
+        }
+
+
+    public Vector2 Origin { get; set; }
+
+    public string Text { get; set; }
+
+    public Color PenColour { get; set; } = Color.Red;
+    }
+}

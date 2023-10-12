@@ -16,13 +16,19 @@ namespace TGC.MonoGame.TP
     /// </summary>
     public class TGCGame : Game
     {
+        public enum GameState
+        {
+            Begin,
+            Pause,
+            Finished
+        }
         public const string ContentFolder3D = "Models/";
         public const string ContentFolderEffects = "Effects/";
         public const string ContentFolderMusic = "Music/";
         public const string ContentFolderSounds = "Sounds/";
         public const string ContentFolderSpriteFonts = "SpriteFonts/";
         public const string ContentFolderTextures = "Textures/";
-        private const int DistanciaParaArboles = 350;
+        private const int DistanciaParaArboles = 500;
         private const int DistanciaParaArbustos = 15;
         private const int DistanciaParaFlores = 15;
         private const int DistanciaParaHongos = 15;
@@ -31,6 +37,7 @@ namespace TGC.MonoGame.TP
         private const int CantidadDeFlores = 250;
         private const int CantidadDeHongos = 250;
         private const int CantidadDeRocas = 120;
+        public SpriteFont Font {get ; set ;}
 
         /// <summary>
         ///     Constructor del juego.
@@ -46,9 +53,9 @@ namespace TGC.MonoGame.TP
             IsMouseVisible = true;
         }
         public Gizmos Gizmos { get; set; }
-
         private GraphicsDeviceManager Graphics { get; }
         private SpriteBatch SpriteBatch { get; set; }
+
         private Model Model { get; set; }
         private Model T90 { get; set; }
         private Model T90A { get; set; }
@@ -71,6 +78,11 @@ namespace TGC.MonoGame.TP
         //private Suelo Suelo {get; set;}
         private QuadPrimitive Quad { get; set; }
         private Matrix FloorWorld { get; set; }
+
+        //Menues
+        public Vector2 PantallaResolucion {get; set;}
+        public GameState EstadoActual {get; set;}
+        public Menu MenuPausa { get; set; }
 
         private Model roca { get; set; }
         private Object Roca { get; set; }
@@ -100,10 +112,17 @@ namespace TGC.MonoGame.TP
             var rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.None;
             GraphicsDevice.RasterizerState = rasterizerState;
-            // Seria hasta aca.
 
-            Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100;
-            Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
+
+            // Seria hasta aca.
+            PantallaResolucion = new Vector2
+            {
+                X = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100,
+                Y = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100
+            };
+
+            Graphics.PreferredBackBufferWidth = (int)PantallaResolucion.X;
+            Graphics.PreferredBackBufferHeight = (int)PantallaResolucion.Y;
             Graphics.ApplyChanges();
 
             Gizmos = new Gizmos
@@ -111,16 +130,15 @@ namespace TGC.MonoGame.TP
                 Enabled = true
             };
 
+            Font = Content.Load<SpriteFont>(ContentFolderSpriteFonts + "File"); 
 
-            Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
-            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+            Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
+            estadoInicialMouse = PantallaResolucion/2;
 
+            /*Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
+            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);*/
 
-
-
-            Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
-            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
-
+            EstadoActual = GameState.Begin;
 
 
 
@@ -146,12 +164,14 @@ namespace TGC.MonoGame.TP
             // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
             SpriteBatch = new SpriteBatch(GraphicsDevice);
             Gizmos.LoadContent(GraphicsDevice, Content);
+            
 
 
             // Cargo el modelo, efecto y textura del tanque que controla el jugador.
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
+            
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f), 
@@ -165,18 +185,27 @@ namespace TGC.MonoGame.TP
             
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
             
-            //cargo el modelo de la roca
             roca = Content.Load<Model>(ContentFolder3D + "Rock/rock");
-            // este efecto esta hecho asi nomas y solo pone las cosas verdes
             EffectRoca = Content.Load<Effect>(ContentFolderEffects + "BasicShaderRock");
-            //Roca = new Object(new Vector3(0f,0f,0f), roca, EffectRoca,null);
-            //Roca.LoadContent();
-
-            //Roca.World = Matrix.CreateScale(50f) * Roca.World;
 
             
+            // Menu 
+            var continuar = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2, "Continuar");
+            var salir = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitY*100, "Salir");
+            var ejemplo2 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitX*200, "Ejemplo2");
+            var ejemplo3 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 - Vector2.UnitX*200, "Ejemplo3");
+            List<Button> botones = new(){
+                continuar,
+                salir,
+                ejemplo2,
+                ejemplo3
+            };
+            MenuPausa = new Menu(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font);
+
+
             InitializeTanks();
             BalasMain = new List<Bala>();
+
             
             InitializeAmbient();
             
@@ -222,7 +251,7 @@ namespace TGC.MonoGame.TP
             // Árboles
             for (int i = 0; i < CantidadDeArboles; i++)
             {
-                posicionAmbiente = SelectNewPosition(DistanciaParaArboles, 1500);
+                posicionAmbiente = SelectNewPosition(DistanciaParaArboles, 3000);
                 String arbol = posiblesArboles[new Random().Next(0, 3)];
                 Ambiente.Add(
                     new Object(
@@ -369,88 +398,127 @@ namespace TGC.MonoGame.TP
         
         int frames = 0;
         float tiempo = 0;
+        KeyboardState estadoAnterior;
         protected override void Update(GameTime gameTime)
         {
-            /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
+            //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
+            tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
             Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));
             
-            if(tiempo >= 1){
-                Console.WriteLine("Frames: " + frames);
-                frames = 0;
-                tiempo = 0;
-            }
-            */
-            // Aca deberiamos poner toda la logica de actualizacion del juego.
-            Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
-
-
-            // Capturar Input teclado
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+            //Console.WriteLine(EstadoActual);
+            
+            switch (EstadoActual)
             {
-                //Salgo del juego.
-                Exit();
+                case GameState.Begin:
+                    //HUD.update(gametime);
+                    if(FollowCamera.Frenado)
+                        FollowCamera.FrenarCamara();
+                    MainGame(gameTime);
+                    break;
+                case GameState.Pause:
+                
+                    if(!FollowCamera.Frenado)
+                        FollowCamera.FrenarCamara();
+                        
+                    MenuPausa.Update(Mouse.GetState());
+                    if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
+                    {
+                        //Salgo del juego.
+                        //Exit();
+                        EstadoActual = GameState.Begin;
+                    }
+                    break;
+            }
+            Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
+            estadoAnterior = Keyboard.GetState();
+
+
+            
+
+            base.Update(gameTime);
+        }
+
+        private void MainGame(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
+            {
+                //Exit();
+                EstadoActual = GameState.Pause;
+                return;
             }
 
             // Control del jugador
             MainTanque.Update(gameTime, Keyboard.GetState(), Ambiente, Tanques, BalasMain);
 
-            // Colisión del MainTanque con el tanque principal
-            /*Tanques.ForEach(TanqueEnemigoDeLista => {
-                TanqueEnemigoDeLista.Update(gameTime);             // Actualiza el tanque enemigo
-                MainTanque.Intersecta(TanqueEnemigoDeLista);       // Analiza la intersección con el main tanque
-                TanqueEnemigoDeLista.Intersecta(Ambiente);         // Analiza la interseccion entre tanque y ambiente
-            });*/
-            Tanques.ForEach(TanqueEnemigoDeLista => {
+            Tanques.ForEach(TanqueEnemigoDeLista =>
+            {
                 TanqueEnemigoDeLista.Update(gameTime, Ambiente);
-                });
+            });
 
             BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));
-            
+
             BalasMain.RemoveAll(O => O.esVictima || O.recorridoCompleto());
 
-            if(Ambiente.Exists(O => O.esVictima))
+            if (Ambiente.Exists(O => O.esVictima))
                 Ambiente.RemoveAll(O => O.esVictima);
-
-            base.Update(gameTime);
         }
 
         /// <summary>
         ///     Se llama cada vez que hay que refrescar la pantalla.
         ///     Escribir aqui el codigo referido al renderizado.
         /// </summary>
+        /// 
+            Rectangle rectangulo = new Rectangle(100, 100, 1000, 1000);
         protected override void Draw(GameTime gameTime)
-        {
+        {        
+
             GraphicsDevice.Clear(Color.BlueViolet);
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default; // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
 
             MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
 
             Tanques.ForEach(tanquesEnemigos => {
+                
                 tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                 Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
 
             Ambiente.ForEach(ambientes => {
+                    
                     ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                     Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
             });
             
             
             BalasMain.ForEach(balas => {
+                
                 balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                 Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
-
+            
             //Gizmos.Draw();
 
-
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
+
+            if(EstadoActual.Equals(GameState.Pause))
+                MenuPausa.Draw(SpriteBatch);
+
+            /*SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
+            SpriteBatch.Draw(
+                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), 
+                rectangulo, 
+                new Color(1,1,1,1f));
+            SpriteBatch.End();*/
            
 
             
             FollowCamera.Update(gameTime, MainTanque.World);
+
             
+            base.Draw(gameTime);
         }
 
         /// <summary>

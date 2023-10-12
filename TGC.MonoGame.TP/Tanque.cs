@@ -162,7 +162,7 @@ namespace TGC.MonoGame.TP
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
-            Console.WriteLine(coolDownChoque);
+            //Console.WriteLine(coolDownChoque);
             if(coolDownChoque > 0)
                 coolDownChoque -= deltaTime;
             
