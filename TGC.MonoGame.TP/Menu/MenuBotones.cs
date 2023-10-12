@@ -10,14 +10,12 @@ using TGC.MonoGame.Samples.Collisions;
 
 namespace TGC.MonoGame.TP
 {    
-    public class Menu
+    public class MenuBotones
     {
         public List<Button> Botones {get; set;}
-        public Texture2D Fondo {get; set;}
         public Vector2 PantallaTamanio {get; set;}
         public SpriteFont Font {get; set;}
-        public Menu(Texture2D fondo, Vector2 pantalla, List<Button> botones, SpriteFont fuente = null){
-            Fondo = fondo;
+        public MenuBotones(Vector2 pantalla, List<Button> botones, SpriteFont fuente = null){
             PantallaTamanio = pantalla;
             Botones = botones;
             Font = fuente;
@@ -25,25 +23,21 @@ namespace TGC.MonoGame.TP
 
         public void Draw(SpriteBatch spriteBatch){
             var rectangulo = new Rectangle(0, 0, (int)PantallaTamanio.X, (int)PantallaTamanio.Y);
-            spriteBatch.Begin();
-
-
-            
-            spriteBatch.Draw(Fondo, rectangulo, new Color(1,1,1,1f));
-            Botones.ForEach(boton => boton.Draw(spriteBatch, Font));
-            
-            spriteBatch.End();
+            Botones.ForEach(boton => boton.Draw(spriteBatch, Font));            
         }
 
-        public void Update(MouseState currentMouseState){
+        public void Update(MouseState currentMouseState, TGCGame juegoActual){
             foreach (var boton in Botones){
-                boton.IsSelected = false;
+                boton.Update(currentMouseState, juegoActual);
+                /*boton.IsSelected = false;
                 if(boton.Rectangle.Contains(currentMouseState.X, currentMouseState.Y)){
-                    if(currentMouseState.RightButton.Equals(ButtonState.Pressed)){}
+                    if(currentMouseState.LeftButton.Equals(ButtonState.Pressed)){
+                        Console.WriteLine("Click");
+                        boton.Click?.Invoke(juegoActual);
+                    }
 
                     boton.IsSelected = true;
-                    Console.WriteLine("Está sobre el botón '" + boton.Text + "' y está en " + currentMouseState.X + " " + currentMouseState.Y);
-                }
+                }*/
             }
             //mouse.Location.X = new Point(currentMouseState.Position.X, currentMouseState.Position.Y) ;
         }

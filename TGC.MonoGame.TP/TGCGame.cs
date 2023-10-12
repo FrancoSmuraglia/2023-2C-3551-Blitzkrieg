@@ -5,6 +5,7 @@ using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TGC.MonoGame.Samples.Collisions;
 using TGC.MonoGame.Samples.Viewer.Gizmos;
 
 namespace TGC.MonoGame.TP
@@ -82,7 +83,7 @@ namespace TGC.MonoGame.TP
         //Menues
         public Vector2 PantallaResolucion {get; set;}
         public GameState EstadoActual {get; set;}
-        public Menu MenuPausa { get; set; }
+        public MenuPausa MenuPausa { get; set; }
 
         private Model roca { get; set; }
         private Object Roca { get; set; }
@@ -190,8 +191,13 @@ namespace TGC.MonoGame.TP
 
             
             // Menu 
-            var continuar = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2, "Continuar");
-            var salir = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitY*100, "Salir");
+            var continuar = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion / 2, "Continuar"){
+                Click = x => x.EstadoActual = GameState.Begin
+            };
+            var salir = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitY*100, "Salir")
+            {
+                Click = x => x.Exit()
+            };
             var ejemplo2 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitX*200, "Ejemplo2");
             var ejemplo3 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 - Vector2.UnitX*200, "Ejemplo3");
             List<Button> botones = new(){
@@ -200,7 +206,10 @@ namespace TGC.MonoGame.TP
                 ejemplo2,
                 ejemplo3
             };
-            MenuPausa = new Menu(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font);
+            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
+            {
+                juego = this
+            };
 
 
             InitializeTanks();
@@ -474,7 +483,9 @@ namespace TGC.MonoGame.TP
         {        
 
             GraphicsDevice.Clear(Color.BlueViolet);
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default; // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
+            
+            // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
 
             MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
@@ -497,8 +508,11 @@ namespace TGC.MonoGame.TP
                 balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                 Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
+
+            BoundingCylinder Cilindro = new BoundingCylinder(MainTanque.Position, MainTanque.AABB.Max.Y - 15, MainTanque.AABB.Max.Z/2);
+            Gizmos.DrawCylinder(Cilindro.Transform, Color.Yellow);
             
-            //Gizmos.Draw();
+            Gizmos.Draw();
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
@@ -531,5 +545,6 @@ namespace TGC.MonoGame.TP
 
             base.UnloadContent();
         }
+
     }
 }

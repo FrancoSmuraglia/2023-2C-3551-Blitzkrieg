@@ -15,6 +15,7 @@ namespace TGC.MonoGame.TP
     {
         // Colisión
         public OrientedBoundingBox TankBox { get; set; }
+        private BoundingCylinder Cilindro { get; set; }
         Model Bullet;
         
         Texture2D BulletTexture;
@@ -31,6 +32,7 @@ namespace TGC.MonoGame.TP
         protected Texture2D Texture { get; set; }
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
+        public Matrix OldRotation{ get; set; }
         protected float Rotation{ get; set; }
         protected Effect Effect { get; set; }
 
@@ -62,8 +64,8 @@ namespace TGC.MonoGame.TP
 
         private const float tiempoEntreDisparoLimite = 1.3f;
 
-
-
+        public BoundingBox AABB;
+        Vector3 posicionAnterior;
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse){
             this.Position = Position;
 
@@ -71,11 +73,14 @@ namespace TGC.MonoGame.TP
             
             Model = modelo;
 
-            var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
+            AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             TankBox = OrientedBoundingBox.FromAABB(AABB);
             PuntoMedio = AABB.Max.Y/2;
             TankBox.Center = Position + Vector3.Up * PuntoMedio;
             TankBox.Orientation = RotationMatrix;
+
+
+            
 
             Effect = efecto;
 
@@ -99,6 +104,7 @@ namespace TGC.MonoGame.TP
             _initialTorret = Torreta.Transform;
             TorretaMatrix = Torreta.Transform;
         }
+
 
         public void LoadContent(Model bala, Texture2D texturaBala){
 
@@ -185,6 +191,7 @@ namespace TGC.MonoGame.TP
                 TankVelocity = TankDirection * moduloVelocidadXZ * Sentido; 
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
                 anguloHorizontalTanque += .03f;
+                OldRotation = Matrix.CreateRotationY(.03f);
             }                
             if(key.IsKeyDown(Keys.D) && Moving && coolDownChoque <= 0){
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
@@ -192,6 +199,7 @@ namespace TGC.MonoGame.TP
                 TankVelocity = TankDirection * moduloVelocidadXZ * Sentido; 
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 anguloHorizontalTanque -= .03f;
+                OldRotation = Matrix.CreateRotationY(-.03f);
             }
             if(Mouse.GetState().LeftButton.Equals(ButtonState.Pressed) && tiempoEntreDisparo > tiempoEntreDisparoLimite){
                 var anguloHorizontaTotal = anguloHorizontalTorreta - anguloHorizontalTanque;
@@ -207,12 +215,19 @@ namespace TGC.MonoGame.TP
                 balas.Add(a);
             }
 
-            AnalisisDeColision(ambiente, enemigos, moduloVelocidadXZ);
+            
+            Position += TankVelocity;    
+            TankBox.Center =  Position + Vector3.Up * PuntoMedio; 
+            if(!AnalisisDeColision(ambiente, enemigos, moduloVelocidadXZ)){
+                CurrentAcceleration *= Acceleration;                    // Decido la aceleración
+                
+                OldPosition = Position;
+                OldRotation = RotationMatrix;
 
-            Position += TankVelocity;                               // Actualizo la posición en función de la velocidad actual
-            CurrentAcceleration *= Acceleration;                    // Decido la aceleración
+            }                          // Actualizo la posición en función de la velocidad actual
 
-            TankBox.Center =  Position + Vector3.Up * PuntoMedio;
+
+            //TankBox.Center =  Position + Vector3.Up * PuntoMedio;
 
             
 
@@ -239,8 +254,8 @@ namespace TGC.MonoGame.TP
             //System.Console.WriteLine(Position);
 
             //El auto en el world
-            World = RotationMatrix * Matrix.CreateTranslation(Position) ;
-            OldPosition = Position;
+
+            World = RotationMatrix * Matrix.CreateTranslation(Position);
         }
         public void agregarVelocidad(Vector3 velocidad){
             TankVelocity = velocidad;
@@ -254,7 +269,7 @@ namespace TGC.MonoGame.TP
             return TankBox.Intersects(objeto.Box);
         }
         
-        public void AnalisisDeColision(List<Object> ambiente, List<TanqueEnemigo> enemigos, float rapidez){
+        public bool AnalisisDeColision(List<Object> ambiente, List<TanqueEnemigo> enemigos, float rapidez){
             foreach (Object itemEspecifico in ambiente){
                 if(Intersecta(itemEspecifico)){
                     if(itemEspecifico.esEliminable){
@@ -263,15 +278,18 @@ namespace TGC.MonoGame.TP
                     else{
                         var vector = Vector3.Normalize(TankVelocity);
                         var salto = vector * 15;
-                        do{ // forma "rústica" de evitar que siga perforado
-                            TankBox.Center -= salto;
-                            Position -= salto;
-                        }
-                        while(Intersecta(itemEspecifico));
                         coolDownChoque = .3f; //segundos
                         Sentido *= -1;
                         TankVelocity = - vector * 20;
+                        TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
+                        if(Intersecta(itemEspecifico)){
+                            Console.WriteLine("SIGUE INTERSECTANDO, FUCK");
+                            itemEspecifico.esVictima = true;
+                        }
+
+                        Position = OldPosition;
                     }
+                    return true;
                 }
             }
 
@@ -284,8 +302,11 @@ namespace TGC.MonoGame.TP
                     Console.WriteLine(TankVelocity.X + " y " + TankVelocity.Z);
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
+                    return true;
                 }
             }
+
+            return false;
         }
 
         public void updateTurret(GameTime gameTime)

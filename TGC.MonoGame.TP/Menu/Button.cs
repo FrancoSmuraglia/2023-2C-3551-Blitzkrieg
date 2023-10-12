@@ -18,7 +18,7 @@ namespace TGC.MonoGame.TP
 
         protected Color Colour = Color.Red;
 
-        public Action Click;
+        public Action<TGCGame> Click;
 
         public bool Clicked { get; protected set; }
 
@@ -26,6 +26,7 @@ namespace TGC.MonoGame.TP
 
         public Vector2 Position { get; set; }
 
+        private MouseState Anterior {get; set;}
         public Rectangle Rectangle
         {
             get
@@ -71,13 +72,23 @@ namespace TGC.MonoGame.TP
 
             spriteBatch.DrawString(fuente, Text, new Vector2(x, y), PenColour, 0, new Vector2(0, 0), 1f, SpriteEffects.None, 0.1f);
         }
-        public void Update(GameTime gameTime, Rectangle mouse)
+        public void Update(MouseState currentMouseState, TGCGame juegoActual)
         {
             Colour = Color.White;
 
             Clicked = false;
+            IsSelected = false;
+            if(Rectangle.Contains(currentMouseState.X, currentMouseState.Y)){
+                if(currentMouseState.LeftButton.Equals(ButtonState.Released) && Anterior.LeftButton.Equals(ButtonState.Pressed)){
+                    Click?.Invoke(juegoActual);
+                }
 
-            if (mouse.Intersects(Rectangle)) // si está sobre el botón
+                IsSelected = true;
+                Console.WriteLine("Está sobre el botón '" + Text + "' y está en " + currentMouseState.X + " " + currentMouseState.Y);
+            }
+            Anterior = currentMouseState;
+
+            /*if (mouse.Intersects(Rectangle)) // si está sobre el botón
             {
                 Colour = Color.Yellow;
 
@@ -86,19 +97,15 @@ namespace TGC.MonoGame.TP
                     Clicked = true;
                     OnClick();
                 }
-            }
-
-            //if (IsHovering)
-            //  OnHover();
-            //else OffHover();
+            }*/
         }
 
-        public virtual void OnClick()
+        /*public virtual void OnClick()
         {
             Click?.Invoke();
 
             IsSelected = true;
-        }
+        }*/
 
 
     public Vector2 Origin { get; set; }
