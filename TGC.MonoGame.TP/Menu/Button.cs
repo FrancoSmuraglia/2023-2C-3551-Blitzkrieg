@@ -13,7 +13,7 @@ namespace TGC.MonoGame.TP
     public class Button
     {
         
-        public const float Scale = 0.2f;
+        public float Scale = 0.3f;
         private Texture2D Texture;
 
         protected Color Colour = Color.Red;
@@ -34,13 +34,16 @@ namespace TGC.MonoGame.TP
                 return new Rectangle((int)Position.X, (int)Position.Y, (int)(Texture.Width * Scale), (int)(Texture.Height * Scale));
             }
         }
-        public Button(Texture2D texture, Vector2 position, string texto = null)
+        public Button(Texture2D texture, Vector2 position, string texto = null, float escala = 1f)
         {
             Texture = texture;
+            
+            Scale = escala;
 
-            Position = position - new Vector2(texture.Width*Scale/2, texture.Height*Scale/2);
+            Position = position - new Vector2(texture.Width, texture.Height)*Scale/2;
 
             Text = texto;
+
         }
 
         public void Draw(SpriteBatch spriteBatch, SpriteFont fuente = null)
@@ -51,7 +54,8 @@ namespace TGC.MonoGame.TP
                 Colour = Color.White;
             
             Rectangle a = this.Rectangle;
-            spriteBatch.Draw(Texture, Position, null, Colour, 0f, Origin, Scale, SpriteEffects.None, 0);
+            
+            spriteBatch.Draw(Texture, Position, null, Colour, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0);
 
             DrawText(spriteBatch, fuente);
         }
@@ -72,6 +76,7 @@ namespace TGC.MonoGame.TP
 
             spriteBatch.DrawString(fuente, Text, new Vector2(x, y), PenColour, 0, new Vector2(0, 0), 1f, SpriteEffects.None, 0.1f);
         }
+        
         public void Update(MouseState currentMouseState, TGCGame juegoActual)
         {
             Colour = Color.White;
@@ -84,20 +89,8 @@ namespace TGC.MonoGame.TP
                 }
 
                 IsSelected = true;
-                Console.WriteLine("Está sobre el botón '" + Text + "' y está en " + currentMouseState.X + " " + currentMouseState.Y);
             }
             Anterior = currentMouseState;
-
-            /*if (mouse.Intersects(Rectangle)) // si está sobre el botón
-            {
-                Colour = Color.Yellow;
-
-                if (Mouse.GetState().RightButton.Equals(ButtonState.Pressed))
-                {
-                    Clicked = true;
-                    OnClick();
-                }
-            }*/
         }
 
         /*public virtual void OnClick()

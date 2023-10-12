@@ -165,63 +165,98 @@ namespace TGC.MonoGame.TP
             // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
             SpriteBatch = new SpriteBatch(GraphicsDevice);
             Gizmos.LoadContent(GraphicsDevice, Content);
-            
+
 
 
             // Cargo el modelo, efecto y textura del tanque que controla el jugador.
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
-            
+
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
-                    new Vector3(0f, 150, 0f), 
-                    T90, 
-                    Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
+                    new Vector3(0f, 150, 0f),
+                    T90,
+                    Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"),
                     estadoInicialMouse
                     );
 
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null);
-            
+
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
-            
+
             roca = Content.Load<Model>(ContentFolder3D + "Rock/rock");
             EffectRoca = Content.Load<Effect>(ContentFolderEffects + "BasicShaderRock");
 
-            
-            // Menu 
-            var continuar = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion / 2, "Continuar"){
-                Click = x => x.EstadoActual = GameState.Begin
-            };
-            var salir = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitY*100, "Salir")
-            {
-                Click = x => x.Exit()
-            };
-            var ejemplo2 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 + Vector2.UnitX*200, "Ejemplo2");
-            var ejemplo3 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion/2 - Vector2.UnitX*200, "Ejemplo3");
-            List<Button> botones = new(){
-                continuar,
-                salir,
-                ejemplo2,
-                ejemplo3
-            };
-            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
-            {
-                juego = this
-            };
 
+            // Menu 
+            InitizalizeMenus();
 
             InitializeTanks();
             BalasMain = new List<Bala>();
 
-            
+
             InitializeAmbient();
-            
+
             Tanques.ForEach(o => o.LoadContent());
             Ambiente.ForEach(o => o.LoadContent());
 
             base.LoadContent();
+        }
+
+        private void InitizalizeMenus()
+        {
+            Texture2D boton = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton");
+            var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .2f)
+            {
+                Click = x => x.EstadoActual = GameState.Begin,
+            };
+            var salir = new Button(boton, PantallaResolucion / 2 + Vector2.UnitY * 100, "Salir", .2f)
+            {
+                Click = x => x.Exit()
+            };
+
+            var arribaIzquierda = new Button(
+                boton,
+                new Vector2(boton.Width, boton.Height) * .3f / 2,
+                "arribaIzquierda",
+                .3f);
+
+            var arribaDerecha = new Button(
+                boton,
+                new Vector2(PantallaResolucion.X, 0) + new Vector2(-boton.Width, boton.Height) * .3f / 2,
+                "arribaDerecha",
+                .3f);
+
+            var abajoIzquierda = new Button(
+                boton,
+                new Vector2(0, PantallaResolucion.Y) + new Vector2(boton.Width, -boton.Height) * .3f / 2,
+                "abajoIzquierda",
+                .3f);
+
+            var abajoDerecha = new Button(
+                boton,
+                PantallaResolucion - new Vector2(boton.Width, boton.Height) * .3f / 2,
+                "abajoDerecha",
+                .3f);
+
+            List<Button> botones = new(){
+                continuar,
+                salir,
+                arribaIzquierda,
+                arribaDerecha,
+                abajoIzquierda,
+                abajoDerecha
+            };
+
+            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
+            {
+                juego = this,
+                Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg")
+            };
+
+            MenuPausa.IniciarCortina();
         }
 
         private void InitializeAmbient()
@@ -411,9 +446,9 @@ namespace TGC.MonoGame.TP
         protected override void Update(GameTime gameTime)
         {
             //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
-            tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
+            /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
-            Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));
+            Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));*/
             
             //Console.WriteLine(EstadoActual);
             
@@ -421,14 +456,18 @@ namespace TGC.MonoGame.TP
             {
                 case GameState.Begin:
                     //HUD.update(gametime);
-                    if(FollowCamera.Frenado)
+                    if(FollowCamera.Frenado){                        
+                        MenuPausa.IniciarCortina();
                         FollowCamera.FrenarCamara();
+                    }
                     MainGame(gameTime);
                     break;
                 case GameState.Pause:
-                
-                    if(!FollowCamera.Frenado)
+                    
+                    if(!FollowCamera.Frenado){
+                        MenuPausa.Estado = MenuPausa.EstadoMenu.Inicio;
                         FollowCamera.FrenarCamara();
+                    }
                         
                     MenuPausa.Update(Mouse.GetState());
                     if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
