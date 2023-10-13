@@ -85,6 +85,9 @@ namespace TGC.MonoGame.TP
         public GameState EstadoActual {get; set;}
         public MenuPausa MenuPausa { get; set; }
 
+        //Frustum para delimitar dibujo
+        private BoundingFrustum BoundingFrustum { get; set; }
+
         private Model roca { get; set; }
         private Object Roca { get; set; }
         private Effect EffectRoca { get; set; }
@@ -147,6 +150,9 @@ namespace TGC.MonoGame.TP
 
             // Configuramos nuestras matrices de la escena, en este caso se realiza en el objeto FollowCamara
             FollowCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
+
+            // Configuración del frustum
+            BoundingFrustum = new BoundingFrustum(FollowCamera.View * FollowCamera.Projection);
 
             FloorWorld = Matrix.CreateScale(10000f, 1f, 10000f);
 
@@ -452,6 +458,8 @@ namespace TGC.MonoGame.TP
             
             //Console.WriteLine(EstadoActual);
             
+            BoundingFrustum.Matrix = FollowCamera.View * FollowCamera.Projection;
+
             switch (EstadoActual)
             {
                 case GameState.Begin:
@@ -480,8 +488,6 @@ namespace TGC.MonoGame.TP
             }
             Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
             estadoAnterior = Keyboard.GetState();
-
-
             
 
             base.Update(gameTime);
@@ -525,47 +531,46 @@ namespace TGC.MonoGame.TP
             
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
             GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
-
-            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-            Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
+            
+            //No hace falta analizar, siempre el tanque va estar en medio de la cámara
+            //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
+                MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+            
+            //Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
 
             Tanques.ForEach(tanquesEnemigos => {
-                
-                tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+                if(tanquesEnemigos.TankBox.Intersects(BoundingFrustum)){
+                    tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                }
+                //Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
 
-            Ambiente.ForEach(ambientes => {
-                    
-                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
-            });
             
+            Ambiente.ForEach(ambientes => {
+                if(ambientes.Box.Intersects(BoundingFrustum))
+                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection); 
+                    //Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
+            });
+                        
             
             BalasMain.ForEach(balas => {
-                
-                balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
+                if(balas.BalaBox.Intersects(BoundingFrustum))
+                    balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                //Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
 
+            /*
             BoundingCylinder Cilindro = new BoundingCylinder(MainTanque.Position, MainTanque.AABB.Max.Y - 15, MainTanque.AABB.Max.Z/2);
             Gizmos.DrawCylinder(Cilindro.Transform, Color.Yellow);
             
             Gizmos.Draw();
+            */
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
 
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
-
-            /*SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-            SpriteBatch.Draw(
-                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), 
-                rectangulo, 
-                new Color(1,1,1,1f));
-            SpriteBatch.End();*/
-           
 
             
             FollowCamera.Update(gameTime, MainTanque.World);
