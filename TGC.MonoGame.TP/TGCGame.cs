@@ -95,6 +95,9 @@ namespace TGC.MonoGame.TP
         private Tanque MainTanque { get; set; }
 
         private Vector2 estadoInicialMouse { get; set; }
+
+        public float tiempoRestante = 300.0f; //5 minutos
+        public bool juegoTerminado = false;
         
 
         /// <summary>
@@ -441,6 +444,17 @@ namespace TGC.MonoGame.TP
             }
             Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
             estadoAnterior = Keyboard.GetState();
+
+            if (!juegoTerminado)
+            {
+                tiempoRestante -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if(tiempoRestante <= 0)
+                {
+                    juegoTerminado = true;
+                    Exit();
+                }
+            }
 
 
             
