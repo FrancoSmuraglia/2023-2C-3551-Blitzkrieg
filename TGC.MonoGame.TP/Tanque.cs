@@ -40,6 +40,8 @@ namespace TGC.MonoGame.TP
         public ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
+
+        public float Vida { get; set; }
         
 
         
@@ -103,6 +105,8 @@ namespace TGC.MonoGame.TP
             _initialCannon = Cannon.Transform;
             _initialTorret = Torreta.Transform;
             TorretaMatrix = Torreta.Transform;
+
+            Vida = 10.0f;
         }
 
 
@@ -165,6 +169,7 @@ namespace TGC.MonoGame.TP
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
         float tiempoEntreDisparo = 0;
+        bool balaEspecial = false;
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
@@ -210,9 +215,22 @@ namespace TGC.MonoGame.TP
                 
                 b *= 5;
 
-                var a = new Bala(Position, b, Bullet, Effect, BulletTexture);
+                
+                
+                
+
+                if (balaEspecial)
+                {
+                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletTexture);
+                    balas.Add(a);
+                }
+                else
+                {
+                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture);
+                    balas.Add(a);
+                }
                 tiempoEntreDisparo = 0;
-                balas.Add(a);
+
             }
 
             
@@ -246,9 +264,18 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
-            updateTurret(gameTime);
-            
+            if (key.IsKeyDown(Keys.D2))
+            {
+                balaEspecial = true;
+            }
+            if (key.IsKeyDown(Keys.D1))
+            {
+                balaEspecial = false;
+            }
 
+            updateTurret(gameTime);
+
+            
             Moving = false;
 
             //System.Console.WriteLine(Position);
@@ -302,6 +329,8 @@ namespace TGC.MonoGame.TP
                     Console.WriteLine(TankVelocity.X + " y " + TankVelocity.Z);
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
+                    enemigoEspecifico.recibirDaño(0.5f);
+                    recibirDaño(0.5f);
                     return true;
                 }
             }
@@ -354,6 +383,11 @@ namespace TGC.MonoGame.TP
             }
             return Matrix.CreateRotationX(anguloVertical);
 
+        }
+
+        public void recibirDaño(float cantidad)
+        {
+            Vida -= cantidad;
         }
     }
 }

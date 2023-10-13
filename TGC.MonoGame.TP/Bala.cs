@@ -28,6 +28,8 @@ namespace TGC.MonoGame.TP
         protected Effect Effect { get; set; }
         protected float Angulo{ get; set; }
 
+        public float Daño { get; set; }
+
 
         private const float tiempoLimiteDeVida = 3000f;
         private float tiempoDeVida;
@@ -58,6 +60,8 @@ namespace TGC.MonoGame.TP
             Velocity = velocidad;
             
             esVictima = false;
+
+            Daño = 1f;
         }
 
         public void Draw(GameTime gameTime, Matrix view, Matrix projection)
@@ -100,7 +104,8 @@ namespace TGC.MonoGame.TP
             {
                 if(BalaBox.Intersects(tanqueEnemigo.TankBox)){
                     tanqueEnemigo.agregarVelocidad(new Vector3(Velocity.X, 0, Velocity.Z));
-                    esVictima = true;   
+                    esVictima = true;
+                    tanqueEnemigo.recibirDaño(Daño);
                 }
             }   
 
