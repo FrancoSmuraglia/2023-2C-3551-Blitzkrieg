@@ -31,15 +31,27 @@ namespace TGC.MonoGame.TP
             spriteBatch.Begin();
             //spriteBatch.DrawString(Font, "Vida: " + Vida.ToString(), PositionVida, Color.White);
             //spriteBatch.DrawString(Font, minutes + ":" + seconds.ToString("0"), PositionTiempo, Color.White);
-            spriteBatch.DrawString(Font, FPS.ToString("0.00"), Vector2.Zero, Color.Yellow);
+            spriteBatch.DrawString(Font, FPS.ToString("0.00") + " FPS", Vector2.Zero, Color.Yellow);
             SeccionDeBotones.Draw(spriteBatch);
             spriteBatch.End();
         }
+        public string ArreglarSegundos(float segundos){
+            var segundoEntero = Math.Truncate(segundos);
+            string segundoArreglado = "";
+            if(segundoEntero == 60)
+                segundoEntero--;
+            
+            if(segundoEntero < 10)
+                segundoArreglado += "0";
+            
+            return segundoArreglado + segundoEntero;
+            
 
+        }
         public void Update(float tiempoRestante, float Vida,bool balaEspecial,GameTime gameTime,List<TanqueEnemigo> Tanques){
             int minutes = (int)(tiempoRestante / 60);
             var seconds = (tiempoRestante % 60);
-            SeccionDeBotones.Botones[0].Text = minutes + ":" + seconds.ToString("0");
+            SeccionDeBotones.Botones[0].Text = "0" + minutes + ":" + ArreglarSegundos(seconds);// seconds.ToString("0");
             SeccionDeBotones.Botones[1].Text = "Vida: " + Vida;
             if(balaEspecial){
                 SeccionDeBotones.Botones[2].IsSelected = true;

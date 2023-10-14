@@ -86,6 +86,9 @@ namespace TGC.MonoGame.TP
         public GameState EstadoActual {get; set;}
         public MenuPausa MenuPausa { get; set; }
 
+        //Frustum para delimitar dibujo
+        private BoundingFrustum BoundingFrustum { get; set; }
+
         private Model roca { get; set; }
         private Object Roca { get; set; }
         private Effect EffectRoca { get; set; }
@@ -154,6 +157,9 @@ namespace TGC.MonoGame.TP
             // Configuramos nuestras matrices de la escena, en este caso se realiza en el objeto FollowCamara
             FollowCamera = new FollowCamera(GraphicsDevice.Viewport.AspectRatio);
 
+            // Configuración del frustum
+            BoundingFrustum = new BoundingFrustum(FollowCamera.View * FollowCamera.Projection);
+
             FloorWorld = Matrix.CreateScale(10000f, 1f, 10000f);
 
             Ambiente = new List<Object>();
@@ -179,6 +185,7 @@ namespace TGC.MonoGame.TP
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
 
+
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f),
@@ -192,34 +199,13 @@ namespace TGC.MonoGame.TP
 
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
 
+
             roca = Content.Load<Model>(ContentFolder3D + "Rock/rock");
             EffectRoca = Content.Load<Effect>(ContentFolderEffects + "BasicShaderRock");
 
 
             // Menu 
-            var continuar = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion / 2, "Continuar")
-            {
-                Click = x => x.EstadoActual = GameState.Begin
-            };
-            var salir = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion / 2 + Vector2.UnitY * 100, "Salir")
-            {
-                Click = x => x.Exit()
-            };
-            var ejemplo2 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion / 2 + Vector2.UnitX * 200, "Ejemplo2");
-            var ejemplo3 = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), PantallaResolucion / 2 - Vector2.UnitX * 200, "Ejemplo3");
-            List<Button> botones = new(){
-                continuar,
-                salir,
-                ejemplo2,
-                ejemplo3
-            };
-            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
-            {
-                juego = this
-            };
-
-            //hud
-            //Hud = new Hud(PantallaResolucion, Font);
+            InitializeMenus();
 
             InitializeTanks();
 
@@ -236,12 +222,84 @@ namespace TGC.MonoGame.TP
             base.LoadContent();
         }
 
+        private void InitializeMenus()
+        {
+            Texture2D boton = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton");
+            var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .2f)
+            {
+                Click = x => x.EstadoActual = GameState.Begin,
+            };
+            var salir = new Button(boton, PantallaResolucion / 2 + Vector2.UnitY * 100, "Salir", .2f)
+            {
+                Click = x => x.Exit()
+            };
+
+            var arribaIzquierda = new Button(
+                boton,
+                new Vector2(boton.Width, boton.Height) * .3f / 2,
+                "arribaIzquierda",
+                .3f);
+
+            var arribaDerecha = new Button(
+                boton,
+                new Vector2(PantallaResolucion.X, 0) + new Vector2(-boton.Width, boton.Height) * .3f / 2,
+                "arribaDerecha",
+                .3f);
+
+            var abajoIzquierda = new Button(
+                boton,
+                new Vector2(0, PantallaResolucion.Y) + new Vector2(boton.Width, -boton.Height) * .3f / 2,
+                "abajoIzquierda",
+                .3f);
+
+            var abajoDerecha = new Button(
+                boton,
+                PantallaResolucion - new Vector2(boton.Width, boton.Height) * .3f / 2,
+                "abajoDerecha",
+                .3f);
+
+            List<Button> botones = new(){
+                continuar,
+                salir,
+                arribaIzquierda,
+                arribaDerecha,
+                abajoIzquierda,
+                abajoDerecha
+            };
+
+            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
+            {
+                juego = this,
+                Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg")
+            };
+
+            MenuPausa.IniciarCortina();
+        }
+
         private void InitializeHUD()
         {
-            var tiempo = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, 10));
-            var vida = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, PantallaResolucion.Y - 10));
-            var botonBalaNormal = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Hud/Bala"), new Vector2(80, PantallaResolucion.Y - 120), "Bala Normal");
-            var botonBalaEspecial = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Hud/Bala"), new Vector2(80, PantallaResolucion.Y - 30), "Bala Especial");
+            var tiempo = new Button(
+                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, 10),
+                 null, 
+                 .2f);
+            var vida = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, PantallaResolucion.Y - 10),
+                 null, 
+                 .2f);
+            var bala = Content.Load<Texture2D>(ContentFolderTextures + "Hud/Bala");
+            var botonBalaNormal = new Button(
+                bala, 
+                new Vector2(0, PantallaResolucion.Y) + new Vector2(bala.Width, -bala.Height) * .2f/2, 
+                "Bala Normal",
+                .2f){
+                    TextHover = Color.DarkGray
+                };
+            var botonBalaEspecial = new Button(
+                bala, 
+                new Vector2(0, PantallaResolucion.Y) + new Vector2(bala.Width, -bala.Height - 900) * .2f/2, 
+                "Bala Especial",
+                .2f){
+                    TextHover = Color.DarkGray
+                };
             //var fps = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(80, 30));
 
             List<Button> botonesHud = new(){
@@ -258,14 +316,16 @@ namespace TGC.MonoGame.TP
                 if(random == 1)
                     nombre += "1";
 
-                botonesHud.Add(
-                    new Button(
-                        Content.Load<Texture2D>(ContentFolderTextures + "Hud/" + nombre),
-                        new Vector2(PantallaResolucion.X - 80, PantallaResolucion.Y - 30 - 60 * i),
-                        null,
-                        .5f
-                        )
-                );
+                var a = new Button(
+                    Content.Load<Texture2D>(ContentFolderTextures + "Hud/" + nombre),
+                    new Vector2(PantallaResolucion.X - 80, PantallaResolucion.Y - 30 - 60 * i),
+                    null,
+                    .5f
+                    )
+                {
+                    NotTextHover = Color.White
+                };                
+                botonesHud.Add(a);
             }
 
             Hud = new Hud(PantallaResolucion, botonesHud, Font);
@@ -458,24 +518,30 @@ namespace TGC.MonoGame.TP
         protected override void Update(GameTime gameTime)
         {
             //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
-            tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
+            /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
-            Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));
+            Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));*/
             
             //Console.WriteLine(EstadoActual);
             
+            BoundingFrustum.Matrix = FollowCamera.View * FollowCamera.Projection;
+
             switch (EstadoActual)
             {
                 case GameState.Begin:
                     //HUD.update(gametime);
-                    if(FollowCamera.Frenado)
+                    if(FollowCamera.Frenado){                        
+                        MenuPausa.IniciarCortina();
                         FollowCamera.FrenarCamara();
+                    }
                     MainGame(gameTime);
                     break;
                 case GameState.Pause:
-                
-                    if(!FollowCamera.Frenado)
+                    
+                    if(!FollowCamera.Frenado){
+                        MenuPausa.Estado = MenuPausa.EstadoMenu.Inicio;
                         FollowCamera.FrenarCamara();
+                    }
                         
                     MenuPausa.Update(Mouse.GetState());
                     if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
@@ -544,33 +610,40 @@ namespace TGC.MonoGame.TP
             
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
             GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
-
-            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-            Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
+            
+            //No hace falta analizar, siempre el tanque va estar en medio de la cámara
+            //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
+                MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+            
+            //Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
 
             Tanques.ForEach(tanquesEnemigos => {
-                
-                tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+                if(tanquesEnemigos.TankBox.Intersects(BoundingFrustum)){
+                    tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                }
+                //Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
 
-            Ambiente.ForEach(ambientes => {
-                    
-                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
-            });
             
+            Ambiente.ForEach(ambientes => {
+                if(ambientes.Box.Intersects(BoundingFrustum))
+                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection); 
+                    //Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
+            });
+                        
             
             BalasMain.ForEach(balas => {
-                
-                balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
+                if(balas.BalaBox.Intersects(BoundingFrustum))
+                    balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                //Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
 
+            /*
             BoundingCylinder Cilindro = new BoundingCylinder(MainTanque.Position, MainTanque.AABB.Max.Y - 15, MainTanque.AABB.Max.Z/2);
             Gizmos.DrawCylinder(Cilindro.Transform, Color.Yellow);
             
             Gizmos.Draw();
+            */
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
@@ -580,14 +653,6 @@ namespace TGC.MonoGame.TP
 
             if (EstadoActual.Equals(GameState.Begin))
                 Hud.Draw(SpriteBatch,MainTanque.Vida,tiempoRestante);
-
-            /*SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-            SpriteBatch.Draw(
-                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), 
-                rectangulo, 
-                new Color(1,1,1,1f));
-            SpriteBatch.End();*/
-           
 
             
             FollowCamera.Update(gameTime, MainTanque.World);

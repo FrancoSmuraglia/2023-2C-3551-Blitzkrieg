@@ -286,6 +286,37 @@ namespace TGC.MonoGame.TP
             //System.Console.WriteLine(Position);
 
             //El auto en el world
+            
+            /*if (key.IsKeyDown(Keys.D))
+            {
+                RotationMatrix *= Matrix.CreateRotationY(-.03f);
+                TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix);
+            }
+            else if (key.IsKeyDown(Keys.A))
+            {
+                RotationMatrix *= Matrix.CreateRotationY(.03f);
+                TankDirection = Vector3.Transform(Vector3.Forward, RotationMatrix);
+            }
+            if(key.IsKeyDown(Keys.W)){ //adeltante
+                TankVelocity += TankDirection * /*2 * Acceleration*  deltaTime * 5;
+                Sentido = 1;
+            }
+            if(key.IsKeyDown(Keys.S)){ //reversa      
+                TankVelocity -= TankDirection /** 2 * Acceleration* * deltaTime * 5;
+                Sentido = -1;
+            }
+            if(key.IsKeyUp(Keys.S) && key.IsKeyUp(Keys.W)){
+                TankVelocity -= Sentido * TankDirection * Acceleration * deltaTime;
+                if(Math.Abs(TankVelocity.X) < 0.1f && Math.Abs(TankVelocity.Z) < 0.1f ){
+                    TankVelocity = new Vector3(0f, TankVelocity.Y, 0f);
+                    Sentido = 0;
+                }
+            }
+
+            Console.WriteLine(TankVelocity);
+
+            Position += TankVelocity;*/
+
 
             World = RotationMatrix * Matrix.CreateTranslation(Position);
         }
@@ -314,10 +345,10 @@ namespace TGC.MonoGame.TP
                         Sentido *= -1;
                         TankVelocity = - vector * 20;
                         TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
-                        if(Intersecta(itemEspecifico)){
+                        /*if(Intersecta(itemEspecifico)){
                             Console.WriteLine("SIGUE INTERSECTANDO, FUCK");
                             itemEspecifico.esVictima = true;
-                        }
+                        }*/
 
                         Position = OldPosition;
                     }

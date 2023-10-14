@@ -13,10 +13,16 @@ namespace TGC.MonoGame.TP
     public class Button
     {
         
-        public float Scale = 0.2f;
+        public float Scale = 0.3f;
         private Texture2D Texture;
 
-        protected Color Colour = Color.Red;
+        public Color Hover = Color.DarkGray;
+        public Color NotHover = Color.White;
+        public Color TextHover = Color.White;
+        public Color NotTextHover = Color.Black;
+        public Color SobreMouse = Color.White;
+        public Color Fondo = Color.White;
+        public Color Letras = Color.Black;
 
         public Action<TGCGame> Click;
 
@@ -34,26 +40,28 @@ namespace TGC.MonoGame.TP
                 return new Rectangle((int)Position.X, (int)Position.Y, (int)(Texture.Width * Scale), (int)(Texture.Height * Scale));
             }
         }
-        public Button(Texture2D texture, Vector2 position, string texto = null, float escala = .2f)
+        public Button(Texture2D texture, Vector2 position, string texto = null, float escala = 1f)
         {
             Texture = texture;
             
             Scale = escala;
 
-            Position = position - new Vector2(texture.Width*Scale/2, texture.Height*Scale/2);
+            Position = position - new Vector2(texture.Width, texture.Height)*Scale/2;
 
             Text = texto;
+
         }
 
         public void Draw(SpriteBatch spriteBatch, SpriteFont fuente = null)
         {
             if (IsSelected)
-                Colour = Color.DarkGray;
+                Fondo = Hover;
             else
-                Colour = Color.White;
+                Fondo = NotHover;
             
             Rectangle a = this.Rectangle;
-            spriteBatch.Draw(Texture, Position, null, Colour, 0f, Origin, Scale, SpriteEffects.None, 0);
+            
+            spriteBatch.Draw(Texture, Position, null, Fondo, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0);
 
             DrawText(spriteBatch, fuente);
         }
@@ -64,9 +72,9 @@ namespace TGC.MonoGame.TP
                 return;
 
             if (IsSelected)
-                PenColour = Color.White;
+                PenColour = TextHover;
             else
-                PenColour = Color.Black;
+                PenColour = NotTextHover;
 
             float x = ((Rectangle.X + (Rectangle.Width / 2)) - (fuente.MeasureString(Text).X / 2)) - Origin.X;
             float y = ((Rectangle.Y + (Rectangle.Height / 2)) - (fuente.MeasureString(Text).Y / 2)) - Origin.Y;
@@ -74,9 +82,10 @@ namespace TGC.MonoGame.TP
 
             spriteBatch.DrawString(fuente, Text, new Vector2(x, y), PenColour, 0, new Vector2(0, 0), 1f, SpriteEffects.None, 0.1f);
         }
+        
         public void Update(MouseState currentMouseState, TGCGame juegoActual)
         {
-            Colour = Color.White;
+            Fondo = Color.White;
 
             Clicked = false;
             IsSelected = false;
@@ -86,20 +95,8 @@ namespace TGC.MonoGame.TP
                 }
 
                 IsSelected = true;
-                Console.WriteLine("Está sobre el botón '" + Text + "' y está en " + currentMouseState.X + " " + currentMouseState.Y);
             }
             Anterior = currentMouseState;
-
-            /*if (mouse.Intersects(Rectangle)) // si está sobre el botón
-            {
-                Colour = Color.Yellow;
-
-                if (Mouse.GetState().RightButton.Equals(ButtonState.Pressed))
-                {
-                    Clicked = true;
-                    OnClick();
-                }
-            }*/
         }
 
         /*public virtual void OnClick()
