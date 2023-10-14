@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BepuPhysics.Collidables;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -75,6 +76,13 @@ namespace TGC.MonoGame.TP
                     meshPart.Effect = Effect;
                 }
             }
+            
+
+            Torreta = Model.Bones["Turret"];
+            TorretaMatrix = Torreta.Transform;
+
+            Cannon = Model.Bones["Cannon"];
+            CannonMatrix = Cannon.Transform;
         }
 
         public void Draw(GameTime gameTime, Matrix view, Matrix projection)
@@ -84,7 +92,6 @@ namespace TGC.MonoGame.TP
             Effect.Parameters["Projection"].SetValue(projection);
             Effect.Parameters["ModelTexture"]?.SetValue(Texture);
 
-            
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
             

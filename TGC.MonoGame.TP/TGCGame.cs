@@ -615,35 +615,35 @@ namespace TGC.MonoGame.TP
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
                 MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             
-            //Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
+            Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
 
             Tanques.ForEach(tanquesEnemigos => {
                 if(tanquesEnemigos.TankBox.Intersects(BoundingFrustum)){
                     tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                 }
-                //Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+                Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
 
             
             Ambiente.ForEach(ambientes => {
                 if(ambientes.Box.Intersects(BoundingFrustum))
                     ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection); 
-                    //Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
+                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
             });
                         
             
             BalasMain.ForEach(balas => {
                 if(balas.BalaBox.Intersects(BoundingFrustum))
                     balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
-                //Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
+                Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
 
-            /*
+            
             BoundingCylinder Cilindro = new BoundingCylinder(MainTanque.Position, MainTanque.AABB.Max.Y - 15, MainTanque.AABB.Max.Z/2);
             Gizmos.DrawCylinder(Cilindro.Transform, Color.Yellow);
             
-            Gizmos.Draw();
-            */
+            //Gizmos.Draw();
+            
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);

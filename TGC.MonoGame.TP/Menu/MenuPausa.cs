@@ -75,7 +75,7 @@ namespace TGC.MonoGame.TP
         }
 
         public void BajarMenu(){
-            if(FondoRect.Y != 0){
+            if(FondoRect.Y < 0){
                 FondoRect = new Rectangle(0, FondoRect.Y+10, (int)PantallaTamanio.X, (int)PantallaTamanio.Y);
                 LogoRect = new Rectangle((int)PantallaTamanio.X/2 - Logo.Width/3/2, LogoRect.Y+10, Logo.Width/3, Logo.Height/3);
                 SeccionDeBotones.Botones.ForEach(boton => boton.Position = new Vector2(boton.Position.X, boton.Position.Y+10));
