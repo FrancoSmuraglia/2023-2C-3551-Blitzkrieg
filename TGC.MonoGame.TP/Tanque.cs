@@ -19,6 +19,7 @@ namespace TGC.MonoGame.TP
         Model Bullet;
         
         Texture2D BulletTexture;
+        Texture2D BulletSpecialTexture;
 
         private float Speed { get; set; }
 
@@ -68,6 +69,9 @@ namespace TGC.MonoGame.TP
 
         public BoundingBox AABB;
         Vector3 posicionAnterior;
+
+        public bool balaEspecial { get ; set;}
+
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse){
             this.Position = Position;
 
@@ -107,10 +111,11 @@ namespace TGC.MonoGame.TP
             TorretaMatrix = Torreta.Transform;
 
             Vida = 10.0f;
+            balaEspecial = false;
         }
 
 
-        public void LoadContent(Model bala, Texture2D texturaBala){
+        public void LoadContent(Model bala, Texture2D texturaBala,Texture2D texturaBalaEspecial){
 
             // Asigno el efecto que cargue a cada parte del mesh.
             // Un modelo puede tener mas de 1 mesh internamente.
@@ -121,6 +126,7 @@ namespace TGC.MonoGame.TP
             Bullet = bala;
 
             BulletTexture = texturaBala;
+            BulletSpecialTexture = texturaBalaEspecial;
 
             foreach (var mesh in Bullet.Meshes)
             {
@@ -169,7 +175,6 @@ namespace TGC.MonoGame.TP
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
         float tiempoEntreDisparo = 0;
-        bool balaEspecial = false;
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
@@ -221,7 +226,7 @@ namespace TGC.MonoGame.TP
 
                 if (balaEspecial)
                 {
-                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletTexture);
+                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture);
                     balas.Add(a);
                 }
                 else

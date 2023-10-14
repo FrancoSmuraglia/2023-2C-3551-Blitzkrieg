@@ -13,7 +13,7 @@ namespace TGC.MonoGame.TP
     public class Button
     {
         
-        public const float Scale = 0.2f;
+        public float Scale = 0.2f;
         private Texture2D Texture;
 
         protected Color Colour = Color.Red;
@@ -34,9 +34,11 @@ namespace TGC.MonoGame.TP
                 return new Rectangle((int)Position.X, (int)Position.Y, (int)(Texture.Width * Scale), (int)(Texture.Height * Scale));
             }
         }
-        public Button(Texture2D texture, Vector2 position, string texto = null)
+        public Button(Texture2D texture, Vector2 position, string texto = null, float escala = .2f)
         {
             Texture = texture;
+            
+            Scale = escala;
 
             Position = position - new Vector2(texture.Width*Scale/2, texture.Height*Scale/2);
 
