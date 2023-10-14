@@ -22,7 +22,8 @@ namespace TGC.MonoGame.TP
         }
 
         public void Draw(SpriteBatch spriteBatch){
-            Botones.ForEach(boton => boton.Draw(spriteBatch, Font));            
+            Botones.ForEach(boton => boton.Draw(spriteBatch, Font));   
+                     
         }
 
         public void Update(MouseState currentMouseState, TGCGame juegoActual){

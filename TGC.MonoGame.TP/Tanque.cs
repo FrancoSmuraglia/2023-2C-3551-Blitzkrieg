@@ -19,6 +19,7 @@ namespace TGC.MonoGame.TP
         Model Bullet;
         
         Texture2D BulletTexture;
+        Texture2D BulletSpecialTexture;
 
         private float Speed { get; set; }
 
@@ -40,6 +41,8 @@ namespace TGC.MonoGame.TP
         public ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
+
+        public float Vida { get; set; }
         
 
         
@@ -66,6 +69,9 @@ namespace TGC.MonoGame.TP
 
         public BoundingBox AABB;
         Vector3 posicionAnterior;
+
+        public bool balaEspecial { get ; set;}
+
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse){
             this.Position = Position;
 
@@ -103,10 +109,13 @@ namespace TGC.MonoGame.TP
             _initialCannon = Cannon.Transform;
             _initialTorret = Torreta.Transform;
             TorretaMatrix = Torreta.Transform;
+
+            Vida = 10.0f;
+            balaEspecial = false;
         }
 
 
-        public void LoadContent(Model bala, Texture2D texturaBala){
+        public void LoadContent(Model bala, Texture2D texturaBala,Texture2D texturaBalaEspecial){
 
             // Asigno el efecto que cargue a cada parte del mesh.
             // Un modelo puede tener mas de 1 mesh internamente.
@@ -117,6 +126,7 @@ namespace TGC.MonoGame.TP
             Bullet = bala;
 
             BulletTexture = texturaBala;
+            BulletSpecialTexture = texturaBalaEspecial;
 
             foreach (var mesh in Bullet.Meshes)
             {
@@ -210,9 +220,22 @@ namespace TGC.MonoGame.TP
                 
                 b *= 5;
 
-                var a = new Bala(Position, b, Bullet, Effect, BulletTexture);
+                
+                
+                
+
+                if (balaEspecial)
+                {
+                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture);
+                    balas.Add(a);
+                }
+                else
+                {
+                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture);
+                    balas.Add(a);
+                }
                 tiempoEntreDisparo = 0;
-                balas.Add(a);
+
             }
 
             
@@ -246,9 +269,18 @@ namespace TGC.MonoGame.TP
                 } 
             }
 
-            updateTurret(gameTime);
-            
+            if (key.IsKeyDown(Keys.D2))
+            {
+                balaEspecial = true;
+            }
+            if (key.IsKeyDown(Keys.D1))
+            {
+                balaEspecial = false;
+            }
 
+            updateTurret(gameTime);
+
+            
             Moving = false;
 
             //System.Console.WriteLine(Position);
@@ -333,6 +365,8 @@ namespace TGC.MonoGame.TP
                     Console.WriteLine(TankVelocity.X + " y " + TankVelocity.Z);
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
+                    enemigoEspecifico.recibirDaño(0.5f);
+                    recibirDaño(0.5f);
                     return true;
                 }
             }
@@ -385,6 +419,11 @@ namespace TGC.MonoGame.TP
             }
             return Matrix.CreateRotationX(anguloVertical);
 
+        }
+
+        public void recibirDaño(float cantidad)
+        {
+            Vida -= cantidad;
         }
     }
 }

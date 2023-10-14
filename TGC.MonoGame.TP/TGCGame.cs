@@ -1,6 +1,7 @@
 ﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -98,6 +99,11 @@ namespace TGC.MonoGame.TP
         private Tanque MainTanque { get; set; }
 
         private Vector2 estadoInicialMouse { get; set; }
+
+        public float tiempoRestante = 300.0f; //5 minutos
+        public bool juegoTerminado = false;
+
+        public Hud Hud { get; set; }
         
 
         /// <summary>
@@ -179,6 +185,7 @@ namespace TGC.MonoGame.TP
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
 
+
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f),
@@ -188,18 +195,22 @@ namespace TGC.MonoGame.TP
                     estadoInicialMouse
                     );
 
-            MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null);
+            MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
 
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
+
 
             roca = Content.Load<Model>(ContentFolder3D + "Rock/rock");
             EffectRoca = Content.Load<Effect>(ContentFolderEffects + "BasicShaderRock");
 
 
             // Menu 
-            InitizalizeMenus();
+            InitializeMenus();
 
             InitializeTanks();
+
+            InitializeHUD();
+
             BalasMain = new List<Bala>();
 
 
@@ -211,7 +222,7 @@ namespace TGC.MonoGame.TP
             base.LoadContent();
         }
 
-        private void InitizalizeMenus()
+        private void InitializeMenus()
         {
             Texture2D boton = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton");
             var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .2f)
@@ -263,6 +274,61 @@ namespace TGC.MonoGame.TP
             };
 
             MenuPausa.IniciarCortina();
+        }
+
+        private void InitializeHUD()
+        {
+            var tiempo = new Button(
+                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, 10),
+                 null, 
+                 .2f);
+            var vida = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, PantallaResolucion.Y - 10),
+                 null, 
+                 .2f);
+            var bala = Content.Load<Texture2D>(ContentFolderTextures + "Hud/Bala");
+            var botonBalaNormal = new Button(
+                bala, 
+                new Vector2(0, PantallaResolucion.Y) + new Vector2(bala.Width, -bala.Height) * .2f/2, 
+                "Bala Normal",
+                .2f){
+                    TextHover = Color.DarkGray
+                };
+            var botonBalaEspecial = new Button(
+                bala, 
+                new Vector2(0, PantallaResolucion.Y) + new Vector2(bala.Width, -bala.Height - 900) * .2f/2, 
+                "Bala Especial",
+                .2f){
+                    TextHover = Color.DarkGray
+                };
+            //var fps = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(80, 30));
+
+            List<Button> botonesHud = new(){
+                tiempo,
+                vida,
+                botonBalaNormal,
+                botonBalaEspecial
+                //fps
+            };
+            for (int i = 0; i < Tanques.Count; i++)
+            {
+                var nombre = "Tanque";
+                int random = new Random().Next(0,1);
+                if(random == 1)
+                    nombre += "1";
+
+                var a = new Button(
+                    Content.Load<Texture2D>(ContentFolderTextures + "Hud/" + nombre),
+                    new Vector2(PantallaResolucion.X - 80, PantallaResolucion.Y - 30 - 60 * i),
+                    null,
+                    .5f
+                    )
+                {
+                    NotTextHover = Color.White
+                };                
+                botonesHud.Add(a);
+            }
+
+            Hud = new Hud(PantallaResolucion, botonesHud, Font);
         }
 
         private void InitializeAmbient()
@@ -488,6 +554,10 @@ namespace TGC.MonoGame.TP
             }
             Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
             estadoAnterior = Keyboard.GetState();
+
+            Hud.Update(tiempoRestante,MainTanque.Vida,MainTanque.balaEspecial,gameTime,Tanques);
+
+
             
 
             base.Update(gameTime);
@@ -495,6 +565,15 @@ namespace TGC.MonoGame.TP
 
         private void MainGame(GameTime gameTime)
         {
+            
+            tiempoRestante -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (tiempoRestante <= 0)
+            {
+                juegoTerminado = true;
+                Exit();
+            }
+
             if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
             {
                 //Exit();
@@ -571,6 +650,9 @@ namespace TGC.MonoGame.TP
 
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
+
+            if (EstadoActual.Equals(GameState.Begin))
+                Hud.Draw(SpriteBatch,MainTanque.Vida,tiempoRestante);
 
             
             FollowCamera.Update(gameTime, MainTanque.World);

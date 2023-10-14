@@ -16,7 +16,13 @@ namespace TGC.MonoGame.TP
         public float Scale = 0.3f;
         private Texture2D Texture;
 
-        protected Color Colour = Color.Red;
+        public Color Hover = Color.DarkGray;
+        public Color NotHover = Color.White;
+        public Color TextHover = Color.White;
+        public Color NotTextHover = Color.Black;
+        public Color SobreMouse = Color.White;
+        public Color Fondo = Color.White;
+        public Color Letras = Color.Black;
 
         public Action<TGCGame> Click;
 
@@ -49,13 +55,13 @@ namespace TGC.MonoGame.TP
         public void Draw(SpriteBatch spriteBatch, SpriteFont fuente = null)
         {
             if (IsSelected)
-                Colour = Color.DarkGray;
+                Fondo = Hover;
             else
-                Colour = Color.White;
+                Fondo = NotHover;
             
             Rectangle a = this.Rectangle;
             
-            spriteBatch.Draw(Texture, Position, null, Colour, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            spriteBatch.Draw(Texture, Position, null, Fondo, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0);
 
             DrawText(spriteBatch, fuente);
         }
@@ -66,9 +72,9 @@ namespace TGC.MonoGame.TP
                 return;
 
             if (IsSelected)
-                PenColour = Color.White;
+                PenColour = TextHover;
             else
-                PenColour = Color.Black;
+                PenColour = NotTextHover;
 
             float x = ((Rectangle.X + (Rectangle.Width / 2)) - (fuente.MeasureString(Text).X / 2)) - Origin.X;
             float y = ((Rectangle.Y + (Rectangle.Height / 2)) - (fuente.MeasureString(Text).Y / 2)) - Origin.Y;
@@ -79,7 +85,7 @@ namespace TGC.MonoGame.TP
         
         public void Update(MouseState currentMouseState, TGCGame juegoActual)
         {
-            Colour = Color.White;
+            Fondo = Color.White;
 
             Clicked = false;
             IsSelected = false;

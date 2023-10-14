@@ -31,6 +31,8 @@ namespace TGC.MonoGame.TP
         private ModelBone Cannon;
         private Matrix TorretaMatrix;
         private Matrix CannonMatrix;
+
+        public float Vida {  get; set; }
         
 
 
@@ -55,6 +57,7 @@ namespace TGC.MonoGame.TP
             TankDirection = Vector3.Forward;
             
             TankVelocity = Vector3.Zero;
+            Vida = 10.0f;
         }
 
         public void LoadContent(){
@@ -170,6 +173,11 @@ namespace TGC.MonoGame.TP
                     objeto.esVictima = true;                    
             }
             return true;
+        }
+
+        public void recibirDaño(float cantidad)
+        {
+            Vida -= cantidad;
         }
     }
 }
