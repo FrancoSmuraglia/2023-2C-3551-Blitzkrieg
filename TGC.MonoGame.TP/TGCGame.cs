@@ -642,7 +642,7 @@ namespace TGC.MonoGame.TP
             BoundingCylinder Cilindro = new BoundingCylinder(MainTanque.Position, MainTanque.AABB.Max.Y - 15, MainTanque.AABB.Max.Z/2);
             Gizmos.DrawCylinder(Cilindro.Transform, Color.Yellow);
             
-            //Gizmos.Draw();
+            Gizmos.Draw();
             
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;

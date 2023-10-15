@@ -25,6 +25,7 @@ namespace TGC.MonoGame.TP
 
         protected Texture2D Texture { get; set; }
         public Vector3 Position{ get; set; }
+        public Vector3 OldPosition{ get; set; }
         protected float Rotation{ get; set; }
         protected Effect Effect { get; set; }
 
@@ -39,6 +40,8 @@ namespace TGC.MonoGame.TP
 
         public TanqueEnemigo(Vector3 Position, Model modelo, Effect efecto, Texture2D textura){
             this.Position = Position;
+
+            OldPosition = Position;
 
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
@@ -126,8 +129,8 @@ namespace TGC.MonoGame.TP
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
             Position += TankVelocity;                               // Actualizo la posición en función de la velocidad actual
-
-            TankBox.Center = Position;
+            TankBox.Center = Position + Vector3.Up * PuntoMedio;
+            
             TankBox.Orientation = RotationMatrix;
             
             if(TankVelocity.X != 0 || TankVelocity.Z != 0) {   // frenada del auto con desaceleración
@@ -145,12 +148,10 @@ namespace TGC.MonoGame.TP
                         itemEspecifico.esVictima = true;
                     }                        
                     else{
-                        //Console.WriteLine("Velocidad del tanque: " + TankVelocity);
                         Sentido *= -1;
-                        TankVelocity = - Vector3.Normalize(TankVelocity) * 20;
-                        //Console.WriteLine("Velocidad contraria: " + TankVelocity);
-                        
-                        //Vector3.Clamp()
+                        Position = OldPosition;
+                        TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
+                        TankVelocity = -TankVelocity*.5f;
                     }
                         
                 }
@@ -163,6 +164,7 @@ namespace TGC.MonoGame.TP
 
             //El auto en el world
             World = RotationMatrix * Matrix.CreateTranslation(Position) ;
+            OldPosition = Position;
 
         }
         public void agregarVelocidad(Vector3 velocidad){
@@ -176,10 +178,12 @@ namespace TGC.MonoGame.TP
 
             foreach (var objeto in listaDeObjetos)
             {
-                if(TankBox.Intersects(objeto.Box) && objeto.esEliminable)
-                    objeto.esVictima = true;                    
+                if(TankBox.Intersects(objeto.Box) && objeto.esEliminable){
+                    objeto.esVictima = true;             
+                    return true;
+                }       
             }
-            return true;
+            return false;
         }
 
         public void recibirDaño(float cantidad)

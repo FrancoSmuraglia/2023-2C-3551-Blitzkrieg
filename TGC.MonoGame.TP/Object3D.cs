@@ -33,6 +33,8 @@ namespace TGC.MonoGame.TP
 
             //Box = BoundingVolumesExtensions.FromMatrix(World);
             var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
+            AABB.Max.Z /= 3;
+            AABB.Max.X /= 3;
             Box = OrientedBoundingBox.FromAABB(AABB);
              // Le sumo a la posición el eje Y máximo de la figura divido dos para que esté en en centro del modelo
             Box.Center = Position + Vector3.Up * (AABB.Max.Y/2); 
