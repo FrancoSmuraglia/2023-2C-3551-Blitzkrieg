@@ -35,6 +35,7 @@ namespace TGC.MonoGame.TP
         private Matrix CannonMatrix;
 
         public float Vida {  get; set; }
+        public bool estaMuerto { get; set; }
         
 
 
@@ -62,6 +63,7 @@ namespace TGC.MonoGame.TP
             
             TankVelocity = Vector3.Zero;
             Vida = 10.0f;
+            estaMuerto = false;
         }
 
         public void LoadContent(){
@@ -155,6 +157,11 @@ namespace TGC.MonoGame.TP
                     }
                         
                 }
+            }
+
+            if(Vida <= 0)
+            {
+                estaMuerto = true;
             }
 
             //System.Console.WriteLine("Enemigos rotatio: " + TankBox.Orientation.Equals(RotationMatrix));
