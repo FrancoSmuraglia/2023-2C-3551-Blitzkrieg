@@ -539,7 +539,7 @@ namespace TGC.MonoGame.TP
                 case GameState.Pause:
                     
                     if(!FollowCamera.Frenado){
-                        MenuPausa.Estado = MenuPausa.EstadoMenu.Inicio;
+                        MenuPausa.Estado = MenuPausa.EstadoMenuPausa.Inicio;
                         FollowCamera.FrenarCamara();
                     }
                         

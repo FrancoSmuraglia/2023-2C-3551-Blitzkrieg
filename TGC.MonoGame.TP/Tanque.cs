@@ -197,26 +197,24 @@ namespace TGC.MonoGame.TP
             if (key.IsKeyDown(Keys.A))
             { // Giro a la izquierda 
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
-                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos, 1.5f)){
+                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
                     RotationMatrix *= Matrix.CreateRotationY(.03f);
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque += .03f;
                 }
-                else{
+                else
                     TankBox.Rotate(Matrix.CreateRotationY(-.03f));
-                }
             }
             if (key.IsKeyDown(Keys.D))
             { // Giro a la izquierda 
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
-                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos, 1.5f)){
+                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
                     RotationMatrix *= Matrix.CreateRotationY(-.03f);
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque -= .03f;
                 }
-                else{
+                else
                     TankBox.Rotate(Matrix.CreateRotationY(.03f));
-                }
             }
 
             Position += TankVelocity;
@@ -230,27 +228,26 @@ namespace TGC.MonoGame.TP
                 TankVelocity += TankAcceleration * deltaTime;
             }
 
-            Console.WriteLine(TankVelocity);
-
             // ** Disparo de balas ** //
 
             if (tiempoEntreDisparo < tiempoEntreDisparoLimite)
-                            tiempoEntreDisparo += deltaTime;
+                tiempoEntreDisparo += deltaTime;
             updateTurret(gameTime);
             Disparo(key, balas);
 
             // ** Análisis de colisión ** //
 
-            if (!ChoqueConObjetosSinDestruccion(ambiente, enemigos, 1.5f))
+            if (!ChoqueConObjetosSinDestruccion(ambiente, enemigos))
             {
                 OldPosition = Position;
-                TankBox.Center = Position + Vector3.Up * PuntoMedio;
+                //TankBox.Center = Position + Vector3.Up * PuntoMedio;
             }
             else{
                 Position = OldPosition;
                 TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
             }
-
+            
+            ChoqueDestructibles(ambiente);
 
             Moving = false;
 
@@ -311,8 +308,14 @@ namespace TGC.MonoGame.TP
         public bool Intersecta(Object objeto){
             return TankBox.Intersects(objeto.Box);
         }
-        
-        public bool ChoqueConObjetosSinDestruccion(List<Object> ambiente, List<TanqueEnemigo> enemigos, float rapidez){
+        public void ChoqueDestructibles(List<Object> ambiente){
+            foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == true)){
+                if(Intersecta(itemEspecifico)){
+                    itemEspecifico.esVictima = true;
+                }
+            }
+        }
+        public bool ChoqueConObjetosSinDestruccion(List<Object> ambiente, List<TanqueEnemigo> enemigos){
             foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == false)){
                 if(Intersecta(itemEspecifico)){
                     TankVelocity = -TankVelocity*.5f;
@@ -327,7 +330,6 @@ namespace TGC.MonoGame.TP
                     if(Math.Abs(velocidadMain.X) < 0.1 && Math.Abs(velocidadMain.Z) < 0.1)
                         velocidadMain -= enemigoEspecifico.TankVelocity/2;
                     TankVelocity -= enemigoEspecifico.TankVelocity;
-                    Console.WriteLine(TankVelocity.X + " y " + TankVelocity.Z);
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     //TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
                     enemigoEspecifico.recibirDaño(0.5f);

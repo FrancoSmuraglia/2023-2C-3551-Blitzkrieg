@@ -12,12 +12,12 @@ namespace TGC.MonoGame.TP
 {    
     public class MenuPausa
     {
-        public enum EstadoMenu{
+        public enum EstadoMenuPausa{
             Bajando,
             Quieto,
             Inicio
         }
-        public EstadoMenu Estado;
+        public EstadoMenuPausa Estado;
         public Texture2D Logo;
         public Texture2D Fondo {get; set;}
         public Vector2 PantallaTamanio {get; set;}
@@ -34,9 +34,7 @@ namespace TGC.MonoGame.TP
             Font = fuente;
             SeccionDeBotones = new MenuBotones(pantalla, botones, fuente);
             posicionesOriginales = botones.Select(boton => boton.Position).ToList();
-            Estado = EstadoMenu.Bajando;
-            
-            
+            Estado = EstadoMenuPausa.Bajando;            
         }
 
         public void Draw(SpriteBatch spriteBatch){
@@ -44,12 +42,12 @@ namespace TGC.MonoGame.TP
 
             switch (Estado)
             {
-                case EstadoMenu.Inicio:
+                case EstadoMenuPausa.Inicio:
                     IniciarCortina();
                     //SeccionDeBotones.Botones.ForEach(boton => boton.Position = new Vector2(boton.Position.X, boton.Position.Y-PantallaTamanio.Y));
-                    Estado = EstadoMenu.Bajando;
+                    Estado = EstadoMenuPausa.Bajando;
                     break;
-                case EstadoMenu.Bajando:
+                case EstadoMenuPausa.Bajando:
                     BajarMenu();
                     break;
             }
@@ -81,7 +79,7 @@ namespace TGC.MonoGame.TP
                 SeccionDeBotones.Botones.ForEach(boton => boton.Position = new Vector2(boton.Position.X, boton.Position.Y+10));
             }
             else
-                Estado = EstadoMenu.Quieto;
+                Estado = EstadoMenuPausa.Quieto;
             Console.WriteLine(FondoRect.X + " " + FondoRect.Y);
 
             
