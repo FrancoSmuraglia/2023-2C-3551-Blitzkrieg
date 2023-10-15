@@ -593,6 +593,15 @@ namespace TGC.MonoGame.TP
 
             BalasMain.RemoveAll(O => O.esVictima || O.recorridoCompleto());
 
+            if (Tanques.Exists(O => O.estaMuerto))
+            {
+                Tanques.RemoveAll(O => O.estaMuerto);
+                InitializeHUD();
+                Hud.Update(tiempoRestante, MainTanque.Vida, MainTanque.balaEspecial, gameTime, Tanques);
+            }
+
+
+
             if (Ambiente.Exists(O => O.esVictima))
                 Ambiente.RemoveAll(O => O.esVictima);
         }
