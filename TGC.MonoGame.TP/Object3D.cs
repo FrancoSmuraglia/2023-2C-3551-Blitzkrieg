@@ -10,7 +10,7 @@ namespace TGC.MonoGame.TP
 {    
     public class Object
     {
-        
+        public Boolean Colisiono { get; set; }
         private Model Model { get; set; }
         public Matrix World { get; set; }
 
@@ -47,6 +47,8 @@ namespace TGC.MonoGame.TP
             Texture = textura;
 
             esEliminable = esDestruible;
+
+            Colisiono = false;
         }
 
         public void LoadContent(){

@@ -196,25 +196,30 @@ namespace TGC.MonoGame.TP
             }
             if (key.IsKeyDown(Keys.A))
             { // Giro a la izquierda 
+                RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
                 if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
-                    RotationMatrix *= Matrix.CreateRotationY(.03f);
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque += .03f;
                 }
-                else
+                else{
+                    RotationMatrix *= Matrix.CreateRotationY(-.03f);
                     TankBox.Rotate(Matrix.CreateRotationY(-.03f));
+                }
+                    
             }
             if (key.IsKeyDown(Keys.D))
             { // Giro a la izquierda 
+                RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
-                    RotationMatrix *= Matrix.CreateRotationY(-.03f);
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque -= .03f;
                 }
-                else
+                else{
+                    RotationMatrix *= Matrix.CreateRotationY(.03f);
                     TankBox.Rotate(Matrix.CreateRotationY(.03f));
+                }
             }
 
             Position += TankVelocity;
@@ -319,6 +324,7 @@ namespace TGC.MonoGame.TP
             foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == false)){
                 if(Intersecta(itemEspecifico)){
                     TankVelocity = -TankVelocity*.5f;
+                    itemEspecifico.Colisiono = true;
                     return true;
                 }
             }

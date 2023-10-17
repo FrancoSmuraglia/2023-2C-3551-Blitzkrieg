@@ -55,6 +55,7 @@ namespace TGC.MonoGame.TP
             IsMouseVisible = true;
         }
         public Gizmos Gizmos { get; set; }
+        private Boolean GizmosActivado = false;
         private GraphicsDeviceManager Graphics { get; }
         private SpriteBatch SpriteBatch { get; set; }
 
@@ -521,30 +522,34 @@ namespace TGC.MonoGame.TP
             /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
             Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));*/
-            
+
             //Console.WriteLine(EstadoActual);
-            
+
             BoundingFrustum.Matrix = FollowCamera.View * FollowCamera.Projection;
 
             switch (EstadoActual)
             {
                 case GameState.Begin:
                     //HUD.update(gametime);
-                    if(FollowCamera.Frenado){                        
+                    if (FollowCamera.Frenado)
+                    {
                         MenuPausa.IniciarCortina();
                         FollowCamera.FrenarCamara();
                     }
+                    if(BotonPresionado(Keys.G))
+                        GizmosActivado = !GizmosActivado;
                     MainGame(gameTime);
                     break;
                 case GameState.Pause:
-                    
-                    if(!FollowCamera.Frenado){
+
+                    if (!FollowCamera.Frenado)
+                    {
                         MenuPausa.Estado = MenuPausa.EstadoMenuPausa.Inicio;
                         FollowCamera.FrenarCamara();
                     }
-                        
+
                     MenuPausa.Update(Mouse.GetState());
-                    if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
+                    if (BotonPresionado(Keys.Escape))
                     {
                         //Salgo del juego.
                         //Exit();
@@ -555,12 +560,17 @@ namespace TGC.MonoGame.TP
             Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
             estadoAnterior = Keyboard.GetState();
 
-            Hud.Update(tiempoRestante,MainTanque.Vida,MainTanque.balaEspecial,gameTime,Tanques);
+            Hud.Update(tiempoRestante, MainTanque.Vida, MainTanque.balaEspecial, gameTime, Tanques);
 
 
-            
+
 
             base.Update(gameTime);
+        }
+
+        public bool BotonPresionado(Keys tecla)
+        {
+            return Keyboard.GetState().IsKeyUp(tecla) && estadoAnterior.IsKeyDown(tecla);
         }
 
         private void MainGame(GameTime gameTime)
@@ -574,7 +584,7 @@ namespace TGC.MonoGame.TP
                 Exit();
             }
 
-            if (Keyboard.GetState().IsKeyUp(Keys.Escape) && estadoAnterior.IsKeyDown(Keys.Escape))
+            if (BotonPresionado(Keys.Escape))
             {
                 //Exit();
                 EstadoActual = GameState.Pause;
@@ -611,7 +621,7 @@ namespace TGC.MonoGame.TP
         ///     Escribir aqui el codigo referido al renderizado.
         /// </summary>
         /// 
-            Rectangle rectangulo = new Rectangle(100, 100, 1000, 1000);
+
         protected override void Draw(GameTime gameTime)
         {        
 
@@ -622,10 +632,13 @@ namespace TGC.MonoGame.TP
             
             //No hace falta analizar, siempre el tanque va estar en medio de la cámara
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
-                MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             
-            Gizmos.DrawCube(MainTanque.TankBox.Center, MainTanque.TankBox.Extents * 2f, Color.GreenYellow);
-
+            var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
+                 MainTanque.TankBox.Orientation *
+                 Matrix.CreateTranslation(MainTanque.Position);
+            Gizmos.DrawCube(tankOBBToWorld, Color.YellowGreen);
+            
             Tanques.ForEach(tanquesEnemigos => {
                 if(tanquesEnemigos.TankBox.Intersects(BoundingFrustum)){
                     tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
@@ -637,7 +650,9 @@ namespace TGC.MonoGame.TP
             Ambiente.ForEach(ambientes => {
                 if(ambientes.Box.Intersects(BoundingFrustum))
                     ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection); 
-                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, Color.Red);
+                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
+                    ambientes.Colisiono = false;
+
             });
                         
             
@@ -647,11 +662,8 @@ namespace TGC.MonoGame.TP
                 Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
 
-            
-            BoundingCylinder Cilindro = new BoundingCylinder(MainTanque.Position, MainTanque.AABB.Max.Y - 15, MainTanque.AABB.Max.Z/2);
-            Gizmos.DrawCylinder(Cilindro.Transform, Color.Yellow);
-            
-            Gizmos.Draw();
+            if(GizmosActivado)
+                Gizmos.Draw();
             
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
