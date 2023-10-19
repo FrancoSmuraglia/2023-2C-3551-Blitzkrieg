@@ -779,49 +779,49 @@
 
 #begin Music/SFX/Ambiente/NotTreeImpact.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Ambiente/NotTreeImpact.mp3
 
 #begin Music/SFX/Ambiente/TreeImpact.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Ambiente/TreeImpact.mp3
 
 #begin Music/SFX/MenuPause/ButtonIsClicked.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/MenuPause/ButtonIsClicked.mp3
 
 #begin Music/SFX/MenuPause/Chains.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/MenuPause/Chains.mp3
 
 #begin Music/SFX/Tank/TankBeingFired.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Tank/TankBeingFired.mp3
 
 #begin Music/SFX/Tank/TankMoving.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Tank/TankMoving.mp3
 
 #begin Music/SFX/Tank/TankShooting.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Tank/TankShooting.mp3
 
 #begin Music/SFX/Tank/TankTurretMoving.mp3
 /importer:Mp3Importer
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Tank/TankTurretMoving.mp3
 
