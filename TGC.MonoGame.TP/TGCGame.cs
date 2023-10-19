@@ -22,7 +22,8 @@ namespace TGC.MonoGame.TP
         {
             Begin,
             Pause,
-            Finished
+            Finished,
+            Lost
         }
         public const string ContentFolder3D = "Models/";
         public const string ContentFolderEffects = "Effects/";
@@ -103,8 +104,11 @@ namespace TGC.MonoGame.TP
 
         public float tiempoRestante = 300.0f; //5 minutos
         public bool juegoTerminado = false;
+        public int puntos = 0;
 
         public Hud Hud { get; set; }
+        public PantallaFinal PantallaFinal { get; set; }
+        public Texture2D Fondo { get; set; }
         
 
         /// <summary>
@@ -211,6 +215,9 @@ namespace TGC.MonoGame.TP
             InitializeTanks();
 
             InitializeHUD();
+
+            Fondo = Content.Load<Texture2D>(ContentFolderTextures + "fondoNegro");
+            PantallaFinal = new PantallaFinal(PantallaResolucion,Fondo,Font);
 
             BalasMain = new List<Bala>();
 
@@ -556,6 +563,20 @@ namespace TGC.MonoGame.TP
                         EstadoActual = GameState.Begin;
                     }
                     break;
+                case GameState.Finished:
+                    if (!FollowCamera.Frenado)
+                    {
+                        FollowCamera.FrenarCamara();
+                    }
+                    //Exit();
+                    break;
+                case GameState.Lost:
+                    if (!FollowCamera.Frenado)
+                    {
+                        FollowCamera.FrenarCamara();
+                    }
+                    //Exit();
+                    break;
             }
             Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
             estadoAnterior = Keyboard.GetState();
@@ -608,6 +629,18 @@ namespace TGC.MonoGame.TP
                 Tanques.RemoveAll(O => O.estaMuerto);
                 InitializeHUD();
                 Hud.Update(tiempoRestante, MainTanque.Vida, MainTanque.balaEspecial, gameTime, Tanques);
+                puntos += 100;
+            }
+
+            if(Tanques.Count == 0)
+            {
+                EstadoActual = GameState.Finished;
+                puntos += (int)tiempoRestante * 25;
+            }
+
+            if(MainTanque.Vida == 0)
+            {
+                EstadoActual = GameState.Lost;
             }
 
 
@@ -674,6 +707,16 @@ namespace TGC.MonoGame.TP
 
             if (EstadoActual.Equals(GameState.Begin))
                 Hud.Draw(SpriteBatch,MainTanque.Vida,tiempoRestante);
+
+            if (EstadoActual.Equals(GameState.Finished))
+            {
+                PantallaFinal.Draw(SpriteBatch,puntos);
+            }
+
+            if(EstadoActual.Equals(GameState.Lost))
+            {
+                PantallaFinal.DrawLost(SpriteBatch);
+            }
 
             
             FollowCamera.Update(gameTime, MainTanque.World);
