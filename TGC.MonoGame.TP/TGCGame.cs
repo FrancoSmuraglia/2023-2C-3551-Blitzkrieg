@@ -564,18 +564,13 @@ namespace TGC.MonoGame.TP
                     }
                     break;
                 case GameState.Finished:
-                    if (!FollowCamera.Frenado)
-                    {
-                        FollowCamera.FrenarCamara();
-                    }
-                    //Exit();
-                    break;
                 case GameState.Lost:
                     if (!FollowCamera.Frenado)
                     {
                         FollowCamera.FrenarCamara();
                     }
-                    //Exit();
+                    if(BotonPresionado(Keys.Escape))
+                        Exit();
                     break;
             }
             Gizmos.UpdateViewProjection(FollowCamera.View, FollowCamera.Projection);
