@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.Samples.Collisions;
@@ -66,13 +67,18 @@ namespace TGC.MonoGame.TP
 
         private Vector2 estadoAnteriorDelMouse;
 
-        private const float tiempoEntreDisparoLimite = 1.3f;
+        private const float tiempoEntreDisparoLimite = 4f;
 
         public BoundingBox AABB;
 
         public bool balaEspecial { get ; set;}
+        public SoundEffect SonidoDisparo { get; set; }
+        public SoundEffectInstance InstanciaSonidoDisparo { get; set;}
+        public SoundEffect SonidoMovimiento { get; set; }
+        public SoundEffectInstance InstanciaSonidoMovimiento { get; set; }
 
-        public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse){
+        public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
+        {
 
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
@@ -111,6 +117,11 @@ namespace TGC.MonoGame.TP
 
             Vida = 10.0f;
             balaEspecial = false;
+            SonidoDisparo = sonidoDisparo;
+            InstanciaSonidoDisparo = sonidoDisparo.CreateInstance();
+            SonidoMovimiento = sonidoMovimiento;
+            InstanciaSonidoMovimiento = sonidoMovimiento.CreateInstance();
+            InstanciaSonidoMovimiento.Volume = 0.5f;
         }
 
 
@@ -173,7 +184,7 @@ namespace TGC.MonoGame.TP
         float anguloVertical = 0;
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
-        float tiempoEntreDisparo = 0;
+        float tiempoEntreDisparo = 3;
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas)
         {
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
@@ -206,7 +217,6 @@ namespace TGC.MonoGame.TP
                     RotationMatrix *= Matrix.CreateRotationY(-.03f);
                     TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 }
-                    
             }
             if (key.IsKeyDown(Keys.D))
             { // Giro a la izquierda 
@@ -253,10 +263,29 @@ namespace TGC.MonoGame.TP
             }
             
             ChoqueDestructibles(ambiente);
-
+            reproducirSonidoMovimiento(moduloVelocidadXZ > 0.1f);
+            if (key.IsKeyDown(Keys.Escape))
+            {
+                InstanciaSonidoMovimiento.Stop();
+            }
             Moving = false;
 
             World = RotationMatrix * Matrix.CreateTranslation(Position);
+        }
+
+        private void reproducirSonidoMovimiento(bool moving)
+        {
+            if (moving)
+            {
+                if (InstanciaSonidoMovimiento.State != SoundState.Playing)
+                {
+                    InstanciaSonidoMovimiento.Play();
+                }
+            }
+            else
+            {
+                InstanciaSonidoMovimiento.Stop();
+            }
         }
 
         private void AgregarFriccion(float deltaTime)
@@ -291,6 +320,7 @@ namespace TGC.MonoGame.TP
                     balas.Add(a);
                 }
                 tiempoEntreDisparo = 0;
+                InstanciaSonidoDisparo.Play();
             }
             if (key.IsKeyDown(Keys.D2))
             {

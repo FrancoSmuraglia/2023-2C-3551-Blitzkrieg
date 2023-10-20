@@ -4,8 +4,10 @@ using System.Linq;
 using System.Net.Http.Headers;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using TGC.MonoGame.Samples.Collisions;
 using TGC.MonoGame.Samples.Viewer.Gizmos;
 
@@ -109,6 +111,9 @@ namespace TGC.MonoGame.TP
         public Hud Hud { get; set; }
         public PantallaFinal PantallaFinal { get; set; }
         public Texture2D Fondo { get; set; }
+        public Song Musica { get; set; }
+        bool musicaReproduciendo = false;
+        public Song MusicaMenu { get; set; }
         
 
         /// <summary>
@@ -189,6 +194,9 @@ namespace TGC.MonoGame.TP
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
+            SoundEffect sonidoDisparo = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankShooting");
+            SoundEffect sonidoMovimiento = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankMoving");
+            SoundEffect sonidoTorreta = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankTurretMoving");
 
 
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
@@ -197,7 +205,9 @@ namespace TGC.MonoGame.TP
                     T90,
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"),
-                    estadoInicialMouse
+                    estadoInicialMouse,
+                    sonidoDisparo,
+                    sonidoMovimiento
                     );
 
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
@@ -221,7 +231,8 @@ namespace TGC.MonoGame.TP
 
             BalasMain = new List<Bala>();
 
-
+            Musica = Content.Load<Song>(ContentFolderMusic + "Ambient/MainGame");
+            MusicaMenu = Content.Load<Song>(ContentFolderMusic + "Ambient/MenuPause");
             InitializeAmbient();
 
             Tanques.ForEach(o => o.LoadContent());
@@ -523,6 +534,7 @@ namespace TGC.MonoGame.TP
         int frames = 0;
         float tiempo = 0;
         KeyboardState estadoAnterior;
+        bool musicaMenuReproducida = false;
         protected override void Update(GameTime gameTime)
         {
             //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
@@ -546,6 +558,13 @@ namespace TGC.MonoGame.TP
                     if(BotonPresionado(Keys.G))
                         GizmosActivado = !GizmosActivado;
                     MainGame(gameTime);
+                    if(!musicaReproduciendo)
+                    {
+                        MediaPlayer.Stop();
+                        musicaMenuReproducida = false;
+                        MediaPlayer.Play(Musica);
+                        musicaReproduciendo = true;
+                    }
                     break;
                 case GameState.Pause:
 
@@ -555,12 +574,23 @@ namespace TGC.MonoGame.TP
                         FollowCamera.FrenarCamara();
                     }
 
+                    if (!musicaMenuReproducida)
+                    {
+                        MediaPlayer.Pause();
+                        musicaReproduciendo = false;
+                        MediaPlayer.Play(MusicaMenu);
+                        musicaMenuReproducida = true;
+                    }
+
+                    
+
                     MenuPausa.Update(Mouse.GetState());
                     if (BotonPresionado(Keys.Escape))
                     {
                         //Salgo del juego.
                         //Exit();
                         EstadoActual = GameState.Begin;
+                        MediaPlayer.Resume();
                     }
                     break;
                 case GameState.Finished:
