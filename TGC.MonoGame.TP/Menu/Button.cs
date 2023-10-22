@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.Samples.Collisions;
@@ -24,6 +25,8 @@ namespace TGC.MonoGame.TP
         public Color Fondo = Color.White;
         public Color Letras = Color.Black;
 
+        
+        public SoundEffect ClickSound { get; set; }
         public Action<TGCGame> Click;
 
         public bool Clicked { get; protected set; }
@@ -91,6 +94,7 @@ namespace TGC.MonoGame.TP
             IsSelected = false;
             if(Rectangle.Contains(currentMouseState.X, currentMouseState.Y)){
                 if(currentMouseState.LeftButton.Equals(ButtonState.Released) && Anterior.LeftButton.Equals(ButtonState.Pressed)){
+                    ClickSound?.CreateInstance().Play();
                     Click?.Invoke(juegoActual);
                 }
 

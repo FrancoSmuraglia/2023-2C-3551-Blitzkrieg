@@ -801,6 +801,12 @@
 /processorParam:Quality=Best
 /build:Music/SFX/MenuPause/Chains.mp3
 
+#begin Music/SFX/MenuPause/MetalImpact.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Music/SFX/MenuPause/MetalImpact.mp3
+
 #begin Music/SFX/Tank/TankBeingFired.mp3
 /importer:Mp3Importer
 /processor:SoundEffectProcessor
@@ -812,6 +818,12 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Music/SFX/Tank/TankMoving.mp3
+
+#begin Music/SFX/Tank/TankMoving2.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Music/SFX/Tank/TankMoving2.mp3
 
 #begin Music/SFX/Tank/TankShooting.mp3
 /importer:Mp3Importer

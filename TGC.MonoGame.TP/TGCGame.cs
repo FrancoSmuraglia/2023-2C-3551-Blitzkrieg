@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Threading;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -111,9 +112,12 @@ namespace TGC.MonoGame.TP
         public Hud Hud { get; set; }
         public PantallaFinal PantallaFinal { get; set; }
         public Texture2D Fondo { get; set; }
+        // Musica
         public Song Musica { get; set; }
-        bool musicaReproduciendo = false;
+        TimeSpan tiempoMusicaPrincipal = TimeSpan.Zero;
         public Song MusicaMenu { get; set; }
+        TimeSpan tiempoMusicaMenu = TimeSpan.Zero;
+        
         
 
         /// <summary>
@@ -195,7 +199,7 @@ namespace TGC.MonoGame.TP
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
             SoundEffect sonidoDisparo = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankShooting");
-            SoundEffect sonidoMovimiento = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankMoving");
+            SoundEffect sonidoMovimiento = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankMoving2");
             SoundEffect sonidoTorreta = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankTurretMoving");
 
 
@@ -238,19 +242,28 @@ namespace TGC.MonoGame.TP
             Tanques.ForEach(o => o.LoadContent());
             Ambiente.ForEach(o => o.LoadContent());
 
+            MediaPlayer.Volume = 0.2f;
+            MediaPlayer.Play(Musica);
+
             base.LoadContent();
         }
 
         private void InitializeMenus()
         {
             Texture2D boton = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton");
+            var clickSound = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/ButtonIsClicked");
             var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .2f)
             {
                 Click = x => x.EstadoActual = GameState.Begin,
+                ClickSound = clickSound
             };
             var salir = new Button(boton, PantallaResolucion / 2 + Vector2.UnitY * 100, "Salir", .2f)
             {
-                Click = x => x.Exit()
+                Click = x => {
+                            Thread.Sleep(clickSound.Duration);
+                            x.Exit();
+                            },
+                ClickSound = clickSound
             };
 
             var arribaIzquierda = new Button(
@@ -289,7 +302,9 @@ namespace TGC.MonoGame.TP
             MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
             {
                 juego = this,
-                Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg")
+                Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg"),
+                Cortina = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/Chains").CreateInstance(),
+                CortinaImpacto = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/MetalImpact").CreateInstance()
             };
 
             MenuPausa.IniciarCortina();
@@ -534,9 +549,9 @@ namespace TGC.MonoGame.TP
         int frames = 0;
         float tiempo = 0;
         KeyboardState estadoAnterior;
-        bool musicaMenuReproducida = false;
         protected override void Update(GameTime gameTime)
         {
+            
             //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
             /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
@@ -550,37 +565,51 @@ namespace TGC.MonoGame.TP
             {
                 case GameState.Begin:
                     //HUD.update(gametime);
-                    if (FollowCamera.Frenado)
+                    if(FollowCamera.Frenado)
                     {
+                        MediaPlayer.Stop();
                         MenuPausa.IniciarCortina();
+                        MenuPausa.Cortina.Stop();
                         FollowCamera.FrenarCamara();
+
+                        
+                        tiempoMusicaMenu = MediaPlayer.PlayPosition;
+                        MediaPlayer.Play(Musica, tiempoMusicaPrincipal);
                     }
+                    
                     if(BotonPresionado(Keys.G))
                         GizmosActivado = !GizmosActivado;
+
                     MainGame(gameTime);
-                    if(!musicaReproduciendo)
+                    
+                    /*if(!musicaReproduciendo)
                     {
                         MediaPlayer.Stop();
                         musicaMenuReproducida = false;
-                        MediaPlayer.Play(Musica);
+                        MediaPlayer.Play(Musica, tiempoMusicaMenu);
                         musicaReproduciendo = true;
                     }
+                    */
                     break;
                 case GameState.Pause:
-
                     if (!FollowCamera.Frenado)
                     {
                         MenuPausa.Estado = MenuPausa.EstadoMenuPausa.Inicio;
                         FollowCamera.FrenarCamara();
+                        
+                        tiempoMusicaPrincipal = MediaPlayer.PlayPosition;
+                        MediaPlayer.Stop();
+                        MediaPlayer.Play(MusicaMenu);
                     }
 
-                    if (!musicaMenuReproducida)
+                    /*if (!musicaMenuReproducida)
                     {
                         MediaPlayer.Pause();
                         musicaReproduciendo = false;
                         MediaPlayer.Play(MusicaMenu);
+                        MediaPlayer.IsRepeating = true;
                         musicaMenuReproducida = true;
-                    }
+                    }*/
 
                     
 

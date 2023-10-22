@@ -120,8 +120,9 @@ namespace TGC.MonoGame.TP
             SonidoDisparo = sonidoDisparo;
             InstanciaSonidoDisparo = sonidoDisparo.CreateInstance();
             SonidoMovimiento = sonidoMovimiento;
+            
             InstanciaSonidoMovimiento = sonidoMovimiento.CreateInstance();
-            InstanciaSonidoMovimiento.Volume = 0.5f;
+            InstanciaSonidoMovimiento.Volume = 0.05f;
         }
 
 
@@ -263,7 +264,7 @@ namespace TGC.MonoGame.TP
             }
             
             ChoqueDestructibles(ambiente);
-            reproducirSonidoMovimiento(moduloVelocidadXZ > 0.1f);
+            reproducirSonidoMovimiento(key.IsKeyDown(Keys.W) || key.IsKeyDown(Keys.S), gameTime.ElapsedGameTime);
             if (key.IsKeyDown(Keys.Escape))
             {
                 InstanciaSonidoMovimiento.Stop();
@@ -273,13 +274,18 @@ namespace TGC.MonoGame.TP
             World = RotationMatrix * Matrix.CreateTranslation(Position);
         }
 
-        private void reproducirSonidoMovimiento(bool moving)
+        TimeSpan progreso = TimeSpan.Zero;
+        private void reproducirSonidoMovimiento(bool moving, TimeSpan delta)
         {
+            progreso += delta;
             if (moving)
             {
-                if (InstanciaSonidoMovimiento.State != SoundState.Playing)
-                {
-                    InstanciaSonidoMovimiento.Play();
+                InstanciaSonidoMovimiento.Play();
+                if(progreso.TotalMilliseconds >= SonidoMovimiento.Duration.TotalMilliseconds * .85){
+                    var NuevaInstancia = SonidoMovimiento.CreateInstance();
+                    NuevaInstancia.Volume = .05f;
+                    NuevaInstancia.Play();
+                    progreso = TimeSpan.Zero;
                 }
             }
             else

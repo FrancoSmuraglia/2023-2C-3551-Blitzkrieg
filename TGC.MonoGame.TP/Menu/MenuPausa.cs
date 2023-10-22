@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.Samples.Collisions;
@@ -28,6 +29,13 @@ namespace TGC.MonoGame.TP
         private Rectangle FondoRect {get; set;}
         private Rectangle LogoRect {get; set;}
         List<Vector2> posicionesOriginales;
+
+
+        
+        public SoundEffectInstance Cortina { get; set; }
+        
+        public SoundEffectInstance CortinaImpacto { get; set; }
+        
         public MenuPausa(Texture2D fondo, Vector2 pantalla, List<Button> botones, SpriteFont fuente = null){
             Fondo = fondo;
             PantallaTamanio = pantalla;
@@ -44,7 +52,6 @@ namespace TGC.MonoGame.TP
             {
                 case EstadoMenuPausa.Inicio:
                     IniciarCortina();
-                    //SeccionDeBotones.Botones.ForEach(boton => boton.Position = new Vector2(boton.Position.X, boton.Position.Y-PantallaTamanio.Y));
                     Estado = EstadoMenuPausa.Bajando;
                     break;
                 case EstadoMenuPausa.Bajando:
@@ -73,13 +80,17 @@ namespace TGC.MonoGame.TP
         }
 
         public void BajarMenu(){
+            Cortina.Play();
             if(FondoRect.Y < 0){
                 FondoRect = new Rectangle(0, FondoRect.Y+10, (int)PantallaTamanio.X, (int)PantallaTamanio.Y);
                 LogoRect = new Rectangle((int)PantallaTamanio.X/2 - Logo.Width/3/2, LogoRect.Y+10, Logo.Width/3, Logo.Height/3);
                 SeccionDeBotones.Botones.ForEach(boton => boton.Position = new Vector2(boton.Position.X, boton.Position.Y+10));
             }
-            else
+            else{
                 Estado = EstadoMenuPausa.Quieto;
+                CortinaImpacto.Play();
+                Cortina.Stop();
+            }
             Console.WriteLine(FondoRect.X + " " + FondoRect.Y);
 
             
