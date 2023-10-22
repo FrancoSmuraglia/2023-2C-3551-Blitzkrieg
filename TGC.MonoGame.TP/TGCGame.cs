@@ -222,7 +222,6 @@ namespace TGC.MonoGame.TP
             roca = Content.Load<Model>(ContentFolder3D + "Rock/rock");
             EffectRoca = Content.Load<Effect>(ContentFolderEffects + "BasicShaderRock");
 
-
             // Menu 
             InitializeMenus();
 
@@ -244,6 +243,7 @@ namespace TGC.MonoGame.TP
 
             MediaPlayer.Volume = 0.2f;
             MediaPlayer.Play(Musica);
+            MediaPlayer.IsRepeating = true;
 
             base.LoadContent();
         }
@@ -361,7 +361,7 @@ namespace TGC.MonoGame.TP
                 };                
                 botonesHud.Add(a);
             }
-
+            
             Hud = new Hud(PantallaResolucion, botonesHud, Font);
         }
 
@@ -398,18 +398,21 @@ namespace TGC.MonoGame.TP
             
             Vector3 posicionAmbiente;
             
+
+            var arbolSonido = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Ambiente/TreeImpact");
             // Árboles
             for (int i = 0; i < CantidadDeArboles; i++)
             {
                 posicionAmbiente = SelectNewPosition(DistanciaParaArboles, 3000);
-                String arbol = posiblesArboles[new Random().Next(0, 3)];
+                string arbol = posiblesArboles[new Random().Next(0, 3)];
                 Ambiente.Add(
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + arbol),
                         Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
-                        arbol.Equals("Tree") 
+                        arbol.Equals("Tree"),
+                        arbolSonido
                         )
                     );
             }
@@ -432,7 +435,8 @@ namespace TGC.MonoGame.TP
                         )
                     );
             }*/
-
+            
+            var plantasNoArbolSonido = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Ambiente/NotTreeImpact");
             // Arbustos
             for (int i = 0; i < CantidadDeArbustos; i++)
             {
@@ -444,7 +448,8 @@ namespace TGC.MonoGame.TP
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + posiblesArbustos[new Random().Next(0, 3)]),
                         Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
-                        true
+                        true,
+                        plantasNoArbolSonido
                         )
                     );
             }
@@ -460,7 +465,8 @@ namespace TGC.MonoGame.TP
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + posiblesFlores[new Random().Next(0, 2)]),
                         Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasFlores[new Random().Next(0, 3)]), 
-                        true
+                        true,
+                        plantasNoArbolSonido
                         )
                     );
             }
@@ -476,7 +482,8 @@ namespace TGC.MonoGame.TP
                         Content.Load<Model>(ContentFolder3D + "Ambiente/Mushroom"),
                         Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
                         Content.Load<Texture2D>(ContentFolderTextures + "Mushroom"),
-                        true)
+                        true,
+                        plantasNoArbolSonido)
                     );
             }
 
@@ -534,10 +541,26 @@ namespace TGC.MonoGame.TP
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
             }*/
-            Tanques.Add(new TanqueEnemigo(new Vector3(1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA")));
-            Tanques.Add(new TanqueEnemigo(new Vector3(-1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
-            Tanques.Add(new TanqueEnemigo(new Vector3(1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC")));
-            Tanques.Add(new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask")));
+            var tanque1 = new TanqueEnemigo(new Vector3(1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
+            {
+                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+            };
+            var tanque2 = new TanqueEnemigo(new Vector3(-1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
+            {
+                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+            };
+            var tanque3 = new TanqueEnemigo(new Vector3(1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
+            {
+                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+            };
+            var tanque4 = new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
+            {
+                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+            };
+            Tanques.Add(tanque1);
+            Tanques.Add(tanque2);
+            Tanques.Add(tanque3);
+            Tanques.Add(tanque4);
         }
 
         /// <summary>

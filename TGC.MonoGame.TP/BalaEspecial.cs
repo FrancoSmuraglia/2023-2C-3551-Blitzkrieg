@@ -11,7 +11,8 @@ namespace TGC.MonoGame.TP
 {
     public class BalaEspecial : Bala
     {
-        public BalaEspecial(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura) : base(Position, velocidad, modelo, efecto, textura)
+        public BalaEspecial(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, Tanque Main) : 
+            base(Position, velocidad, modelo, efecto, textura, Main)
         {
             Daño = 2;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BepuPhysics.Collidables;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.Samples.Collisions;
@@ -36,12 +37,18 @@ namespace TGC.MonoGame.TP
 
         public float Vida {  get; set; }
         public bool estaMuerto { get; set; }
+        public AudioEmitter Emitter {get;set;}
+        public SoundEffect SonidoColision {get;set;}
         
 
 
         public TanqueEnemigo(Vector3 Position, Model modelo, Effect efecto, Texture2D textura){
             this.Position = Position;
 
+            Emitter = new AudioEmitter
+            {
+                Position = this.Position
+            };
             OldPosition = Position;
 
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
@@ -173,6 +180,8 @@ namespace TGC.MonoGame.TP
             World = RotationMatrix * Matrix.CreateTranslation(Position) ;
             OldPosition = Position;
 
+            Emitter.Position = Position;
+
         }
         public void agregarVelocidad(Vector3 velocidad){
             TankVelocity += velocidad;
@@ -196,6 +205,15 @@ namespace TGC.MonoGame.TP
         public void recibirDaño(float cantidad)
         {
             Vida -= cantidad;
+        }
+
+        public void reproducirSonido(AudioListener listener)
+        {
+            var a = SonidoColision.CreateInstance();
+            a.Apply3D(listener,Emitter);
+            Console.WriteLine(listener.Position);
+            Console.WriteLine(Emitter.Position);
+            a.Play();
         }
     }
 }

@@ -40,14 +40,17 @@ namespace TGC.MonoGame.TP
 
         private Vector2 estadoAnteriorDelMouse;
 
+        public Tanque Jugador {get; set;}
 
 
-        public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura){
+        public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, Tanque Main){
             this.Position = Position;
 
             World = Matrix.CreateScale(5f) * Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
             Model = modelo;
+
+            Jugador = Main;
 
             var AABB = BoundingVolumesExtensions.FromMatrix(World);
             BalaBox = OrientedBoundingBox.FromAABB(AABB);
@@ -104,6 +107,7 @@ namespace TGC.MonoGame.TP
             {
                 if(BalaBox.Intersects(tanqueEnemigo.TankBox)){
                     tanqueEnemigo.agregarVelocidad(new Vector3(Velocity.X, 0, Velocity.Z));
+                    tanqueEnemigo.reproducirSonido(Jugador.listener);
                     esVictima = true;
                     tanqueEnemigo.recibirDaño(Daño);
                 }
@@ -114,6 +118,7 @@ namespace TGC.MonoGame.TP
                     if(ambiente.esEliminable){
                         ambiente.esVictima = true;
                     }
+                    ambiente.reproducirSonido(Jugador.listener);
                     esVictima = true;   
                 }
             }   

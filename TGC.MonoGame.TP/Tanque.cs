@@ -76,6 +76,7 @@ namespace TGC.MonoGame.TP
         public SoundEffectInstance InstanciaSonidoDisparo { get; set;}
         public SoundEffect SonidoMovimiento { get; set; }
         public SoundEffectInstance InstanciaSonidoMovimiento { get; set; }
+        public AudioListener listener {get;set;}
 
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
         {
@@ -92,6 +93,10 @@ namespace TGC.MonoGame.TP
 
             this.Position = Position; // + Vector3.Up * 150;
             OldPosition = Position;
+            listener = new AudioListener()
+            {
+                Position = this.Position  
+            };
 
             Effect = efecto;
 
@@ -272,6 +277,8 @@ namespace TGC.MonoGame.TP
             Moving = false;
 
             World = RotationMatrix * Matrix.CreateTranslation(Position);
+
+            listener.Position = Position;
         }
 
         TimeSpan progreso = TimeSpan.Zero;
@@ -316,13 +323,13 @@ namespace TGC.MonoGame.TP
                 b *= 5;
 
                 if (balaEspecial)
-                {
-                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture);
+                {   
+                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture, this);
                     balas.Add(a);
                 }
                 else
                 {
-                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture);
+                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture, this);
                     balas.Add(a);
                 }
                 tiempoEntreDisparo = 0;
@@ -353,6 +360,7 @@ namespace TGC.MonoGame.TP
             foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == true)){
                 if(Intersecta(itemEspecifico)){
                     itemEspecifico.esVictima = true;
+                    itemEspecifico.reproducirSonido(listener);
                 }
             }
         }
@@ -361,6 +369,7 @@ namespace TGC.MonoGame.TP
                 if(Intersecta(itemEspecifico)){
                     TankVelocity = -TankVelocity*.5f;
                     itemEspecifico.Colisiono = true;
+                    itemEspecifico.reproducirSonido(listener);
                     return true;
                 }
             }
@@ -375,6 +384,7 @@ namespace TGC.MonoGame.TP
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     //TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
                     enemigoEspecifico.recibirDaño(0.5f);
+                    enemigoEspecifico.reproducirSonido(listener);
                     recibirDaño(0.5f);
                     return true;
                 }
@@ -386,7 +396,6 @@ namespace TGC.MonoGame.TP
         public void updateTurret(GameTime gameTime)
         {
             MouseState currentMouseState = Mouse.GetState();
-
             //updateVertical(currentMouseState, gameTime);
             Matrix anguloH = updateHorizontal(currentMouseState, gameTime);
             Matrix anguloV = updateVertical(currentMouseState,gameTime);

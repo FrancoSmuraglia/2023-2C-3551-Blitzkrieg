@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.Samples.Collisions;
@@ -23,13 +24,19 @@ namespace TGC.MonoGame.TP
         private Effect Effect { get; set; }
 
         public OrientedBoundingBox Box { get; set; }
+        
+        private SoundEffect Colision {get; set;}
+        public AudioEmitter Emitter {get;set;}
 
-        public Object(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, bool esDestruible){
+
+        public Object(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, bool esDestruible, SoundEffect sonidoAlColisionar = null){
             this.Position = Position;
 
             World =  Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
             Model = modelo;
+
+            Colision = sonidoAlColisionar;
 
             //Box = BoundingVolumesExtensions.FromMatrix(World);
             var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
@@ -49,6 +56,11 @@ namespace TGC.MonoGame.TP
             esEliminable = esDestruible;
 
             Colisiono = false;
+
+            Emitter = new AudioEmitter
+            {
+                Position = this.Position
+            };
         }
 
         public void LoadContent(){
@@ -84,6 +96,14 @@ namespace TGC.MonoGame.TP
                 Effect.Parameters["World"].SetValue(meshWorld*World);
                 mesh.Draw();
             }
+        }
+        public void reproducirSonido(AudioListener listener)
+        {
+            var a = Colision?.CreateInstance();
+            a?.Apply3D(listener,Emitter);
+            Console.WriteLine(listener.Position);
+            Console.WriteLine(Emitter.Position);
+            a?.Play();
         }
     }
 
