@@ -383,9 +383,7 @@ namespace TGC.MonoGame.TP
                     TankVelocity -= enemigoEspecifico.TankVelocity;
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     //TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
-                    enemigoEspecifico.recibirDaño(0.5f);
                     enemigoEspecifico.reproducirSonido(listener);
-                    recibirDaño(0.5f);
                     return true;
                 }
             }

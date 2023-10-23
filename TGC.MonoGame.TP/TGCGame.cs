@@ -312,10 +312,10 @@ namespace TGC.MonoGame.TP
 
         private void InitializeHUD()
         {
-            var tiempo = new Button(
-                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, 10),
-                 null, 
-                 .2f);
+            //var tiempo = new Button(
+                //null, new Vector2(PantallaResolucion.X / 2, 40),
+                 //null, 
+                 //.17f);
             var vida = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, PantallaResolucion.Y - 10),
                  null, 
                  .2f);
@@ -336,8 +336,9 @@ namespace TGC.MonoGame.TP
                 };
             //var fps = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(80, 30));
 
+
             List<Button> botonesHud = new(){
-                tiempo,
+                //tiempo,
                 vida,
                 botonBalaNormal,
                 botonBalaEspecial
@@ -361,8 +362,22 @@ namespace TGC.MonoGame.TP
                 };                
                 botonesHud.Add(a);
             }
-            
+
+            var texturaReloj1 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-1");
+            var texturaReloj2 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-2");
+            var texturaReloj3 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-3");
+            var texturaReloj4 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-4");
+
+            List<Texture2D> texturasReloj = new()
+            {
+                texturaReloj1,
+                texturaReloj2,
+                texturaReloj3,
+                texturaReloj4
+            };
+
             Hud = new Hud(PantallaResolucion, botonesHud, Font);
+            Hud.RelojTexturas = texturasReloj;
         }
 
         private void InitializeAmbient()
