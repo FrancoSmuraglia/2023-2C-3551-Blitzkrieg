@@ -10,6 +10,7 @@ using TGC.MonoGame.Samples.Collisions;
 
 namespace TGC.MonoGame.TP
 {
+    // WIP: A mejorar en gral
     public class PantallaFinal
     {
         public enum EstadoPantallaFinal

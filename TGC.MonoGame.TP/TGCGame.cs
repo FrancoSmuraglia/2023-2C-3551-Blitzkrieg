@@ -312,13 +312,24 @@ namespace TGC.MonoGame.TP
 
         private void InitializeHUD()
         {
-            var tiempo = new Button(
-                Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, 10),
-                 null, 
-                 .2f);
-            var vida = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(PantallaResolucion.X / 2, PantallaResolucion.Y - 10),
-                 null, 
-                 .2f);
+            //var tiempo = new Button(
+                //null, new Vector2(PantallaResolucion.X / 2, 40),
+                 //null, 
+                 //.17f);
+            var texturaVida = Content.Load<Texture2D>(ContentFolderTextures + "Hud/Placa2");
+            
+            /*var vida = new Button(texturaVida, new Vector2(PantallaResolucion.X / 2, PantallaResolucion.Y/2),
+                 null,
+                 .2f)
+            { 
+                NotHover = new Color(0,0,0,0.2f)
+            };*/
+            var vida = new Button(texturaVida, new Vector2(PantallaResolucion.X/2, PantallaResolucion.Y - texturaVida.Height*.4f/2),
+                 null,
+                 .4f)
+            { 
+                NotHover = new Color(1,1,1,1f)
+            };
             var bala = Content.Load<Texture2D>(ContentFolderTextures + "Hud/Bala");
             var botonBalaNormal = new Button(
                 bala, 
@@ -335,9 +346,10 @@ namespace TGC.MonoGame.TP
                     TextHover = Color.DarkGray
                 };
             //var fps = new Button(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton"), new Vector2(80, 30));
-
+            //vida.NotTextHover = Color.White;
+           
             List<Button> botonesHud = new(){
-                tiempo,
+                //tiempo,
                 vida,
                 botonBalaNormal,
                 botonBalaEspecial
@@ -345,10 +357,10 @@ namespace TGC.MonoGame.TP
             };
             for (int i = 0; i < Tanques.Count; i++)
             {
-                var nombre = "Tanque";
-                int random = new Random().Next(0,1);
-                if(random == 1)
-                    nombre += "1";
+                var nombre = "Tanque3";
+                //int random = new Random().Next(0,1);
+                //if(random == 1)
+                //    nombre += "1";
 
                 var a = new Button(
                     Content.Load<Texture2D>(ContentFolderTextures + "Hud/" + nombre),
@@ -357,12 +369,31 @@ namespace TGC.MonoGame.TP
                     .5f
                     )
                 {
+                    NotHover = new Color(.7f,.7f,.7f,.8f),
                     NotTextHover = Color.White
                 };                
                 botonesHud.Add(a);
             }
-            
-            Hud = new Hud(PantallaResolucion, botonesHud, Font);
+
+            var texturaReloj1 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-1");
+            var texturaReloj2 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-2");
+            var texturaReloj3 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-3");
+            var texturaReloj4 = Content.Load<Texture2D>(ContentFolderTextures + "Reloj/reloj-4");
+
+            List<Texture2D> texturasReloj = new()
+            {
+                texturaReloj1,
+                texturaReloj2,
+                texturaReloj3,
+                texturaReloj4
+            };
+
+            Hud = new Hud(PantallaResolucion, botonesHud, Font)
+            {
+                RelojTexturas = texturasReloj,
+                Vida = MainTanque.Vida,
+                FuenteVida = Content.Load<SpriteFont>(ContentFolderSpriteFonts + "File Vida")
+            };
         }
 
         private void InitializeAmbient()
@@ -679,7 +710,7 @@ namespace TGC.MonoGame.TP
             if (tiempoRestante <= 0)
             {
                 juegoTerminado = true;
-                Exit();
+                EstadoActual = GameState.Lost;
             }
 
             if (BotonPresionado(Keys.Escape))
@@ -787,11 +818,13 @@ namespace TGC.MonoGame.TP
 
             if (EstadoActual.Equals(GameState.Finished))
             {
+                // WIP
                 PantallaFinal.Draw(SpriteBatch,puntos);
             }
 
             if(EstadoActual.Equals(GameState.Lost))
             {
+                // WIP
                 PantallaFinal.DrawLost(SpriteBatch);
             }
 
