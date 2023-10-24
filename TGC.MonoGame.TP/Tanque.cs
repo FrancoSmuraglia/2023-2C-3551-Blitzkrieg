@@ -367,9 +367,10 @@ namespace TGC.MonoGame.TP
         public bool ChoqueConObjetosSinDestruccion(List<Object> ambiente, List<TanqueEnemigo> enemigos){
             foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == false)){
                 if(Intersecta(itemEspecifico)){
+                    if(TankVelocity.Length() > 5f)
+                        itemEspecifico.reproducirSonido(listener);
                     TankVelocity = -TankVelocity*.5f;
                     itemEspecifico.Colisiono = true;
-                    itemEspecifico.reproducirSonido(listener);
                     return true;
                 }
             }
