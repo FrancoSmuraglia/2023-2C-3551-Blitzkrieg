@@ -133,7 +133,7 @@ namespace TGC.MonoGame.TP
             return TankBox.Intersects(objeto.Box);
         }
 
-        public void Update(GameTime gameTime, List<Object> ambiente){
+        public void Update(GameTime gameTime, List<Object> ambiente, AudioListener audioJugador){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
@@ -162,6 +162,7 @@ namespace TGC.MonoGame.TP
                         TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
                         TankVelocity = -TankVelocity*.5f;
                     }
+                    itemEspecifico.reproducirSonido(audioJugador);
                         
                 }
             }
@@ -211,8 +212,8 @@ namespace TGC.MonoGame.TP
         {
             var a = SonidoColision.CreateInstance();
             a.Apply3D(listener,Emitter);
-            Console.WriteLine(listener.Position);
-            Console.WriteLine(Emitter.Position);
+            //Console.WriteLine(listener.Position);
+            //Console.WriteLine(Emitter.Position);
             a.Play();
         }
     }

@@ -101,7 +101,7 @@ namespace TGC.MonoGame.TP
 
         private List<Object> Ambiente { get; set; }
 
-        private Tanque MainTanque { get; set; }
+        public Tanque MainTanque { get; set; }
 
         private Vector2 estadoInicialMouse { get; set; }
 
@@ -292,11 +292,11 @@ namespace TGC.MonoGame.TP
 
             List<Button> botones = new(){
                 continuar,
-                salir,
+                salir/*,
                 arribaIzquierda,
                 arribaDerecha,
                 abajoIzquierda,
-                abajoDerecha
+                abajoDerecha*/
             };
 
             MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
@@ -725,7 +725,7 @@ namespace TGC.MonoGame.TP
 
             Tanques.ForEach(TanqueEnemigoDeLista =>
             {
-                TanqueEnemigoDeLista.Update(gameTime, Ambiente);
+                TanqueEnemigoDeLista.Update(gameTime, Ambiente, MainTanque.listener);
             });
 
             BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));

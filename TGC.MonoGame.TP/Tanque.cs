@@ -371,6 +371,7 @@ namespace TGC.MonoGame.TP
                         itemEspecifico.reproducirSonido(listener);
                     TankVelocity = -TankVelocity*.5f;
                     itemEspecifico.Colisiono = true;
+                    TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
                     return true;
                 }
             }
@@ -379,13 +380,17 @@ namespace TGC.MonoGame.TP
                 if(Intersecta(enemigoEspecifico)){
                     var velocidadMain = TankVelocity;
                     TankVelocity = -TankVelocity*.5f;
-                    if(Math.Abs(velocidadMain.X) < 0.1 && Math.Abs(velocidadMain.Z) < 0.1)
+                    
+                    if(TankVelocity.Length() > 5f)
+                        enemigoEspecifico.reproducirSonido(listener);
+                    /*if(Math.Abs(velocidadMain.X) < 0.1 && Math.Abs(velocidadMain.Z) < 0.1)
                         velocidadMain -= enemigoEspecifico.TankVelocity/2;
                     TankVelocity -= enemigoEspecifico.TankVelocity;
-                    enemigoEspecifico.agregarVelocidad(velocidadMain);
+                    enemigoEspecifico.agregarVelocidad(velocidadMain);*/
                     //TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
-                    enemigoEspecifico.reproducirSonido(listener);
+                    
                     //recibirDaño(.5f);
+                    TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
                     return true;
                 }
             }
