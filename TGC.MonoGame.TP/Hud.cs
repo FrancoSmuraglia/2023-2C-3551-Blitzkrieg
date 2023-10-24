@@ -21,6 +21,8 @@ namespace TGC.MonoGame.TP
         public List<Texture2D> RelojTexturas { get; set;}
         public Vector2 Pantalla { get;set; }
         public String TiempoRestante { get; set; }
+        public float Vida {  get; set; }
+        public SpriteFont FuenteVida { get; set; }
         public Hud(Vector2 pantalla, List<Button> botones,SpriteFont fuente = null)
         {
             Font = fuente;
@@ -40,10 +42,18 @@ namespace TGC.MonoGame.TP
             //spriteBatch.DrawString(Font, minutes + ":" + seconds.ToString("0"), PositionTiempo, Color.White);
             spriteBatch.DrawString(Font, FPS.ToString("0.00") + " FPS", Vector2.Zero, Color.Yellow);
             SeccionDeBotones.Draw(spriteBatch);
-            //spriteBatch.Draw(RelojTexturas[1], new Vector2(Pantalla.X /2, 40), Color.White);
+
+            var textoVida = "  Vida: " + Vida;
+            float x = ((SeccionDeBotones.Botones[0].Rectangle.X + (SeccionDeBotones.Botones[0].Rectangle.Width / 2)) - 
+                (FuenteVida.MeasureString(textoVida).X / 2));
+            float y = ((SeccionDeBotones.Botones[0].Rectangle.Y + (SeccionDeBotones.Botones[0].Rectangle.Height / 2)) - 
+                (FuenteVida.MeasureString(textoVida).Y / 2));
+
+            spriteBatch.DrawString(FuenteVida, textoVida, new Vector2(x,y)//new Vector2((Pantalla.X / 2) - 50, Pantalla.Y - 30)
+                , Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
             spriteBatch.Draw(RelojTexturas[relojActual], new Vector2((Pantalla.X / 2) - 75, 10), null, Color.White, 0f, Vector2.Zero, .2f, SpriteEffects.None, 0);
             //spriteBatch.DrawString(Font, TiempoRestante, new Vector2((Pantalla.X / 2) + 5, 35), Color.White);
-            spriteBatch.DrawString(Font, TiempoRestante, new Vector2((Pantalla.X / 2), 35), Color.White, 0f, Vector2.Zero, 1.5f, SpriteEffects.None, 0);
+            spriteBatch.DrawString(FuenteVida, TiempoRestante, new Vector2((Pantalla.X / 2), 35), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
             spriteBatch.End();
         }
         public string ArreglarSegundos(float segundos){
@@ -60,20 +70,20 @@ namespace TGC.MonoGame.TP
 
         }
 
-        private float elapsedTime;
-        public void Update(float tiempoRestante, float Vida,bool balaEspecial,GameTime gameTime,List<TanqueEnemigo> Tanques){
+        private string segundosAnterior;
+        public void Update(float tiempoRestante, float vida,bool balaEspecial,GameTime gameTime,List<TanqueEnemigo> Tanques){
             int minutes = (int)(tiempoRestante / 60);
             var seconds = (tiempoRestante % 60);
-            TiempoRestante = "0" + minutes + ":" + ArreglarSegundos(seconds);
+            string segundosArregladoActual = ArreglarSegundos(seconds);
+            TiempoRestante = "0" + minutes + ":" + segundosArregladoActual;
 
-            elapsedTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (elapsedTime >= 1.0f)
+            if (segundosArregladoActual != segundosAnterior)
             {
                 relojActual = (relojActual + 1) % RelojTexturas.Count;
-                elapsedTime = 0f;
             }
             //SeccionDeBotones.Botones[0].Text = "0" + minutes + ":" + ArreglarSegundos(seconds);// seconds.ToString("0");
-            SeccionDeBotones.Botones[0].Text = "Vida: " + Vida;
+            //SeccionDeBotones.Botones[0].Text = "Vida: " + Vida;
+            Vida = vida;
             if(balaEspecial){
                 SeccionDeBotones.Botones[1].IsSelected = true;
                 SeccionDeBotones.Botones[2].IsSelected = false;
@@ -92,7 +102,7 @@ namespace TGC.MonoGame.TP
             /*SeccionDeBotones.Botones[6].Text = "Enemigo 2: " + Tanques[1].Vida;
             SeccionDeBotones.Botones[7].Text = "Enemigo 3: " + Tanques[2].Vida;
             SeccionDeBotones.Botones[8].Text = "Enemigo 4: " + Tanques[3].Vida;*/
-
+            segundosAnterior = segundosArregladoActual;
 
         }
     }

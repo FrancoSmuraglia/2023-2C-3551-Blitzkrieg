@@ -14,6 +14,7 @@ namespace TGC.MonoGame.TP
 {    
     public class Tanque
     {
+        public const float VidaMaxima = 10;
         // Colisión
         public OrientedBoundingBox TankBox { get; set; }
         private BoundingCylinder Cilindro { get; set; }
@@ -120,7 +121,7 @@ namespace TGC.MonoGame.TP
             _initialTorret = Torreta.Transform;
             TorretaMatrix = Torreta.Transform;
 
-            Vida = 10.0f;
+            Vida = VidaMaxima;
             balaEspecial = false;
             SonidoDisparo = sonidoDisparo;
             InstanciaSonidoDisparo = sonidoDisparo.CreateInstance();
@@ -195,7 +196,6 @@ namespace TGC.MonoGame.TP
         {
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
-
             
             // ** Movimiento del tanque ** //
 
@@ -384,6 +384,7 @@ namespace TGC.MonoGame.TP
                     enemigoEspecifico.agregarVelocidad(velocidadMain);
                     //TankVelocity /= 2; // El tanque enemigo al no tener velocidad en esta entrega simplemente se reduce la velocidad de nuestro tanque a la mitad
                     enemigoEspecifico.reproducirSonido(listener);
+                    //recibirDaño(.5f);
                     return true;
                 }
             }
@@ -440,6 +441,7 @@ namespace TGC.MonoGame.TP
         public void recibirDaño(float cantidad)
         {
             Vida -= cantidad;
+            Vida = Math.Clamp(Vida, 0, VidaMaxima);
         }
     }
 }
