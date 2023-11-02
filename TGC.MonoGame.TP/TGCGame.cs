@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading;
+using BepuPhysics.Collidables;
 using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -117,6 +118,8 @@ namespace TGC.MonoGame.TP
         TimeSpan tiempoMusicaPrincipal = TimeSpan.Zero;
         public Song MusicaMenu { get; set; }
         TimeSpan tiempoMusicaMenu = TimeSpan.Zero;
+
+        SkyBox SkyBox;
         
         
 
@@ -244,6 +247,12 @@ namespace TGC.MonoGame.TP
             MediaPlayer.Volume = 0.2f;
             MediaPlayer.Play(Musica);
             MediaPlayer.IsRepeating = true;
+
+            //SkyBox
+            Model modeloSkyBox = Content.Load<Model>(ContentFolder3D + "SkyBox/cube");
+            TextureCube textureCube = Content.Load<TextureCube>(ContentFolderTextures + "SkyBox/skybox");
+            Effect efectoSkyBox = Content.Load<Effect>(ContentFolderEffects + "Skybox");
+            SkyBox = new SkyBox(modeloSkyBox,textureCube,efectoSkyBox);
 
             base.LoadContent();
         }
@@ -764,10 +773,18 @@ namespace TGC.MonoGame.TP
         /// 
 
         protected override void Draw(GameTime gameTime)
-        {        
+        {
 
             GraphicsDevice.Clear(Color.BlueViolet);
-            
+
+            var originalRasterizerState = GraphicsDevice.RasterizerState;
+            var rasterizerState = new RasterizerState();
+            rasterizerState.CullMode = CullMode.None;
+            Graphics.GraphicsDevice.RasterizerState = rasterizerState;
+
+            SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+            GraphicsDevice.RasterizerState = originalRasterizerState;
+
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
             GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
             
@@ -831,7 +848,8 @@ namespace TGC.MonoGame.TP
             
             FollowCamera.Update(gameTime, MainTanque.World);
 
-            
+         
+
             base.Draw(gameTime);
         }
 

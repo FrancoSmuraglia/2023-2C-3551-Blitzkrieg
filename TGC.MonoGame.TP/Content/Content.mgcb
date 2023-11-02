@@ -56,6 +56,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/Gizmos.fx
 
+#begin Effects/Skybox.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/Skybox.fx
+
 #begin Models/Ambiente/BigBush.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
@@ -600,6 +606,25 @@
 /processorParam:TextureFormat=Color
 /build:Models/Rock/tex/FBX_OBJ.jpg
 
+#begin Models/SkyBox/cube.fbx
+/importer:FbxImporter
+/processor:ModelProcessor
+/processorParam:ColorKeyColor=0,0,0,0
+/processorParam:ColorKeyEnabled=True
+/processorParam:DefaultEffect=BasicEffect
+/processorParam:GenerateMipmaps=True
+/processorParam:GenerateTangentFrames=False
+/processorParam:PremultiplyTextureAlpha=True
+/processorParam:PremultiplyVertexColors=True
+/processorParam:ResizeTexturesToPowerOfTwo=False
+/processorParam:RotationX=0
+/processorParam:RotationY=0
+/processorParam:RotationZ=0
+/processorParam:Scale=1
+/processorParam:SwapWindingOrder=False
+/processorParam:TextureFormat=Compressed
+/build:Models/SkyBox/cube.fbx
+
 #begin Models/sphere.fbx
 /importer:FbxImporter
 /processor:ModelProcessor
@@ -1120,6 +1145,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Reloj/reloj-4.png
+
+#begin Textures/SkyBox/skybox.dds
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=False
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/SkyBox/skybox.dds
 
 #begin Textures/TexturaRoca1.png
 /importer:TextureImporter
