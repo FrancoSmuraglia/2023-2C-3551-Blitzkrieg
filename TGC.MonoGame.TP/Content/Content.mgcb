@@ -44,6 +44,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/BasicShaderRock.fx
 
+#begin Effects/BlinnPhong.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/BlinnPhong.fx
+
 #begin Effects/Floor.fx
 /importer:EffectImporter
 /processor:EffectProcessor

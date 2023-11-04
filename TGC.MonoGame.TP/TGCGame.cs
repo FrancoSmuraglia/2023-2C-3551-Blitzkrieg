@@ -120,9 +120,15 @@ namespace TGC.MonoGame.TP
         TimeSpan tiempoMusicaMenu = TimeSpan.Zero;
 
         SkyBox SkyBox;
-        
-        
 
+
+        //Blinn Phong
+        private CubePrimitive lightBox;
+
+        private Effect EffectLight { get; set; }
+        private Matrix LightBoxWorld { get; set; } = Matrix.Identity;
+
+        
         /// <summary>
         ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
         ///     Escribir aqui el codigo de inicializacion: el procesamiento que podemos pre calcular para nuestro juego.
@@ -205,7 +211,7 @@ namespace TGC.MonoGame.TP
             SoundEffect sonidoMovimiento = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankMoving2");
             SoundEffect sonidoTorreta = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankTurretMoving");
 
-
+            EffectLight = Content.Load<Effect>(ContentFolderEffects + "BlinnPhong");
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f),
@@ -215,7 +221,11 @@ namespace TGC.MonoGame.TP
                     estadoInicialMouse,
                     sonidoDisparo,
                     sonidoMovimiento
-                    );
+                    )
+            {
+                efectoTanque = EffectLight,
+                NormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/normal")
+            };
 
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
 
@@ -233,7 +243,7 @@ namespace TGC.MonoGame.TP
             InitializeHUD();
 
             Fondo = Content.Load<Texture2D>(ContentFolderTextures + "fondoNegro");
-            PantallaFinal = new PantallaFinal(PantallaResolucion,Fondo,Font);
+            PantallaFinal = new PantallaFinal(PantallaResolucion, Fondo, Font);
 
             BalasMain = new List<Bala>();
 
@@ -252,7 +262,7 @@ namespace TGC.MonoGame.TP
             Model modeloSkyBox = Content.Load<Model>(ContentFolder3D + "SkyBox/cube");
             TextureCube textureCube = Content.Load<TextureCube>(ContentFolderTextures + "SkyBox/skybox");
             Effect efectoSkyBox = Content.Load<Effect>(ContentFolderEffects + "Skybox");
-            SkyBox = new SkyBox(modeloSkyBox,textureCube,efectoSkyBox);
+            SkyBox = new SkyBox(modeloSkyBox, textureCube, efectoSkyBox);
 
             base.LoadContent();
         }
@@ -614,7 +624,7 @@ namespace TGC.MonoGame.TP
         KeyboardState estadoAnterior;
         protected override void Update(GameTime gameTime)
         {
-            
+            FollowCamera.Update(gameTime, MainTanque.World);
             //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
             /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
@@ -777,22 +787,21 @@ namespace TGC.MonoGame.TP
 
             GraphicsDevice.Clear(Color.BlueViolet);
 
-            var originalRasterizerState = GraphicsDevice.RasterizerState;
+            /*var originalRasterizerState = GraphicsDevice.RasterizerState;
             var rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.None;
             Graphics.GraphicsDevice.RasterizerState = rasterizerState;
-
             SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
-            GraphicsDevice.RasterizerState = originalRasterizerState;
+            GraphicsDevice.RasterizerState = originalRasterizerState;*/
 
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
-            
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;            
+            GraphicsDevice.BlendState = BlendState.Opaque;
             //No hace falta analizar, siempre el tanque va estar en medio de la cámara
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
-            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
             
-            var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
+            /*var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
                  MainTanque.TankBox.Orientation *
                  Matrix.CreateTranslation(MainTanque.Position);
             Gizmos.DrawCube(tankOBBToWorld, Color.YellowGreen);
@@ -825,7 +834,7 @@ namespace TGC.MonoGame.TP
             
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
+            //Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
 
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
@@ -843,10 +852,7 @@ namespace TGC.MonoGame.TP
             {
                 // WIP
                 PantallaFinal.DrawLost(SpriteBatch);
-            }
-
-            
-            FollowCamera.Update(gameTime, MainTanque.World);
+            }*/
 
          
 
