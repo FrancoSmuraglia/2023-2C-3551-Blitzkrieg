@@ -79,9 +79,10 @@ namespace TGC.MonoGame.TP
         public SoundEffect SonidoMovimiento { get; set; }
         public SoundEffectInstance InstanciaSonidoMovimiento { get; set; }
         public AudioListener listener {get;set;}
+        public Effect efectoTanque {  get; set;}
 
         //bling
-        public Effect efectoTanque {get;set;}
+        //public Effect efectoTanque {get;set;}
 
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
         {
@@ -157,6 +158,7 @@ namespace TGC.MonoGame.TP
                 }
             }
 
+            //efectoTanque.CurrentTechnique = Effect.Techniques["Default"];
             foreach (var mesh in Model.Meshes)
             {
                 foreach (var meshPart in mesh.MeshParts)
@@ -166,6 +168,30 @@ namespace TGC.MonoGame.TP
             }
         }
 
+        //public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        //{
+        //    // Tanto la vista como la proyección vienen de la cámara por parámetro
+        //    Effect.Parameters["View"].SetValue(view);
+        //    Effect.Parameters["Projection"].SetValue(projection);
+        //    Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+        //
+        //
+        //    var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+        //    Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+        //
+        //    // forma de girar la torreta con cañón
+        //    // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
+        //    // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
+        //
+        //    World = RotationMatrix * Matrix.CreateTranslation(Position);
+        //    foreach (var mesh in Model.Meshes)
+        //    {
+        //        var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
+        //        Effect.Parameters["World"].SetValue(meshWorld * World);
+        //        mesh.Draw();
+        //    }
+        //}
+
         public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition)
         {
             actualizarLuz(camaraPosition);
@@ -174,40 +200,40 @@ namespace TGC.MonoGame.TP
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
             
-
+        
             World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
-                var meshWorld = mesh.ParentBone.Transform;//modelMeshesBaseTransforms[mesh.ParentBone.Index];
+                var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
                 var finalWorld = meshWorld * World;
-                efectoTanque.Parameters["World"].SetValue(finalWorld);
-                efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(finalWorld)));
-                efectoTanque.Parameters["WorldViewProjection"].SetValue(finalWorld * view * projection);
+                efectoTanque.Parameters["World"].SetValue(meshWorld * World);
+                efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
+                efectoTanque.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
                 mesh.Draw();
             }
             
         }
-
+        
         public void actualizarLuz(Vector3 camaraPosition){
-            efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(0.25f, 0.0f, 0.0f));
+            efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
             efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
             efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
-
-            efectoTanque.Parameters["KAmbient"].SetValue(1.0f);
+        
+            efectoTanque.Parameters["KAmbient"].SetValue(1f);
             efectoTanque.Parameters["KDiffuse"].SetValue(1.0f);
-            efectoTanque.Parameters["KSpecular"].SetValue(1.0f);
+            efectoTanque.Parameters["KSpecular"].SetValue(1f);
             efectoTanque.Parameters["shininess"].SetValue(16.0f);
             efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
             efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
-
+        
             efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
             efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
             efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
-
+        
         }
 
-        
-        
+
+
         float anguloVertical = 0;
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;

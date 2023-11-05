@@ -238,7 +238,7 @@ namespace TGC.MonoGame.TP
             // Menu 
             InitializeMenus();
 
-            InitializeTanks();
+            //InitializeTanks();
 
             InitializeHUD();
 
@@ -459,7 +459,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + arbol),
-                        Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
                         arbol.Equals("Tree"),
                         arbolSonido
@@ -496,7 +496,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + posiblesArbustos[new Random().Next(0, 3)]),
-                        Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
                         true,
                         plantasNoArbolSonido
@@ -513,7 +513,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + posiblesFlores[new Random().Next(0, 2)]),
-                        Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasFlores[new Random().Next(0, 3)]), 
                         true,
                         plantasNoArbolSonido
@@ -530,7 +530,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/Mushroom"),
-                        Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
                         Content.Load<Texture2D>(ContentFolderTextures + "Mushroom"),
                         true,
                         plantasNoArbolSonido)
@@ -547,7 +547,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Rocas/" + posiblesRocas[new Random().Next(0, 7)]),
-                        Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasRocas[new Random().Next(0, 1)]),
                         false)
                     );
@@ -759,11 +759,11 @@ namespace TGC.MonoGame.TP
                 puntos += 100;
             }
 
-            if(Tanques.Count == 0)
-            {
-                EstadoActual = GameState.Finished;
-                puntos += (int)tiempoRestante * 25;
-            }
+            //if(Tanques.Count == 0)
+            //{
+            //    EstadoActual = GameState.Finished;
+            //    puntos += (int)tiempoRestante * 25;
+            //}
 
             if(MainTanque.Vida == 0)
             {
@@ -796,7 +796,7 @@ namespace TGC.MonoGame.TP
 
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;            
-            GraphicsDevice.BlendState = BlendState.Opaque;
+            //GraphicsDevice.BlendState = BlendState.Opaque;
             //No hace falta analizar, siempre el tanque va estar en medio de la cámara
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
             MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
@@ -813,15 +813,15 @@ namespace TGC.MonoGame.TP
                 Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
 
-            
+            */
             Ambiente.ForEach(ambientes => {
                 if(ambientes.Box.Intersects(BoundingFrustum))
-                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection); 
+                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection,FollowCamera.CamaraPosition); 
                     Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
                     ambientes.Colisiono = false;
 
             });
-                        
+            /*            
             
             BalasMain.ForEach(balas => {
                 if(balas.BalaBox.Intersects(BoundingFrustum))
@@ -834,8 +834,9 @@ namespace TGC.MonoGame.TP
             
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            //Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
-
+            */
+            Quad.Draw(EffectLight, FloorWorld,FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+            /*
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
 

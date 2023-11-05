@@ -1,3 +1,4 @@
+using BepuPhysics.Constraints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -126,26 +127,59 @@ namespace TGC.MonoGame.TP
             }
         }
 
-        public void Draw(Effect effect, Matrix world, Matrix view, Matrix projection)
+        public void Draw(Effect effect, Matrix world, Matrix view, Matrix projection, Vector3 camaraPosition)
         {
-            effect.Parameters["World"].SetValue(world);
-            effect.Parameters["View"].SetValue(view);
-            effect.Parameters["Projection"].SetValue(projection);
-            effect.Parameters["ModelTexture"]?.SetValue(Textura);
+            //effect.Parameters["World"].SetValue(world);
+            //effect.Parameters["View"].SetValue(view);
+            //effect.Parameters["Projection"].SetValue(projection);
+            //effect.Parameters["ModelTexture"]?.SetValue(Textura);
+            //
+            //var graphicsDevice = effect.GraphicsDevice;
+            //
+            //
+            //// Set our vertex declaration, vertex buffer, and index buffer.
+            //
+            //graphicsDevice.SetVertexBuffer(Vertices);
+            //graphicsDevice.Indices = Indices;
+            //
+            //foreach (var effectPass in effect.CurrentTechnique.Passes)
+            //{
+            //    effectPass.Apply();
+            //    graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Indices.IndexCount / 3);
+            //}
 
+            actualizarLuz(camaraPosition, effect);
             var graphicsDevice = effect.GraphicsDevice;
-
-            
-            // Set our vertex declaration, vertex buffer, and index buffer.
-            
             graphicsDevice.SetVertexBuffer(Vertices);
             graphicsDevice.Indices = Indices;
+
+            effect.Parameters["World"].SetValue(world);
+            effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(world)));
+            effect.Parameters["WorldViewProjection"].SetValue(world * view * projection);
 
             foreach (var effectPass in effect.CurrentTechnique.Passes)
             {
                 effectPass.Apply();
                 graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Indices.IndexCount / 3);
             }
+        }
+
+        public void actualizarLuz(Vector3 camaraPosition, Effect effect)
+        {
+            effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+
+            effect.Parameters["KAmbient"].SetValue(1.0f);
+            effect.Parameters["KDiffuse"].SetValue(1.0f);
+            effect.Parameters["KSpecular"].SetValue(1.0f);
+            effect.Parameters["shininess"].SetValue(16.0f);
+            effect.Parameters["lightPosition"].SetValue(new Vector3(500, 500, 500));
+            effect.Parameters["eyePosition"].SetValue(camaraPosition);
+
+            effect.Parameters["ModelTexture"].SetValue(Textura);
+            //Effect.Parameters["NormalTexture"].SetValue(NormalTexture);
+            effect.Parameters["Tiling"].SetValue(Vector2.One);
         }
     }
 }

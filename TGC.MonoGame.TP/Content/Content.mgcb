@@ -62,6 +62,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/Gizmos.fx
 
+#begin Effects/PBR.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/PBR.fx
+
 #begin Effects/Skybox.fx
 /importer:EffectImporter
 /processor:EffectProcessor
