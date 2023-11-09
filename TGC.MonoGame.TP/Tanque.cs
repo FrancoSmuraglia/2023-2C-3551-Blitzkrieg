@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Particle3DSample;
 using TGC.MonoGame.Samples.Collisions;
 
 
@@ -14,6 +15,7 @@ namespace TGC.MonoGame.TP
 {    
     public class Tanque
     {
+        public ParticleSystem polvo;
         public const float VidaMaxima = 10;
         // Colisión
         public OrientedBoundingBox TankBox { get; set; }
@@ -204,6 +206,7 @@ namespace TGC.MonoGame.TP
                 Moving = true;
                 CurrentAcceleration = 1f;
                 Sentido = 1;
+                polvo.AddParticle(Position, -TankVelocity/3);
             }
             if (key.IsKeyDown(Keys.S))
             { //reversa                

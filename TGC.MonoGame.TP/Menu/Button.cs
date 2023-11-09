@@ -64,7 +64,7 @@ namespace TGC.MonoGame.TP
             
             Rectangle a = this.Rectangle;
             
-            spriteBatch.Draw(Texture, Position, null, Fondo, 0f, Vector2.Zero, Scale, SpriteEffects.None, 0);
+            spriteBatch.Draw(Texture, Position, null, Fondo, 0f, Vector2.Zero, Scale, SpriteEffects.None, 1);
 
             DrawText(spriteBatch, fuente);
         }

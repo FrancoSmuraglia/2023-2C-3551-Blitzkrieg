@@ -52,6 +52,7 @@ namespace TGC.MonoGame.TP
         /// <param name="gameTime">The Game Time to calculate framerate-independent movement</param>
         /// <param name="followedWorld">The World matrix to follow</param>
         public bool Frenado = false;
+        public Vector3 posicionCamara;
         public void Update(GameTime gameTime, Matrix followedWorld)
         {
             
@@ -77,7 +78,7 @@ namespace TGC.MonoGame.TP
             Vector3 direccionCamara = new Vector3(MathF.Cos(yaw) * MathF.Cos(pitch), MathF.Sin(pitch),MathF.Sin(yaw) * MathF.Cos(pitch));
 
             //calculo la posicion con la direccion de la camara
-            Vector3 posicionCamara = followedPosition - direccionCamara * AxisDistanceToTarget;
+            posicionCamara = followedPosition - direccionCamara * AxisDistanceToTarget;
 
             View = Matrix.CreateLookAt(posicionCamara, followedPosition, Vector3.Up);
 

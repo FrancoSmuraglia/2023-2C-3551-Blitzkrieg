@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using Particle3DSample;
 using TGC.MonoGame.Samples.Collisions;
 using TGC.MonoGame.Samples.Viewer.Gizmos;
 
@@ -116,9 +117,19 @@ namespace TGC.MonoGame.TP
         public Song Musica { get; set; }
         TimeSpan tiempoMusicaPrincipal = TimeSpan.Zero;
         public Song MusicaMenu { get; set; }
+        internal FireParticleSystem fireParticles { get; private set; }
+
         TimeSpan tiempoMusicaMenu = TimeSpan.Zero;
+        // particula 
         
-        
+        List<Projectile> projectiles = new List<Projectile>();
+        ParticleSystem explosionParticles;
+        ParticleSystem explosionSmokeParticles;
+        ParticleSystem projectileTrailParticles;
+
+        SmokePlumeParticleSystem smokePlumeParticles { get; set; }
+
+
 
         /// <summary>
         ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
@@ -127,7 +138,23 @@ namespace TGC.MonoGame.TP
         protected override void Initialize()
         {
 
+            explosionParticles = new ExplosionParticleSystem(this, Content);
+            explosionSmokeParticles = new ExplosionSmokeParticleSystem(this, Content);
+            projectileTrailParticles = new ProjectileTrailParticleSystem(this, Content);
+            smokePlumeParticles = new SmokePlumeParticleSystem(this, Content);
+            fireParticles = new FireParticleSystem(this, Content);
+            smokePlumeParticles = new SmokePlumeParticleSystem(this, Content);
 
+            
+            explosionParticles.DrawOrder = 400;
+            explosionSmokeParticles.DrawOrder = 200;
+            projectileTrailParticles.DrawOrder = 300;
+            smokePlumeParticles.DrawOrder = 100;
+
+            Components.Add(explosionParticles);
+            Components.Add(explosionSmokeParticles);
+            Components.Add(projectileTrailParticles);
+            Components.Add(smokePlumeParticles);
             // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
 
             // Apago el backface culling.
@@ -212,8 +239,10 @@ namespace TGC.MonoGame.TP
                     estadoInicialMouse,
                     sonidoDisparo,
                     sonidoMovimiento
-                    );
-
+                    )
+            {
+                polvo = smokePlumeParticles
+            };
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
 
             Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
@@ -603,6 +632,54 @@ namespace TGC.MonoGame.TP
         int frames = 0;
         float tiempo = 0;
         KeyboardState estadoAnterior;
+        TimeSpan timeToNextProjectile;
+        void UpdateExplosions(GameTime gameTime)
+        {
+            timeToNextProjectile -= gameTime.ElapsedGameTime;
+
+            if (timeToNextProjectile <= TimeSpan.Zero)
+            {
+                // Create a new projectile once per second. The real work of moving
+                // and creating particles is handled inside the Projectile class.
+                projectileTrailParticles.AddParticle(MainTanque.Position, Vector3.Zero);
+                projectiles.Add(new Projectile(explosionParticles,
+                                               explosionSmokeParticles,
+                                               projectileTrailParticles));
+
+                timeToNextProjectile += TimeSpan.FromSeconds(1);
+            }
+        }
+        void UpdateProjectiles(GameTime gameTime)
+        {
+            int i = 0;
+
+            while (i < projectiles.Count)
+            {
+                if (!projectiles[i].Update(gameTime))
+                {
+                    // Remove projectiles at the end of their life.
+                    projectiles.RemoveAt(i);
+                }
+                else
+                {
+                    // Advance to the next projectile.
+                    i++;
+                }
+            }
+        }
+        /*void UpdateFire()
+        {
+            const int fireParticlesPerFrame = 20;
+
+            // Create a number of fire particles, randomly positioned around a circle.
+            for (int i = 0; i < fireParticlesPerFrame; i++)
+            {
+                fireParticles.AddParticle(RandomPointOnCircle(), Vector3.Zero);
+            }
+
+            // Create one smoke particle per frmae, too.
+            smokePlumeParticles.AddParticle(RandomPointOnCircle(), Vector3.Zero);
+        }*/
         protected override void Update(GameTime gameTime)
         {
             
@@ -612,7 +689,12 @@ namespace TGC.MonoGame.TP
             Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));*/
 
             //Console.WriteLine(EstadoActual);
-
+            //UpdateExplosions(gameTime);
+            //UpdateProjectiles(gameTime);
+            smokePlumeParticles.SetCamera(FollowCamera.View, FollowCamera.Projection);
+            explosionParticles.SetCamera(FollowCamera.View, FollowCamera.Projection);
+            explosionSmokeParticles.SetCamera(FollowCamera.View, FollowCamera.Projection);
+            projectileTrailParticles.SetCamera(FollowCamera.View, FollowCamera.Projection);
             BoundingFrustum.Matrix = FollowCamera.View * FollowCamera.Projection;
 
             switch (EstadoActual)
@@ -630,20 +712,12 @@ namespace TGC.MonoGame.TP
                         tiempoMusicaMenu = MediaPlayer.PlayPosition;
                         MediaPlayer.Play(Musica, tiempoMusicaPrincipal);
                     }
-                    
+                    //smokePlumeParticles.Draw(gameTime);
                     if(BotonPresionado(Keys.G))
                         GizmosActivado = !GizmosActivado;
 
                     MainGame(gameTime);
-                    
-                    /*if(!musicaReproduciendo)
-                    {
-                        MediaPlayer.Stop();
-                        musicaMenuReproducida = false;
-                        MediaPlayer.Play(Musica, tiempoMusicaMenu);
-                        musicaReproduciendo = true;
-                    }
-                    */
+
                     break;
                 case GameState.Pause:
                     if (!FollowCamera.Frenado)
@@ -655,16 +729,6 @@ namespace TGC.MonoGame.TP
                         MediaPlayer.Stop();
                         MediaPlayer.Play(MusicaMenu);
                     }
-
-                    /*if (!musicaMenuReproducida)
-                    {
-                        MediaPlayer.Pause();
-                        musicaReproduciendo = false;
-                        MediaPlayer.Play(MusicaMenu);
-                        MediaPlayer.IsRepeating = true;
-                        musicaMenuReproducida = true;
-                    }*/
-
                     
 
                     MenuPausa.Update(Mouse.GetState());
@@ -676,6 +740,7 @@ namespace TGC.MonoGame.TP
                         MediaPlayer.Resume();
                     }
                     break;
+
                 case GameState.Finished:
                 case GameState.Lost:
                     if (!FollowCamera.Frenado)
@@ -693,8 +758,8 @@ namespace TGC.MonoGame.TP
 
 
 
-
-            base.Update(gameTime);
+            if(EstadoActual.Equals(GameState.Begin))
+                base.Update(gameTime);
         }
 
         public bool BotonPresionado(Keys tecla)
@@ -725,7 +790,7 @@ namespace TGC.MonoGame.TP
 
             Tanques.ForEach(TanqueEnemigoDeLista =>
             {
-                TanqueEnemigoDeLista.Update(gameTime, Ambiente, MainTanque.listener);
+                TanqueEnemigoDeLista.Update(gameTime, Ambiente, MainTanque);
             });
 
             BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));
@@ -765,11 +830,11 @@ namespace TGC.MonoGame.TP
 
         protected override void Draw(GameTime gameTime)
         {        
-
-            GraphicsDevice.Clear(Color.BlueViolet);
             
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
             GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
+            
+            GraphicsDevice.Clear(Color.BlueViolet);
             
             //No hace falta analizar, siempre el tanque va estar en medio de la cámara
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
@@ -810,6 +875,8 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Quad.Draw(Effect, FloorWorld,FollowCamera.View, FollowCamera.Projection);
 
+            base.Draw(gameTime);
+            
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
 
@@ -831,8 +898,7 @@ namespace TGC.MonoGame.TP
             
             FollowCamera.Update(gameTime, MainTanque.World);
 
-            
-            base.Draw(gameTime);
+            GraphicsDevice.BlendState = BlendState.Opaque;
         }
 
         /// <summary>
