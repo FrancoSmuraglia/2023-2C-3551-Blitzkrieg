@@ -27,12 +27,12 @@ namespace TGC.MonoGame.TP
 
         private float PuntoMedio {get; set;}
         
-        Matrix RotationMatrix = Matrix.Identity;
+        public Matrix RotationMatrix = Matrix.Identity;
 
-        protected Model Model { get; set; }
+        public Model Model { get; set; }
         public Matrix World { get; set; }
 
-        protected Texture2D Texture { get; set; }
+        public Texture2D Texture { get; set; }
         public Texture2D NormalTexture { get; set; }
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
@@ -213,22 +213,49 @@ namespace TGC.MonoGame.TP
             }
             
         }
-        
+
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = efectoTanque;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                efectoTanque.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
+        }
+
         public void actualizarLuz(Vector3 camaraPosition){
-            efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
-            efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
-            efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            //efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //
+            //efectoTanque.Parameters["KAmbient"].SetValue(1f);
+            //efectoTanque.Parameters["KDiffuse"].SetValue(1.0f);
+            //efectoTanque.Parameters["KSpecular"].SetValue(1f);
+            //efectoTanque.Parameters["shininess"].SetValue(16.0f);
+            //efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
+            //efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
         
-            efectoTanque.Parameters["KAmbient"].SetValue(1f);
-            efectoTanque.Parameters["KDiffuse"].SetValue(1.0f);
-            efectoTanque.Parameters["KSpecular"].SetValue(1f);
-            efectoTanque.Parameters["shininess"].SetValue(16.0f);
-            efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
-            efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
-        
-            efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
-            efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
-            efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
+            efectoTanque.Parameters["baseTexture"].SetValue(Texture);
+            //efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
+            //efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
         
         }
 

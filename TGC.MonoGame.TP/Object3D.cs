@@ -103,20 +103,20 @@ namespace TGC.MonoGame.TP
         }
         public void actualizarLuz(Vector3 camaraPosition)
         {
-            Effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
-            Effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
-            Effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //Effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //Effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            //Effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //
+            //Effect.Parameters["KAmbient"].SetValue(1.0f);
+            //Effect.Parameters["KDiffuse"].SetValue(0.5f);
+            //Effect.Parameters["KSpecular"].SetValue(0.0f);
+            //Effect.Parameters["shininess"].SetValue(16.0f);
+            Effect.Parameters["lightPosition"].SetValue(new Vector3(500f, 10000f, 500f));
+            //Effect.Parameters["eyePosition"].SetValue(camaraPosition);
 
-            Effect.Parameters["KAmbient"].SetValue(1.0f);
-            Effect.Parameters["KDiffuse"].SetValue(0.5f);
-            Effect.Parameters["KSpecular"].SetValue(0.0f);
-            Effect.Parameters["shininess"].SetValue(16.0f);
-            Effect.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
-            Effect.Parameters["eyePosition"].SetValue(camaraPosition);
-
-            Effect.Parameters["ModelTexture"].SetValue(Texture);
+            Effect.Parameters["baseTexture"].SetValue(Texture);
             //Effect.Parameters["NormalTexture"].SetValue(NormalTexture);
-            Effect.Parameters["Tiling"].SetValue(Vector2.One);
+            //Effect.Parameters["Tiling"].SetValue(Vector2.One);
         }
 
         public void reproducirSonido(AudioListener listener)

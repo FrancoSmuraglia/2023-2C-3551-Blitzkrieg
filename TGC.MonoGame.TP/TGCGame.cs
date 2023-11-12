@@ -127,8 +127,18 @@ namespace TGC.MonoGame.TP
 
         private Effect EffectLight { get; set; }
         private Matrix LightBoxWorld { get; set; } = Matrix.Identity;
+        private Vector3 lightPosition = new Vector3(500f, 10000f, 500f);
 
-        
+        //Shadows
+        private const int ShadowmapSize = 8192;
+
+        private readonly float LightCameraFarPlaneDistance = 50000f;
+
+        private readonly float LightCameraNearPlaneDistance = 5f;
+        private TargetCamera TargetLightCamera { get; set; }
+        private RenderTarget2D ShadowMapRenderTarget;
+
+
         /// <summary>
         ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
         ///     Escribir aqui el codigo de inicializacion: el procesamiento que podemos pre calcular para nuestro juego.
@@ -187,6 +197,10 @@ namespace TGC.MonoGame.TP
 
             Ambiente = new List<Object>();
 
+            TargetLightCamera = new TargetCamera(1f, lightPosition, Vector3.Zero);
+            TargetLightCamera.BuildProjection(1f, LightCameraNearPlaneDistance, LightCameraFarPlaneDistance,
+                MathHelper.PiOver2);
+
             base.Initialize();
         }
 
@@ -211,7 +225,7 @@ namespace TGC.MonoGame.TP
             SoundEffect sonidoMovimiento = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankMoving2");
             SoundEffect sonidoTorreta = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankTurretMoving");
 
-            EffectLight = Content.Load<Effect>(ContentFolderEffects + "BlinnPhong");
+            EffectLight = Content.Load<Effect>(ContentFolderEffects + "ShadowMap");
             //BulletModel = Content.Load<Model>(ContentFolder3D + "bullet");
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f),
@@ -263,6 +277,15 @@ namespace TGC.MonoGame.TP
             TextureCube textureCube = Content.Load<TextureCube>(ContentFolderTextures + "SkyBox/skybox");
             Effect efectoSkyBox = Content.Load<Effect>(ContentFolderEffects + "Skybox");
             SkyBox = new SkyBox(modeloSkyBox, textureCube, efectoSkyBox);
+
+            //light
+            lightBox = new CubePrimitive(GraphicsDevice, 100f, Color.White);
+            EffectLight.Parameters["lightPosition"].SetValue(lightPosition);
+            LightBoxWorld = Matrix.CreateScale(3f) * Matrix.CreateTranslation(lightPosition);
+
+            //shadows
+            ShadowMapRenderTarget = new RenderTarget2D(GraphicsDevice, ShadowmapSize, ShadowmapSize, false,
+                SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PlatformContents);
 
             base.LoadContent();
         }
@@ -459,7 +482,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + arbol),
-                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
+                        Content.Load<Effect>(ContentFolderEffects + "ShadowMap"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
                         arbol.Equals("Tree"),
                         arbolSonido
@@ -496,7 +519,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + posiblesArbustos[new Random().Next(0, 3)]),
-                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
+                        Content.Load<Effect>(ContentFolderEffects + "ShadowMap"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasArboles[new Random().Next(0, 6)]),
                         true,
                         plantasNoArbolSonido
@@ -513,7 +536,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/" + posiblesFlores[new Random().Next(0, 2)]),
-                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
+                        Content.Load<Effect>(ContentFolderEffects + "ShadowMap"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasFlores[new Random().Next(0, 3)]), 
                         true,
                         plantasNoArbolSonido
@@ -530,7 +553,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Ambiente/Mushroom"),
-                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
+                        Content.Load<Effect>(ContentFolderEffects + "ShadowMap"),
                         Content.Load<Texture2D>(ContentFolderTextures + "Mushroom"),
                         true,
                         plantasNoArbolSonido)
@@ -547,7 +570,7 @@ namespace TGC.MonoGame.TP
                     new Object(
                         posicionAmbiente,
                         Content.Load<Model>(ContentFolder3D + "Rocas/" + posiblesRocas[new Random().Next(0, 7)]),
-                        Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"),
+                        Content.Load<Effect>(ContentFolderEffects + "ShadowMap"),
                         Content.Load<Texture2D>(ContentFolderTextures + posiblesTexturasRocas[new Random().Next(0, 1)]),
                         false)
                     );
@@ -625,6 +648,7 @@ namespace TGC.MonoGame.TP
         protected override void Update(GameTime gameTime)
         {
             FollowCamera.Update(gameTime, MainTanque.World);
+            TargetLightCamera.BuildView();
             //Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
             /*tiempo += (float)(gameTime.ElapsedGameTime.TotalSeconds);
             frames++;
@@ -786,21 +810,48 @@ namespace TGC.MonoGame.TP
         {
 
             GraphicsDevice.Clear(Color.BlueViolet);
+            drawMap(gameTime);
+            drawScene(gameTime);
 
+            base.Draw(gameTime);
+        }
+
+        private void drawMap(GameTime gameTime)
+        {
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            // Set the render target as our shadow map, we are drawing the depth into this texture
+            GraphicsDevice.SetRenderTarget(ShadowMapRenderTarget);
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1f, 0);
+
+            MainTanque.efectoTanque.CurrentTechnique = MainTanque.efectoTanque.Techniques["DepthPass"];
+            MainTanque.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
+        }
+
+        private void drawScene(GameTime gameTime)
+        {
             /*var originalRasterizerState = GraphicsDevice.RasterizerState;
-            var rasterizerState = new RasterizerState();
-            rasterizerState.CullMode = CullMode.None;
-            Graphics.GraphicsDevice.RasterizerState = rasterizerState;
-            SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
-            GraphicsDevice.RasterizerState = originalRasterizerState;*/
+                        var rasterizerState = new RasterizerState();
+                        rasterizerState.CullMode = CullMode.None;
+                        Graphics.GraphicsDevice.RasterizerState = rasterizerState;
+                        SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+                        GraphicsDevice.RasterizerState = originalRasterizerState;*/
 
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;            
+            //GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             //GraphicsDevice.BlendState = BlendState.Opaque;
             //No hace falta analizar, siempre el tanque va estar en medio de la cámara
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 
+
+            GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
+
+            MainTanque.efectoTanque.CurrentTechnique = MainTanque.efectoTanque.Techniques["DrawShadowed"];
+            MainTanque.efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            MainTanque.efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
+            MainTanque.efectoTanque.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            MainTanque.efectoTanque.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
             MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
-            
+
             /*var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
                  MainTanque.TankBox.Orientation *
                  Matrix.CreateTranslation(MainTanque.Position);
@@ -814,11 +865,12 @@ namespace TGC.MonoGame.TP
             });
 
             */
-            Ambiente.ForEach(ambientes => {
-                if(ambientes.Box.Intersects(BoundingFrustum))
-                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection,FollowCamera.CamaraPosition); 
-                    Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
-                    ambientes.Colisiono = false;
+            Ambiente.ForEach(ambientes =>
+            {
+                if (ambientes.Box.Intersects(BoundingFrustum))
+                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+                Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
+                ambientes.Colisiono = false;
 
             });
             /*            
@@ -835,7 +887,9 @@ namespace TGC.MonoGame.TP
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             */
-            Quad.Draw(EffectLight, FloorWorld,FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+            Quad.Draw(EffectLight, FloorWorld, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+
+            lightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
             /*
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
@@ -854,10 +908,6 @@ namespace TGC.MonoGame.TP
                 // WIP
                 PantallaFinal.DrawLost(SpriteBatch);
             }*/
-
-         
-
-            base.Draw(gameTime);
         }
 
         /// <summary>
@@ -869,6 +919,7 @@ namespace TGC.MonoGame.TP
             Content.Unload();
 
             base.UnloadContent();
+            ShadowMapRenderTarget.Dispose();
         }
 
     }

@@ -68,6 +68,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/PBR.fx
 
+#begin Effects/ShadowMap.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/ShadowMap.fx
+
 #begin Effects/Skybox.fx
 /importer:EffectImporter
 /processor:EffectProcessor
