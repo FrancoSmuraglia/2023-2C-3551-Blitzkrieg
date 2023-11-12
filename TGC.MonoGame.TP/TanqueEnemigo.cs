@@ -28,7 +28,7 @@ namespace TGC.MonoGame.TP
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
         protected float Rotation{ get; set; }
-        protected Effect Effect { get; set; }
+        public Effect Effect { get; set; }
 
         private ModelBone Torreta;
         private ModelBone Cannon;
@@ -39,6 +39,7 @@ namespace TGC.MonoGame.TP
         public bool estaMuerto { get; set; }
         public AudioEmitter Emitter {get;set;}
         public SoundEffect SonidoColision {get;set;}
+        public Texture2D NormalTexture { get; set; }
         
 
 
@@ -97,12 +98,11 @@ namespace TGC.MonoGame.TP
             CannonMatrix = Cannon.Transform;
         }
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition)
         {
-            // Tanto la vista como la proyección vienen de la cámara por parámetro
-            Effect.Parameters["View"].SetValue(view);
-            Effect.Parameters["Projection"].SetValue(projection);
-            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+            actualizarLuz(camaraPosition);
+
+           
 
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
@@ -115,9 +115,30 @@ namespace TGC.MonoGame.TP
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                Effect.Parameters["World"].SetValue(meshWorld*World);
+                var finalWorld = meshWorld * World;
+                Effect.Parameters["World"].SetValue(meshWorld * World);
+                Effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
+                Effect.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
                 mesh.Draw();
             }
+        }
+
+        public void actualizarLuz(Vector3 camaraPosition)
+        {
+            Effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            Effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            Effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+
+            Effect.Parameters["KAmbient"].SetValue(1f);
+            Effect.Parameters["KDiffuse"].SetValue(1f);
+            Effect.Parameters["KSpecular"].SetValue(0.2f);
+            Effect.Parameters["shininess"].SetValue(100f);
+            //Effect.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
+            Effect.Parameters["eyePosition"].SetValue(camaraPosition);
+
+            Effect.Parameters["ModelTexture"].SetValue(Texture);
+            Effect.Parameters["NormalTexture"].SetValue(NormalTexture);
+            Effect.Parameters["Tiling"].SetValue(Vector2.One);
         }
 
         

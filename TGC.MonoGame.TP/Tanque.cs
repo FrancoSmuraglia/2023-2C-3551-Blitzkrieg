@@ -220,10 +220,10 @@ namespace TGC.MonoGame.TP
             efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
         
             efectoTanque.Parameters["KAmbient"].SetValue(1f);
-            efectoTanque.Parameters["KDiffuse"].SetValue(1.0f);
-            efectoTanque.Parameters["KSpecular"].SetValue(1f);
-            efectoTanque.Parameters["shininess"].SetValue(16.0f);
-            efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
+            efectoTanque.Parameters["KDiffuse"].SetValue(1f);
+            efectoTanque.Parameters["KSpecular"].SetValue(0.2f);
+            efectoTanque.Parameters["shininess"].SetValue(100f);
+            //efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
             efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
         
             efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
