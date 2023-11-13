@@ -174,7 +174,7 @@ namespace TGC.MonoGame.TP
             //effect.Parameters["KDiffuse"].SetValue(1.0f);
             //effect.Parameters["KSpecular"].SetValue(1.0f);
             //effect.Parameters["shininess"].SetValue(16.0f);
-            effect.Parameters["lightPosition"].SetValue(new Vector3(500f, 10000f, 500f));
+            //effect.Parameters["lightPosition"].SetValue(new Vector3(500f, 10000f, 500f));
             //effect.Parameters["eyePosition"].SetValue(camaraPosition);
 
             effect.Parameters["baseTexture"].SetValue(Textura);

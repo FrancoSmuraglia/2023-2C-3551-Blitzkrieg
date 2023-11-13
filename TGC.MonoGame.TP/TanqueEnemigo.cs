@@ -28,7 +28,7 @@ namespace TGC.MonoGame.TP
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
         protected float Rotation{ get; set; }
-        protected Effect Effect { get; set; }
+        public Effect Effect { get; set; }
 
         private ModelBone Torreta;
         private ModelBone Cannon;
@@ -99,28 +99,73 @@ namespace TGC.MonoGame.TP
 
         public void Draw(GameTime gameTime, Matrix view, Matrix projection)
         {
+            actualizarLuz();
             // Tanto la vista como la proyección vienen de la cámara por parámetro
-            Effect.Parameters["View"].SetValue(view);
-            Effect.Parameters["Projection"].SetValue(projection);
-            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
 
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
-            
-            // forma de girar la torreta con cañón
-            // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
-            // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
-            
+
+
             World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                Effect.Parameters["World"].SetValue(meshWorld*World);
+                var finalWorld = meshWorld * World;
+                Effect.Parameters["World"].SetValue(meshWorld * World);
+                Effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
+                Effect.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
                 mesh.Draw();
             }
+
         }
 
-        
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = Effect;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                Effect.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
+        }
+
+        public void actualizarLuz()
+        {
+            //efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            //efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+            //
+            //efectoTanque.Parameters["KAmbient"].SetValue(1f);
+            //efectoTanque.Parameters["KDiffuse"].SetValue(1.0f);
+            //efectoTanque.Parameters["KSpecular"].SetValue(1f);
+            //efectoTanque.Parameters["shininess"].SetValue(16.0f);
+            //efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
+            //efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
+
+            Effect.Parameters["baseTexture"].SetValue(Texture);
+            //efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
+            //efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
+
+        }
+
+
         public Vector3 TankVelocity  { get; set; }
         private Vector3 TankDirection  { get; set; }
         

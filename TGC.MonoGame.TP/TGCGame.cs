@@ -127,14 +127,14 @@ namespace TGC.MonoGame.TP
 
         private Effect EffectLight { get; set; }
         private Matrix LightBoxWorld { get; set; } = Matrix.Identity;
-        private Vector3 lightPosition = new Vector3(500f, 10000f, 500f);
+        private Vector3 lightPosition = new Vector3(500f, 14000f, 500f);
 
         //Shadows
         private const int ShadowmapSize = 8192;
 
-        private readonly float LightCameraFarPlaneDistance = 50000f;
+        private readonly float LightCameraFarPlaneDistance = 15000f;
 
-        private readonly float LightCameraNearPlaneDistance = 5f;
+        private readonly float LightCameraNearPlaneDistance = 50f;
         private TargetCamera TargetLightCamera { get; set; }
         private RenderTarget2D ShadowMapRenderTarget;
 
@@ -252,7 +252,7 @@ namespace TGC.MonoGame.TP
             // Menu 
             InitializeMenus();
 
-            //InitializeTanks();
+            InitializeTanks();
 
             InitializeHUD();
 
@@ -276,7 +276,7 @@ namespace TGC.MonoGame.TP
             Model modeloSkyBox = Content.Load<Model>(ContentFolder3D + "SkyBox/cube");
             TextureCube textureCube = Content.Load<TextureCube>(ContentFolderTextures + "SkyBox/skybox");
             Effect efectoSkyBox = Content.Load<Effect>(ContentFolderEffects + "Skybox");
-            SkyBox = new SkyBox(modeloSkyBox, textureCube, efectoSkyBox);
+            SkyBox = new SkyBox(modeloSkyBox, textureCube, efectoSkyBox, 25000f);
 
             //light
             lightBox = new CubePrimitive(GraphicsDevice, 100f, Color.White);
@@ -614,19 +614,19 @@ namespace TGC.MonoGame.TP
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
             }*/
-            var tanque1 = new TanqueEnemigo(new Vector3(1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
+            var tanque1 = new TanqueEnemigo(new Vector3(1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "ShadowMap"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
-            var tanque2 = new TanqueEnemigo(new Vector3(-1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
+            var tanque2 = new TanqueEnemigo(new Vector3(-1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "ShadowMap"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
-            var tanque3 = new TanqueEnemigo(new Vector3(1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
+            var tanque3 = new TanqueEnemigo(new Vector3(1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "ShadowMap"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
-            var tanque4 = new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
+            var tanque4 = new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "ShadowMap"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
@@ -823,18 +823,38 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.SetRenderTarget(ShadowMapRenderTarget);
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1f, 0);
 
+            EffectLight.CurrentTechnique = EffectLight.Techniques["DepthPass"];
+            //EffectLight.Parameters["lightPosition"].SetValue(lightPosition);
+            Quad.Draw(EffectLight, FloorWorld, TargetLightCamera.View, TargetLightCamera.Projection, FollowCamera.CamaraPosition);
+
             MainTanque.efectoTanque.CurrentTechnique = MainTanque.efectoTanque.Techniques["DepthPass"];
+            //MainTanque.efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
             MainTanque.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
+
+            Ambiente.ForEach(ambientes =>
+            {
+                ambientes.Effect.CurrentTechnique = ambientes.Effect.Techniques["DepthPass"];
+                //ambientes.Effect.Parameters["lightPosition"].SetValue(lightPosition);
+                if (ambientes.Box.Intersects(BoundingFrustum))
+                    ambientes.Draw(gameTime, TargetLightCamera.View, TargetLightCamera.Projection, FollowCamera.CamaraPosition);
+                Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
+                ambientes.Colisiono = false;
+
+            });
+
+            Tanques.ForEach(tanquesEnemigos => {
+                tanquesEnemigos.Effect.CurrentTechnique = tanquesEnemigos.Effect.Techniques["DepthPass"];
+                if (tanquesEnemigos.TankBox.Intersects(BoundingFrustum))
+                {
+                    tanquesEnemigos.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
+                }
+                Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+            });
         }
 
         private void drawScene(GameTime gameTime)
         {
-            /*var originalRasterizerState = GraphicsDevice.RasterizerState;
-                        var rasterizerState = new RasterizerState();
-                        rasterizerState.CullMode = CullMode.None;
-                        Graphics.GraphicsDevice.RasterizerState = rasterizerState;
-                        SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
-                        GraphicsDevice.RasterizerState = originalRasterizerState;*/
+            
 
             // Se agrega por problemas con el pipeline cuando se renderiza 3D y 2D a la vez
             //GraphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -845,6 +865,13 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
 
+            var originalRasterizerState = GraphicsDevice.RasterizerState;
+            var rasterizerState = new RasterizerState();
+            rasterizerState.CullMode = CullMode.None;
+            Graphics.GraphicsDevice.RasterizerState = rasterizerState;
+            SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+            GraphicsDevice.RasterizerState = originalRasterizerState;
+
             MainTanque.efectoTanque.CurrentTechnique = MainTanque.efectoTanque.Techniques["DrawShadowed"];
             MainTanque.efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
             MainTanque.efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
@@ -852,7 +879,7 @@ namespace TGC.MonoGame.TP
             MainTanque.efectoTanque.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
             MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
 
-            /*var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
+            var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
                  MainTanque.TankBox.Orientation *
                  Matrix.CreateTranslation(MainTanque.Position);
             Gizmos.DrawCube(tankOBBToWorld, Color.YellowGreen);
@@ -864,16 +891,17 @@ namespace TGC.MonoGame.TP
                 Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
 
-            */
+            
             Ambiente.ForEach(ambientes =>
             {
+                ambientes.Effect.CurrentTechnique = ambientes.Effect.Techniques["DrawShadowed"];
                 if (ambientes.Box.Intersects(BoundingFrustum))
                     ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
                 Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
                 ambientes.Colisiono = false;
 
             });
-            /*            
+                        
             
             BalasMain.ForEach(balas => {
                 if(balas.BalaBox.Intersects(BoundingFrustum))
@@ -886,11 +914,11 @@ namespace TGC.MonoGame.TP
             
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            */
+            
             Quad.Draw(EffectLight, FloorWorld, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
 
             lightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
-            /*
+            
             if(EstadoActual.Equals(GameState.Pause))
                 MenuPausa.Draw(SpriteBatch);
 
@@ -907,7 +935,7 @@ namespace TGC.MonoGame.TP
             {
                 // WIP
                 PantallaFinal.DrawLost(SpriteBatch);
-            }*/
+            }
         }
 
         /// <summary>

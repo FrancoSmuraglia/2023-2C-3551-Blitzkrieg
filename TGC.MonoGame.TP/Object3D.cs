@@ -21,7 +21,7 @@ namespace TGC.MonoGame.TP
         private Texture2D Texture { get; set; }
         public Vector3 Position{ get; set; }
         private float Rotation{ get; set; }
-        private Effect Effect { get; set; }
+        public Effect Effect { get; set; }
 
         public OrientedBoundingBox Box { get; set; }
         
@@ -111,7 +111,7 @@ namespace TGC.MonoGame.TP
             //Effect.Parameters["KDiffuse"].SetValue(0.5f);
             //Effect.Parameters["KSpecular"].SetValue(0.0f);
             //Effect.Parameters["shininess"].SetValue(16.0f);
-            Effect.Parameters["lightPosition"].SetValue(new Vector3(500f, 10000f, 500f));
+            //Effect.Parameters["lightPosition"].SetValue(new Vector3(500f, 10000f, 500f));
             //Effect.Parameters["eyePosition"].SetValue(camaraPosition);
 
             Effect.Parameters["baseTexture"].SetValue(Texture);
