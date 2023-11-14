@@ -141,7 +141,34 @@ namespace TGC.MonoGame.TP
             Effect.Parameters["Tiling"].SetValue(Vector2.One);
         }
 
-        
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = Effect;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                Effect.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
+        }
+
+
         public Vector3 TankVelocity  { get; set; }
         private Vector3 TankDirection  { get; set; }
         

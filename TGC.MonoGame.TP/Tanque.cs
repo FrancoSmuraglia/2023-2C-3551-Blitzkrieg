@@ -221,7 +221,7 @@ namespace TGC.MonoGame.TP
         
             efectoTanque.Parameters["KAmbient"].SetValue(1f);
             efectoTanque.Parameters["KDiffuse"].SetValue(1f);
-            efectoTanque.Parameters["KSpecular"].SetValue(0.2f);
+            efectoTanque.Parameters["KSpecular"].SetValue(0.8f);
             efectoTanque.Parameters["shininess"].SetValue(100f);
             //efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
             efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
@@ -230,6 +230,33 @@ namespace TGC.MonoGame.TP
             efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
             efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
         
+        }
+
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = efectoTanque;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                efectoTanque.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
         }
 
 
