@@ -15,6 +15,13 @@ namespace TGC.MonoGame.TP
 {    
     public class Tanque
     {
+        private enum EstadoRuedas{
+            Quieto,
+            Avance,
+            Retroceso,
+            GiroSobrePropioTanque
+        }
+        private EstadoRuedas EstadoActualDeRuedas = EstadoRuedas.Quieto;
         public ParticleSystem polvo;
         public const float VidaMaxima = 10;
         // Colisión
@@ -81,12 +88,20 @@ namespace TGC.MonoGame.TP
         public SoundEffectInstance InstanciaSonidoMovimiento { get; set; }
         public AudioListener listener {get;set;}
 
+        // ruedas
+
+        private Matrix[] RuedasMatriz {get; set; }
+        private ModelBone[] RuedasBones {get; set;}
+
+        private Texture2D Treadmill {get; set;}
+
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
         {
 
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
             Model = modelo;
+
 
             AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             TankBox = OrientedBoundingBox.FromAABB(AABB);
@@ -110,6 +125,23 @@ namespace TGC.MonoGame.TP
 
             Cannon = modelo.Bones["Cannon"];
             CannonMatrix = Cannon.Transform;
+
+            var a = modelo.Bones["Treadmill1"];
+            
+
+            // obtengo las ruedas
+
+            RuedasMatriz = new Matrix[16];
+            RuedasBones = new ModelBone[16];
+            string nombreRueda = "Wheel";
+            for (int i = 1; i < 17; i++)
+            {
+                int posicionLogica = i - 1;
+                nombreRueda += i;
+                RuedasBones[posicionLogica] = modelo.Bones[nombreRueda];
+                RuedasMatriz[posicionLogica] = RuedasBones[posicionLogica].Transform;
+                nombreRueda = "Wheel";
+            }
 
             TankDirection = Vector3.Forward;
 
@@ -167,6 +199,7 @@ namespace TGC.MonoGame.TP
         public void Draw(GameTime gameTime, Matrix view, Matrix projection)
         {
             // Tanto la vista como la proyección vienen de la cámara por parámetro
+            AnimarRuedas();
             Effect.Parameters["View"].SetValue(view);
             Effect.Parameters["Projection"].SetValue(projection);
             Effect.Parameters["ModelTexture"]?.SetValue(Texture);
@@ -207,12 +240,14 @@ namespace TGC.MonoGame.TP
                 CurrentAcceleration = 1f;
                 Sentido = 1;
                 polvo.AddParticle(Position, -TankVelocity/3);
+                EstadoActualDeRuedas = EstadoRuedas.Avance;
             }
             if (key.IsKeyDown(Keys.S))
             { //reversa                
                 Moving = true;
                 CurrentAcceleration = 1f;
                 Sentido = -1;
+                EstadoActualDeRuedas = EstadoRuedas.Retroceso;
             }
             if (key.IsKeyDown(Keys.A))
             { // Giro a la izquierda 
@@ -251,11 +286,14 @@ namespace TGC.MonoGame.TP
             {             
                 TankVelocity += TankAcceleration * deltaTime;
             }
+            if(moduloVelocidadXZ <= .1)
+                EstadoActualDeRuedas = EstadoRuedas.Quieto;
 
             // ** Disparo de balas ** //
 
             if (tiempoEntreDisparo < tiempoEntreDisparoLimite)
                 tiempoEntreDisparo += deltaTime;
+            
             updateTurret(gameTime);
             Disparo(key, balas);
 
@@ -273,10 +311,12 @@ namespace TGC.MonoGame.TP
             
             ChoqueDestructibles(ambiente);
             reproducirSonidoMovimiento(key.IsKeyDown(Keys.W) || key.IsKeyDown(Keys.S), gameTime.ElapsedGameTime);
+
             if (key.IsKeyDown(Keys.Escape))
             {
                 InstanciaSonidoMovimiento.Stop();
             }
+
             Moving = false;
 
             World = RotationMatrix * Matrix.CreateTranslation(Position);
@@ -451,6 +491,32 @@ namespace TGC.MonoGame.TP
         {
             Vida -= cantidad;
             Vida = Math.Clamp(Vida, 0, VidaMaxima);
+        }
+
+        float anguloGiroDeRuedas = 0;
+        private void AnimarRuedas(){
+
+            switch (EstadoActualDeRuedas)
+            {
+                case EstadoRuedas.Avance:
+                    for (int i = 0; i < 16; i++)
+                    {
+                        anguloGiroDeRuedas += TankVelocity.Length()/1000;
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas) * RuedasMatriz[i];
+                    }
+                    break;
+                case EstadoRuedas.Retroceso:
+                    for (int i = 0; i < 16; i++)
+                    {
+                        anguloGiroDeRuedas -= TankVelocity.Length()/1000;
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas) * RuedasMatriz[i];
+                    }
+                    break;
+
+                
+                default:
+                    break;
+            }
         }
     }
 }

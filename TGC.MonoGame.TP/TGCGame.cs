@@ -77,6 +77,7 @@ namespace TGC.MonoGame.TP
         private List<Bala> bullets;
         
         private List<TanqueEnemigo> Tanques { get; set; }
+        private List<Bala> BalasEnemigas { get; set; }
         private List<Bala> BalasMain { get; set; }
 
         private Object Prueba { get; set; }
@@ -161,7 +162,7 @@ namespace TGC.MonoGame.TP
             // Esto se hace por un problema en el diseno del modelo del logo de la materia.
             // Una vez que empiecen su juego, esto no es mas necesario y lo pueden sacar.
             var rasterizerState = new RasterizerState();
-            rasterizerState.CullMode = CullMode.None;
+            rasterizerState.CullMode = CullMode.CullClockwiseFace;
             GraphicsDevice.RasterizerState = rasterizerState;
 
 
@@ -262,12 +263,13 @@ namespace TGC.MonoGame.TP
             PantallaFinal = new PantallaFinal(PantallaResolucion,Fondo,Font);
 
             BalasMain = new List<Bala>();
+            BalasEnemigas = new List<Bala>();
 
             Musica = Content.Load<Song>(ContentFolderMusic + "Ambient/MainGame");
             MusicaMenu = Content.Load<Song>(ContentFolderMusic + "Ambient/MenuPause");
             InitializeAmbient();
 
-            Tanques.ForEach(o => o.LoadContent());
+            Tanques.ForEach(o => o.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Effect>(ContentFolderEffects + "BasicShader")));
             Ambiente.ForEach(o => o.LoadContent());
 
             MediaPlayer.Volume = 0.2f;
@@ -601,26 +603,26 @@ namespace TGC.MonoGame.TP
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
             }*/
-            var tanque1 = new TanqueEnemigo(new Vector3(1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
+            var tanque1 = new TanqueEnemigo(new Vector3(10000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
-            var tanque2 = new TanqueEnemigo(new Vector3(-1000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
+            var tanque2 = new TanqueEnemigo(new Vector3(-10000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
-            var tanque3 = new TanqueEnemigo(new Vector3(1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
+            var tanque3 = new TanqueEnemigo(new Vector3(10000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
-            var tanque4 = new TanqueEnemigo(new Vector3(-1000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
+            var tanque4 = new TanqueEnemigo(new Vector3(-10000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
             {
                 SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
             };
             Tanques.Add(tanque1);
-            Tanques.Add(tanque2);
-            Tanques.Add(tanque3);
-            Tanques.Add(tanque4);
+            //Tanques.Add(tanque2);
+            //Tanques.Add(tanque3);
+            //Tanques.Add(tanque4);
         }
 
         /// <summary>
@@ -790,12 +792,15 @@ namespace TGC.MonoGame.TP
 
             Tanques.ForEach(TanqueEnemigoDeLista =>
             {
-                TanqueEnemigoDeLista.Update(gameTime, Ambiente, MainTanque);
+                TanqueEnemigoDeLista.Update(gameTime, Ambiente, MainTanque, BalasEnemigas);
             });
 
             BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));
 
+            BalasEnemigas.ForEach(O => O.Update(gameTime, MainTanque, Ambiente));
+
             BalasMain.RemoveAll(O => O.esVictima || O.recorridoCompleto());
+            BalasEnemigas.RemoveAll(O => O.esVictima || O.recorridoCompleto());
 
             if (Tanques.Exists(O => O.estaMuerto))
             {
@@ -849,7 +854,10 @@ namespace TGC.MonoGame.TP
                 if(tanquesEnemigos.TankBox.Intersects(BoundingFrustum)){
                     tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                 }
-                Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+                var tankOBBToWorld = Matrix.CreateScale(tanquesEnemigos.TankBox.Extents * 2f) *
+                    tanquesEnemigos.TankBox.Orientation *
+                    Matrix.CreateTranslation(tanquesEnemigos.Position);
+                Gizmos.DrawCube(tankOBBToWorld, Color.Black);
             });
 
             
@@ -866,6 +874,11 @@ namespace TGC.MonoGame.TP
                 if(balas.BalaBox.Intersects(BoundingFrustum))
                     balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
                 Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
+            });
+
+            BalasEnemigas.ForEach(balas => {
+                if(balas.BalaBox.Intersects(BoundingFrustum))
+                    balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
             });
 
             if(GizmosActivado)

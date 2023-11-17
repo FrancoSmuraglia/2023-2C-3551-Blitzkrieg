@@ -499,7 +499,7 @@ namespace Particle3DSample
         /// <summary>
         /// Adds a new particle to the system.
         /// </summary>
-        public void AddParticle(Vector3 position, Vector3 velocity)
+        public void  AddParticle(Vector3 position, Vector3 velocity)
         {
             // Figure out where in the circular queue to allocate the new particle.
             int nextFreeParticle = firstFreeParticle + 1;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using BepuPhysics.Collidables;
+using BepuPhysics.Constraints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,6 +21,7 @@ namespace TGC.MonoGame.TP
         
         private float PuntoMedio {get; set;}
 
+        private const int DistanciaMaximaDeVision = 5000;
         Matrix RotationMatrix = Matrix.Identity;
 
         protected Model Model { get; set; }
@@ -40,7 +42,15 @@ namespace TGC.MonoGame.TP
         public bool estaMuerto { get; set; }
         public AudioEmitter Emitter {get;set;}
         public SoundEffect SonidoColision {get;set;}
+
+        private float velocidadGiro {get; set;} 
         
+
+        // bala 
+
+        private Model ModelBala {get; set;}
+        private Texture2D TexturaBala {get; set;}
+        private Effect EfectoBala{get; set;}
 
 
         public TanqueEnemigo(Vector3 Position, Model modelo, Effect efecto, Texture2D textura){
@@ -72,14 +82,27 @@ namespace TGC.MonoGame.TP
             TankVelocity = Vector3.Zero;
             Vida = 10.0f;
             estaMuerto = false;
+
+            velocidadGiro = MathHelper.Lerp(.05f,.1f, (float)new Random().NextDouble());
         }
 
-        public void LoadContent(){
+        public void LoadContent(Model bala, Texture2D texturaBala, Effect efectoBala){
 
             // Asigno el efecto que cargue a cada parte del mesh.
             // Un modelo puede tener mas de 1 mesh internamente.
+            ModelBala = bala;
 
-            //Effect.Parameters["ModelTexture"].SetValue(Texture);
+            TexturaBala = texturaBala;
+
+            EfectoBala = efectoBala;
+
+            foreach (var mesh in ModelBala.Meshes)
+            {
+                foreach (var meshPart in mesh.MeshParts)
+                {
+                    meshPart.Effect = Effect;
+                }
+            }
 
             // Al mesh le asigno el Effect (solo textura por ahora)
             foreach (var mesh in Model.Meshes)
@@ -154,47 +177,51 @@ namespace TGC.MonoGame.TP
             return angle;
         }
 
+        float tiempoEntreDisparo;
+        private void BusquedaYPersecucion(Vector3 playerposition, List<Bala> balas, float deltaTime){
+            Vector3 distance = playerposition - Position;
+            var distanceLongitud = distance.Length();
+            tiempoEntreDisparo += deltaTime;
+            if(distanceLongitud < DistanciaMaximaDeVision)
+            { // radio de visión del tanqueEnemigo
+                var directionActual = RotationMatrix.Forward;
+                
+                var angulo = VectorAngle(distance, directionActual);
 
-        private void GirarHaciaElJugador(Vector3 playerposition){
-            Vector3 Forward = playerposition - Position;
-            var distance = Forward.Length();
-            var directionActual = RotationMatrix.Forward;
-            
-            var angulo = VectorAngle(Forward, directionActual);
-
-
-            //var angulo = Math.Acos(Vector3.Dot(directionActual, Forward));
-            ///var dx = playerposition.X - Forward.X;
-            ///var dz = playerposition.Z - Forward.Z; 
-            /// var angulo = Math.Atan2(dx, dz);
-            //Console.WriteLine(angulo * 180 / Math.PI);
-
-            //var angulo = Math.Atan2(Forward.X, Forward.Z) - Math.Atan2(directionActual.X, directionActual.Z);
-            if(Math.Abs(angulo) > 0.2){
-                if(angulo > 0)
-                    RotationMatrix *= Matrix.CreateRotationY(.01f);
-                else if (angulo < 0)
-                    RotationMatrix *= Matrix.CreateRotationY(-.01f);
+                if(Math.Abs(angulo) > 0.2){
+                    if(angulo > 0)
+                        RotationMatrix *= Matrix.CreateRotationY(velocidadGiro);
+                    else if (angulo < 0)
+                        RotationMatrix *= Matrix.CreateRotationY(-velocidadGiro);
+                }
+                
+                if(distanceLongitud > 2000)
+                    TankVelocity += deltaTime * Vector3.Normalize(distance) * 100;
+                
+                if(distanceLongitud < DistanciaMaximaDeVision/2 && tiempoEntreDisparo >= 5)
+                    Disparar(balas, Vector3.Normalize(distance));
             }
-
-            
-            if(distance > 1000)
-                TankVelocity += directionActual * 1;
-            
-            
             
 
 
         }
+        private void Disparar(List<Bala> balas, Vector3 velocidadDisparo)
+        {
+            var balaObjeto = new Bala(Position, velocidadDisparo * 5, ModelBala, EfectoBala, TexturaBala, this);
+            balas.Add(balaObjeto);
+            tiempoEntreDisparo = 0;
+        }
+
         private void AgregarFriccion(float deltaTime)
         {
             var lateral_velocity = RotationMatrix.Right * Vector3.Dot(TankVelocity, RotationMatrix.Right);
             var lateral_friction = -lateral_velocity * 10f;
             var backwards_friction = -TankVelocity * 8f;
             TankVelocity += (backwards_friction + lateral_friction) * deltaTime;
-            TankAcceleration = TankDirection * Sentido * CurrentAcceleration * 30;
+            TankAcceleration = TankDirection * CurrentAcceleration * 30;
         }
-        public void Update(GameTime gameTime, List<Object> ambiente, Tanque jugador){
+
+        public void Update(GameTime gameTime, List<Object> ambiente, Tanque jugador, List<Bala> balasEnemigas){
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
@@ -203,12 +230,11 @@ namespace TGC.MonoGame.TP
             
             TankBox.Orientation = RotationMatrix;
             
-            GirarHaciaElJugador(jugador.Position);
+            //BusquedaYPersecucion(jugador.Position, balasEnemigas, deltaTime);
             
             AgregarFriccion(deltaTime);
 
-            if (Moving && moduloVelocidadXZ < 30f)
-            {             
+            if (Moving && moduloVelocidadXZ < 30f){             
                 TankVelocity += TankAcceleration * deltaTime;
             }
 

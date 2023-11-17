@@ -41,6 +41,7 @@ namespace TGC.MonoGame.TP
         private Vector2 estadoAnteriorDelMouse;
 
         public Tanque Jugador {get; set;}
+        public TanqueEnemigo EnemigoEspecifico {get; set;}
 
 
         public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, Tanque Main){
@@ -51,6 +52,30 @@ namespace TGC.MonoGame.TP
             Model = modelo;
 
             Jugador = Main;
+
+            var AABB = BoundingVolumesExtensions.FromMatrix(World);
+            BalaBox = OrientedBoundingBox.FromAABB(AABB);
+            BalaBox.Center = Position + Vector3.Up * AABB.Max.Y / 2 ;
+
+            Effect = efecto;
+
+            Texture = textura;
+
+            Velocity = velocidad;
+            
+            esVictima = false;
+
+            Daño = 1f;
+        }
+
+        public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, TanqueEnemigo Main){
+            this.Position = Position;
+
+            World = Matrix.CreateScale(5f) * Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
+            
+            Model = modelo;
+
+            EnemigoEspecifico = Main;
 
             var AABB = BoundingVolumesExtensions.FromMatrix(World);
             BalaBox = OrientedBoundingBox.FromAABB(AABB);
@@ -121,9 +146,35 @@ namespace TGC.MonoGame.TP
                     ambiente.reproducirSonido(Jugador.listener);
                     esVictima = true;   
                 }
+            }              
+        }
+
+        public void Update(GameTime gameTime, Tanque jugador, List<Object> ambientaciones){    
+            BalaBox.Center = Position;
+            if(!recorridoCompleto() && !esVictima){
+                var delta = (float)gameTime.ElapsedGameTime.Milliseconds;
+                tiempoDeVida += delta;
+                Position += Velocity * delta;
             }   
 
-                
+            foreach (var ambiente in ambientaciones){
+                if(BalaBox.Intersects(ambiente.Box)){
+                    if(ambiente.esEliminable){
+                        ambiente.esVictima = true;
+                    }
+                    ambiente.reproducirSonido(jugador.listener);
+                    esVictima = true;   
+                }
+            }      
+
+            if(BalaBox.Intersects(jugador.TankBox)){
+                jugador.agregarVelocidad(new Vector3(Velocity.X, 0, Velocity.Z));
+                //jugador.reproducirSonido(Jugador.listener);
+                esVictima = true;
+                jugador.recibirDaño(Daño);
+            }
+
+
         }
         
     }
