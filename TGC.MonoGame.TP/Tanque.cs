@@ -19,7 +19,8 @@ namespace TGC.MonoGame.TP
             Quieto,
             Avance,
             Retroceso,
-            GiroSobrePropioTanque
+            GiroDerecha,
+            GiroIzquierda
         }
         private EstadoRuedas EstadoActualDeRuedas = EstadoRuedas.Quieto;
         public ParticleSystem polvo;
@@ -133,14 +134,13 @@ namespace TGC.MonoGame.TP
 
             RuedasMatriz = new Matrix[16];
             RuedasBones = new ModelBone[16];
-            string nombreRueda = "Wheel";
             for (int i = 1; i < 17; i++)
             {
                 int posicionLogica = i - 1;
+                string nombreRueda = "Wheel";
                 nombreRueda += i;
                 RuedasBones[posicionLogica] = modelo.Bones[nombreRueda];
                 RuedasMatriz[posicionLogica] = RuedasBones[posicionLogica].Transform;
-                nombreRueda = "Wheel";
             }
 
             TankDirection = Vector3.Forward;
@@ -200,6 +200,7 @@ namespace TGC.MonoGame.TP
         {
             // Tanto la vista como la proyección vienen de la cámara por parámetro
             AnimarRuedas();
+            updateTurret(gameTime);
             Effect.Parameters["View"].SetValue(view);
             Effect.Parameters["Projection"].SetValue(projection);
             Effect.Parameters["ModelTexture"]?.SetValue(Texture);
@@ -233,6 +234,9 @@ namespace TGC.MonoGame.TP
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
             // ** Movimiento del tanque ** //
+            
+            if(moduloVelocidadXZ <= .1)
+                EstadoActualDeRuedas = EstadoRuedas.Quieto;
 
             if (key.IsKeyDown(Keys.W))
             { //adeltante
@@ -254,6 +258,7 @@ namespace TGC.MonoGame.TP
                 RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
                 if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
+                    EstadoActualDeRuedas = EstadoRuedas.GiroIzquierda;
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque += .03f;
                 }
@@ -267,6 +272,7 @@ namespace TGC.MonoGame.TP
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
+                    EstadoActualDeRuedas = EstadoRuedas.GiroDerecha;
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque -= .03f;
                 }
@@ -286,15 +292,12 @@ namespace TGC.MonoGame.TP
             {             
                 TankVelocity += TankAcceleration * deltaTime;
             }
-            if(moduloVelocidadXZ <= .1)
-                EstadoActualDeRuedas = EstadoRuedas.Quieto;
 
             // ** Disparo de balas ** //
 
             if (tiempoEntreDisparo < tiempoEntreDisparoLimite)
                 tiempoEntreDisparo += deltaTime;
             
-            updateTurret(gameTime);
             Disparo(key, balas);
 
             // ** Análisis de colisión ** //
@@ -494,25 +497,49 @@ namespace TGC.MonoGame.TP
         }
 
         float anguloGiroDeRuedas = 0;
+        float anguloGiro = 0;
+        float anguloGiroIzquierda = 0;
         private void AnimarRuedas(){
-
+           
             switch (EstadoActualDeRuedas)
             {
                 case EstadoRuedas.Avance:
+                    anguloGiroDeRuedas += TankVelocity.Length()/100;
                     for (int i = 0; i < 16; i++)
                     {
-                        anguloGiroDeRuedas += TankVelocity.Length()/1000;
                         RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas) * RuedasMatriz[i];
                     }
                     break;
                 case EstadoRuedas.Retroceso:
+                    anguloGiroDeRuedas -= TankVelocity.Length()/100;
                     for (int i = 0; i < 16; i++)
                     {
-                        anguloGiroDeRuedas -= TankVelocity.Length()/1000;
                         RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas) * RuedasMatriz[i];
                     }
                     break;
-
+                case EstadoRuedas.GiroDerecha:                        
+                    anguloGiro += 0.1f;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas + anguloGiro) * RuedasMatriz[i];
+                    }
+                    for (int i = 9; i < 15; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas - anguloGiro) * RuedasMatriz[i];
+                    }
+                    break;
+                case EstadoRuedas.GiroIzquierda:                        
+                    anguloGiro += 0.1f;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas - anguloGiro) * RuedasMatriz[i];
+                    }
+                    for (int i = 9; i < 15; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas + anguloGiro) * RuedasMatriz[i];
+                    }
+                    break;
+            
                 
                 default:
                     break;

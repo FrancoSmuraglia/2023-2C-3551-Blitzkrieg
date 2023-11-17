@@ -16,6 +16,7 @@ namespace TGC.MonoGame.TP
     public class TanqueEnemigo
     {
         // Colisión
+        bool IsMoving = false;
         public OrientedBoundingBox TankBox { get; set; }
         private float Speed { get; set; }
         
@@ -52,6 +53,12 @@ namespace TGC.MonoGame.TP
         private Texture2D TexturaBala {get; set;}
         private Effect EfectoBala{get; set;}
 
+        // ruedas
+
+        private Matrix[] RuedasMatriz {get; set; }
+        private ModelBone[] RuedasBones {get; set;}
+
+
 
         public TanqueEnemigo(Vector3 Position, Model modelo, Effect efecto, Texture2D textura){
             this.Position = Position;
@@ -84,6 +91,20 @@ namespace TGC.MonoGame.TP
             estaMuerto = false;
 
             velocidadGiro = MathHelper.Lerp(.05f,.1f, (float)new Random().NextDouble());
+
+            // obtengo las ruedas
+
+            RuedasMatriz = new Matrix[16];
+            RuedasBones = new ModelBone[16];
+            for (int i = 1; i < 17; i++)
+            {
+                int posicionLogica = i - 1;
+                string nombreRueda = "Wheel";
+                nombreRueda += i;
+                RuedasBones[posicionLogica] = modelo.Bones[nombreRueda];
+                RuedasMatriz[posicionLogica] = RuedasBones[posicionLogica].Transform;
+            }
+
         }
 
         public void LoadContent(Model bala, Texture2D texturaBala, Effect efectoBala){
@@ -121,6 +142,20 @@ namespace TGC.MonoGame.TP
             CannonMatrix = Cannon.Transform;
         }
 
+        
+        private void MoverRuedas()
+        {
+            if (IsMoving)
+            {
+                anguloGiro += TankVelocity.Length() / 100;
+                for (int i = 0; i < 16; i++)
+                {
+                    RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiro) * RuedasMatriz[i];
+                }
+            }
+        }
+
+        float anguloGiro = 0;
         public void Draw(GameTime gameTime, Matrix view, Matrix projection)
         {
             // Tanto la vista como la proyección vienen de la cámara por parámetro
@@ -128,23 +163,32 @@ namespace TGC.MonoGame.TP
             Effect.Parameters["Projection"].SetValue(projection);
             Effect.Parameters["ModelTexture"]?.SetValue(Texture);
 
+            for (int i = 0; i < 16; i++)
+            {
+                RuedasBones[i].Transform = RuedasMatriz[i];
+            }
+            Torreta.Transform = TorretaMatrix;
+            Cannon.Transform = CannonMatrix;
+            MoverRuedas();
+
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
-            
+
             // forma de girar la torreta con cañón
             // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
             // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
-            
+
+
             World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                Effect.Parameters["World"].SetValue(meshWorld*World);
+                Effect.Parameters["World"].SetValue(meshWorld * World);
                 mesh.Draw();
             }
         }
 
-        
+
         public Vector3 TankVelocity  { get; set; }
         private Vector3 TankDirection  { get; set; }
         public Vector3 TankAcceleration { get; set; } 
@@ -182,8 +226,10 @@ namespace TGC.MonoGame.TP
             Vector3 distance = playerposition - Position;
             var distanceLongitud = distance.Length();
             tiempoEntreDisparo += deltaTime;
+            IsMoving = false;
             if(distanceLongitud < DistanciaMaximaDeVision)
             { // radio de visión del tanqueEnemigo
+                IsMoving = true;
                 var directionActual = RotationMatrix.Forward;
                 
                 var angulo = VectorAngle(distance, directionActual);
@@ -222,6 +268,9 @@ namespace TGC.MonoGame.TP
         }
 
         public void Update(GameTime gameTime, List<Object> ambiente, Tanque jugador, List<Bala> balasEnemigas){
+            
+
+
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
@@ -230,7 +279,7 @@ namespace TGC.MonoGame.TP
             
             TankBox.Orientation = RotationMatrix;
             
-            //BusquedaYPersecucion(jugador.Position, balasEnemigas, deltaTime);
+            BusquedaYPersecucion(jugador.Position, balasEnemigas, deltaTime);
             
             AgregarFriccion(deltaTime);
 

@@ -224,6 +224,7 @@ namespace TGC.MonoGame.TP
 
             // Cargo el modelo, efecto y textura del tanque que controla el jugador.
             T90 = Content.Load<Model>(ContentFolder3D + "T90");
+            
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
             Textura = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA");
             SoundEffect sonidoDisparo = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankShooting");
@@ -787,13 +788,15 @@ namespace TGC.MonoGame.TP
                 return;
             }
 
-            // Control del jugador
-            MainTanque.Update(gameTime, Keyboard.GetState(), Ambiente, Tanques, BalasMain);
+            
 
             Tanques.ForEach(TanqueEnemigoDeLista =>
             {
                 TanqueEnemigoDeLista.Update(gameTime, Ambiente, MainTanque, BalasEnemigas);
             });
+
+            // Control del jugador
+            MainTanque.Update(gameTime, Keyboard.GetState(), Ambiente, Tanques, BalasMain);
 
             BalasMain.ForEach(o => o.Update(gameTime, Tanques, Ambiente));
 
