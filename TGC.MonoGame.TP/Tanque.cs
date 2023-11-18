@@ -192,9 +192,9 @@ namespace TGC.MonoGame.TP
         //    }
         //}
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition)
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
         {
-            actualizarLuz(camaraPosition);
+            actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
             // Tanto la vista como la proyección vienen de la cámara por parámetro
             
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
@@ -206,15 +206,15 @@ namespace TGC.MonoGame.TP
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
                 var finalWorld = meshWorld * World;
-                efectoTanque.Parameters["World"].SetValue(meshWorld * World);
-                efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
-                efectoTanque.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
+                efectoTanque.Parameters["World"].SetValue(finalWorld);
+                efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(finalWorld)));
+                efectoTanque.Parameters["WorldViewProjection"].SetValue(finalWorld * view * projection);
                 mesh.Draw();
             }
             
         }
         
-        public void actualizarLuz(Vector3 camaraPosition){
+        public void actualizarEfecto(Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera){
             efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
             efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
             efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
@@ -223,12 +223,18 @@ namespace TGC.MonoGame.TP
             efectoTanque.Parameters["KDiffuse"].SetValue(1f);
             efectoTanque.Parameters["KSpecular"].SetValue(0.8f);
             efectoTanque.Parameters["shininess"].SetValue(100f);
-            //efectoTanque.Parameters["lightPosition"].SetValue(new Vector3(500,500,500));
             efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
         
             efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
             efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
             efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
+
+
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["NormalMapping"];
+            efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
+            efectoTanque.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            efectoTanque.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
         
         }
 
@@ -236,11 +242,12 @@ namespace TGC.MonoGame.TP
         {
             //actualizarLuz(camaraPosition);
             // Tanto la vista como la proyección vienen de la cámara por parámetro
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["DepthPass"];
 
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
 
-            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            //World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var modelMesh in Model.Meshes)
             {
                 foreach (var part in modelMesh.MeshParts)

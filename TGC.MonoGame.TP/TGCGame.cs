@@ -193,7 +193,7 @@ namespace TGC.MonoGame.TP
             // Configuración del frustum
             BoundingFrustum = new BoundingFrustum(FollowCamera.View * FollowCamera.Projection);
 
-            FloorWorld = Matrix.CreateScale(10000f, 1f, 10000f);
+            FloorWorld = Matrix.Identity; //Matrix.CreateScale(10000f, 1f, 10000f);
 
             Ambiente = new List<Object>();
 
@@ -230,7 +230,7 @@ namespace TGC.MonoGame.TP
             MainTanque = new Tanque(
                     new Vector3(0f, 150, 0f),
                     T90,
-                    Content.Load<Effect>(ContentFolderEffects + "BasicShader"),
+                    EffectLight,
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"),
                     estadoInicialMouse,
                     sonidoDisparo,
@@ -243,7 +243,7 @@ namespace TGC.MonoGame.TP
 
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
 
-            Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolder3D + "textures_mod/tierra"));
+            Quad = new QuadPrimitive(GraphicsDevice, Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Gravel_001_BaseColor"), Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Gravel_001_Normal"));
 
 
             roca = Content.Load<Model>(ContentFolder3D + "Rock/rock");
@@ -815,45 +815,46 @@ namespace TGC.MonoGame.TP
         {
 
             GraphicsDevice.Clear(Color.BlueViolet);
-            DrawMap(gameTime);
+            DrawShadowMap(gameTime);
             DrawScene(gameTime);
 
             base.Draw(gameTime);
         }
 
-        private void DrawMap(GameTime gameTime)
+        private void DrawShadowMap(GameTime gameTime)
         {
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             // Set the render target as our shadow map, we are drawing the depth into this texture
             GraphicsDevice.SetRenderTarget(ShadowMapRenderTarget);
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1f, 0);
 
-            EffectLight.CurrentTechnique = EffectLight.Techniques["DepthPass"];
             //EffectLight.Parameters["lightPosition"].SetValue(lightPosition);
-            Quad.Draw(EffectLight, FloorWorld, TargetLightCamera.View, TargetLightCamera.Projection, FollowCamera.CamaraPosition);
+            Quad.DrawShadows(EffectLight, FloorWorld, TargetLightCamera.View, TargetLightCamera.Projection);
 
-            MainTanque.efectoTanque.CurrentTechnique = MainTanque.efectoTanque.Techniques["DepthPass"];
             //MainTanque.efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
             MainTanque.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
 
             Ambiente.ForEach(ambientes =>
             {
-                ambientes.Effect.CurrentTechnique = ambientes.Effect.Techniques["DepthPass"];
-                //ambientes.Effect.Parameters["lightPosition"].SetValue(lightPosition);
                 if (ambientes.Box.Intersects(BoundingFrustum))
-                    ambientes.Draw(gameTime, TargetLightCamera.View, TargetLightCamera.Projection, FollowCamera.CamaraPosition);
+                    ambientes.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
                 Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
                 ambientes.Colisiono = false;
 
             });
 
             Tanques.ForEach(tanquesEnemigos => {
-                tanquesEnemigos.Effect.CurrentTechnique = tanquesEnemigos.Effect.Techniques["DepthPass"];
                 if (tanquesEnemigos.TankBox.Intersects(BoundingFrustum))
                 {
                     tanquesEnemigos.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
                 }
                 Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
+            });
+
+            BalasMain.ForEach(balas => {
+                if (balas.BalaBox.Intersects(BoundingFrustum))
+                    balas.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
+                Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
         }
 
@@ -869,12 +870,9 @@ namespace TGC.MonoGame.TP
             SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
             GraphicsDevice.RasterizerState = originalRasterizerState;
 
-            MainTanque.efectoTanque.CurrentTechnique = MainTanque.efectoTanque.Techniques["NormalMapping"];
-            MainTanque.efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
-            MainTanque.efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
-            MainTanque.efectoTanque.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
-            MainTanque.efectoTanque.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
-            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+            
+            MainTanque.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, ShadowMapRenderTarget, 
+                lightPosition, ShadowmapSize, TargetLightCamera);
 
             var tankOBBToWorld = Matrix.CreateScale(MainTanque.TankBox.Extents * 2f) *
                  MainTanque.TankBox.Orientation *
@@ -882,14 +880,10 @@ namespace TGC.MonoGame.TP
             Gizmos.DrawCube(tankOBBToWorld, Color.YellowGreen);
 
             Tanques.ForEach(tanquesEnemigos => {
-                tanquesEnemigos.Effect.CurrentTechnique = tanquesEnemigos.Effect.Techniques["NormalMapping"];
-                tanquesEnemigos.Effect.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
-                tanquesEnemigos.Effect.Parameters["lightPosition"].SetValue(lightPosition);
-                tanquesEnemigos.Effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
-                tanquesEnemigos.Effect.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
                 if (tanquesEnemigos.TankBox.Intersects(BoundingFrustum))
                 {
-                    tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+                    tanquesEnemigos.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, ShadowMapRenderTarget, 
+                        lightPosition, ShadowmapSize, TargetLightCamera);
                 }
                 Gizmos.DrawCube(tanquesEnemigos.TankBox.Center, tanquesEnemigos.TankBox.Extents * 2f, Color.Black);
             });
@@ -897,13 +891,9 @@ namespace TGC.MonoGame.TP
 
             Ambiente.ForEach(ambientes =>
             {
-                ambientes.Effect.CurrentTechnique = ambientes.Effect.Techniques["Default"];
-                ambientes.Effect.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
-                ambientes.Effect.Parameters["lightPosition"].SetValue(lightPosition);
-                ambientes.Effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
-                ambientes.Effect.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
                 if (ambientes.Box.Intersects(BoundingFrustum))
-                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+                    ambientes.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, ShadowMapRenderTarget, 
+                        lightPosition, ShadowmapSize, TargetLightCamera);
                 Gizmos.DrawCube(ambientes.Box.Center, ambientes.Box.Extents * 2f, ambientes.Colisiono ? Color.Blue : Color.Red);
                 ambientes.Colisiono = false;
 
@@ -912,7 +902,7 @@ namespace TGC.MonoGame.TP
 
             BalasMain.ForEach(balas => {
                 if (balas.BalaBox.Intersects(BoundingFrustum))
-                    balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection);
+                    balas.Draw(gameTime, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
                 Gizmos.DrawCube(balas.BalaBox.Center, balas.BalaBox.Extents * 2f, Color.White);
             });
 
@@ -922,7 +912,8 @@ namespace TGC.MonoGame.TP
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            Quad.Draw(EffectLight, FloorWorld, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition);
+            Quad.Draw(EffectLight, FloorWorld, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, ShadowMapRenderTarget, 
+                lightPosition, ShadowmapSize, TargetLightCamera);
 
             LightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
 
