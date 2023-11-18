@@ -1,3 +1,4 @@
+using BepuPhysics.Constraints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -10,11 +11,12 @@ namespace TGC.MonoGame.TP
     public class QuadPrimitive
     {
         public Texture2D Textura;
+        public Texture2D Normal;
         /// <summary>
         ///     Create a textured quad.
         /// </summary>
         /// <param name="graphicsDevice">Used to initialize and control the presentation of the graphics device.</param>
-        public QuadPrimitive(GraphicsDevice graphicsDevice, Texture2D textura)
+        public QuadPrimitive(GraphicsDevice graphicsDevice, Texture2D textura, Texture2D normal)
         {
             CreateVertexBuffer(graphicsDevice);
             CreateIndexBuffer(graphicsDevice);
@@ -24,6 +26,7 @@ namespace TGC.MonoGame.TP
             Effect.EnableDefaultLighting();
             Effect.Texture = textura;
             Textura = textura;
+            Normal = normal;
         }
 
         /// <summary>
@@ -59,13 +62,13 @@ namespace TGC.MonoGame.TP
             var vertices = new[]
             {
                 // Possitive X, Possitive Z (1,1) 0
-                new VertexPositionNormalTexture(Vector3.UnitX + Vector3.UnitZ, Vector3.Up, textureCoordinateUpperRight),
+                new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)*10000f, Vector3.Up, textureCoordinateUpperRight*20f),
                 // Possitive X, Negative Z (1,-1) 1
-                new VertexPositionNormalTexture(Vector3.UnitX - Vector3.UnitZ, Vector3.Up, textureCoordinateLowerRight),
+                new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)*10000f, Vector3.Up, textureCoordinateLowerRight*20f),
                 // Negative X, Possitive Z (-1,1) 2
-                new VertexPositionNormalTexture(Vector3.UnitZ - Vector3.UnitX, Vector3.Up, textureCoordinateUpperLeft),
+                new VertexPositionNormalTexture((Vector3.UnitZ - Vector3.UnitX)*10000f, Vector3.Up, textureCoordinateUpperLeft*20f),
                 // Negative X, Negative Z (-1,-1) 3
-                new VertexPositionNormalTexture(-Vector3.UnitX - Vector3.UnitZ, Vector3.Up, textureCoordinateLowerLeft)
+                new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ)*10000f, Vector3.Up, textureCoordinateLowerLeft*20f)
             };
 
             Vertices = new VertexBuffer(graphicsDevice, VertexPositionNormalTexture.VertexDeclaration, vertices.Length,
@@ -126,20 +129,78 @@ namespace TGC.MonoGame.TP
             }
         }
 
-        public void Draw(Effect effect, Matrix world, Matrix view, Matrix projection)
+        public void Draw(Effect effect, Matrix world, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
         {
-            effect.Parameters["World"].SetValue(world);
-            effect.Parameters["View"].SetValue(view);
-            effect.Parameters["Projection"].SetValue(projection);
-            effect.Parameters["ModelTexture"]?.SetValue(Textura);
+            //effect.Parameters["World"].SetValue(world);
+            //effect.Parameters["View"].SetValue(view);
+            //effect.Parameters["Projection"].SetValue(projection);
+            //effect.Parameters["ModelTexture"]?.SetValue(Textura);
+            //
+            //var graphicsDevice = effect.GraphicsDevice;
+            //
+            //
+            //// Set our vertex declaration, vertex buffer, and index buffer.
+            //
+            //graphicsDevice.SetVertexBuffer(Vertices);
+            //graphicsDevice.Indices = Indices;
+            //
+            //foreach (var effectPass in effect.CurrentTechnique.Passes)
+            //{
+            //    effectPass.Apply();
+            //    graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Indices.IndexCount / 3);
+            //}
 
+            actualizarLuz(camaraPosition, effect, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
             var graphicsDevice = effect.GraphicsDevice;
-
-            
-            // Set our vertex declaration, vertex buffer, and index buffer.
-            
             graphicsDevice.SetVertexBuffer(Vertices);
             graphicsDevice.Indices = Indices;
+
+            effect.Parameters["World"].SetValue(world);
+            effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(world)));
+            effect.Parameters["WorldViewProjection"].SetValue(world * view * projection);
+
+            foreach (var effectPass in effect.CurrentTechnique.Passes)
+            {
+                effectPass.Apply();
+                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Indices.IndexCount / 3);
+            }
+        }
+
+        public void actualizarLuz(Vector3 camaraPosition, Effect effect, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, 
+            int ShadowmapSize, TargetCamera TargetLightCamera)
+        {
+            effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+
+            effect.Parameters["KAmbient"].SetValue(1.0f);
+            effect.Parameters["KDiffuse"].SetValue(1.0f);
+            effect.Parameters["KSpecular"].SetValue(0.0f);
+            effect.Parameters["shininess"].SetValue(32.0f);
+            effect.Parameters["eyePosition"].SetValue(camaraPosition);
+
+            effect.Parameters["ModelTexture"].SetValue(Textura);
+            effect.Parameters["NormalTexture"].SetValue(Normal);
+            effect.Parameters["Tiling"].SetValue(Vector2.One);
+
+            effect.CurrentTechnique = effect.Techniques["NormalMapping"];
+            effect.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            effect.Parameters["lightPosition"].SetValue(lightPosition);
+            effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            effect.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
+        }
+
+        public void DrawShadows(Effect effect, Matrix world, Matrix view, Matrix projection)
+        {
+            var graphicsDevice = effect.GraphicsDevice;
+            graphicsDevice.SetVertexBuffer(Vertices);
+            graphicsDevice.Indices = Indices;
+
+            effect.CurrentTechnique = effect.Techniques["DepthPass"];
+
+            effect.Parameters["World"].SetValue(world);
+            effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(world)));
+            effect.Parameters["WorldViewProjection"].SetValue(world * view * projection);
 
             foreach (var effectPass in effect.CurrentTechnique.Passes)
             {

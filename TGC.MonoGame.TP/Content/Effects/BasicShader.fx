@@ -40,12 +40,23 @@ struct VertexShaderOutput
     float4 TextureCoordinate : TEXCOORD0;
 };
 
+bool PointInSphere(float3 center, float radius, float3 pointOfInterest){
+    /*float3 distance = center - pointOfInterest;
+    float a = sqrt(dot(distance,distance));*/
+    float3 distance = pointOfInterest - center;
+    float dis = pow(distance.x,2) + pow(distance.y,2) + pow(distance.z,2);
+    return dis <= radius*radius;
+}
+
 VertexShaderOutput MainVS(in VertexShaderInput input)
 {
     // Clear the output
 	VertexShaderOutput output = (VertexShaderOutput)0;
     // Model space to World space
     float4 worldPosition = mul(input.Position, World);
+    /*if(PointInSphere((500,000,500), 750, worldPosition.xyz)){
+        worldPosition.xyz = worldPosition.xyz * .5;
+    }*/
     // World space to View space
     float4 viewPosition = mul(worldPosition, View);
 	// View space to Projection space

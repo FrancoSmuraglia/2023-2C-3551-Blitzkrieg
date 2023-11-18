@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Particle3DSample;
 using TGC.MonoGame.Samples.Collisions;
 
 
@@ -41,6 +42,9 @@ namespace TGC.MonoGame.TP
         private Vector2 estadoAnteriorDelMouse;
 
         public Tanque Jugador {get; set;}
+        public TanqueEnemigo EnemigoEspecifico {get; set;}
+
+        public ParticleSystem Rastros;
 
 
         public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, Tanque Main){
@@ -67,13 +71,78 @@ namespace TGC.MonoGame.TP
             Daño = 1f;
         }
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection)
-        {
-            // Tanto la vista como la proyección vienen de la cámara por parámetro
-            Effect.Parameters["View"].SetValue(view);
-            Effect.Parameters["Projection"].SetValue(projection);
-            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+        public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, TanqueEnemigo Main){
+            this.Position = Position;
 
+            World = Matrix.CreateScale(5f) * Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
+            
+            Model = modelo;
+
+            EnemigoEspecifico = Main;
+
+            var AABB = BoundingVolumesExtensions.FromMatrix(World);
+            BalaBox = OrientedBoundingBox.FromAABB(AABB);
+            BalaBox.Center = Position + Vector3.Up * AABB.Max.Y / 2 ;
+
+            Effect = efecto;
+
+            Texture = textura;
+
+            Velocity = velocidad;
+            
+            esVictima = false;
+
+            Daño = 1f;
+        }
+
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
+        {
+            actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+
+            
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+            
+            // forma de girar la torreta con cañón
+            // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
+            // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
+            
+            //World = Matrix.CreateScale(5f)  * Matrix.CreateTranslation(Position);
+            foreach (var mesh in Model.Meshes)
+            {
+                var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
+                Effect.Parameters["World"].SetValue(meshWorld*World);
+                Effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
+                Effect.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
+                mesh.Draw();
+            }
+        }
+        public void actualizarEfecto(Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera){
+            Effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            Effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            Effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+        
+            Effect.Parameters["KAmbient"].SetValue(1f);
+            Effect.Parameters["KDiffuse"].SetValue(1f);
+            Effect.Parameters["KSpecular"].SetValue(0.8f);
+            Effect.Parameters["shininess"].SetValue(100f);
+            Effect.Parameters["eyePosition"].SetValue(camaraPosition);
+        
+            Effect.Parameters["ModelTexture"].SetValue(Texture);
+            //Effect.Parameters["NormalTexture"].SetValue(NormalTexture);
+            Effect.Parameters["Tiling"].SetValue(Vector2.One);
+
+
+            Effect.CurrentTechnique = Effect.Techniques["Default"];
+            Effect.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            Effect.Parameters["lightPosition"].SetValue(lightPosition);
+            Effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            Effect.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
+        
+        }
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            Effect.CurrentTechnique = Effect.Techniques["DepthPass"];
             
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
@@ -85,8 +154,11 @@ namespace TGC.MonoGame.TP
             World = Matrix.CreateScale(5f)  * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
+                foreach (var part in mesh.MeshParts)
+                    part.Effect = Effect;
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                Effect.Parameters["World"].SetValue(meshWorld*World);
+                Effect.Parameters["WorldViewProjection"]
+                    .SetValue(meshWorld * World * view * projection);
                 mesh.Draw();
             }
         }
@@ -101,6 +173,7 @@ namespace TGC.MonoGame.TP
                 var delta = (float)gameTime.ElapsedGameTime.Milliseconds;
                 tiempoDeVida += delta;
                 Position += Velocity * delta;
+                Rastros.AddParticle(Position, -Velocity);
             }       
 
             foreach (var tanqueEnemigo in enemigos)
@@ -121,9 +194,34 @@ namespace TGC.MonoGame.TP
                     ambiente.reproducirSonido(Jugador.listener);
                     esVictima = true;   
                 }
+            }              
+        }
+
+        public void Update(GameTime gameTime, Tanque jugador, List<Object> ambientaciones){    
+            BalaBox.Center = Position;
+            if(!recorridoCompleto() && !esVictima){
+                var delta = (float)gameTime.ElapsedGameTime.Milliseconds;
+                tiempoDeVida += delta;
+                Position += Velocity * delta;
+                Rastros.AddParticle(Position, -Velocity);
             }   
 
-                
+            foreach (var ambiente in ambientaciones){
+                if(BalaBox.Intersects(ambiente.Box)){
+                    if(ambiente.esEliminable){
+                        ambiente.esVictima = true;
+                    }
+                    ambiente.reproducirSonido(jugador.listener);
+                    esVictima = true;   
+                }
+            }      
+
+            if(BalaBox.Intersects(jugador.TankBox)){
+                jugador.agregarVelocidad(new Vector3(Velocity.X, 0, Velocity.Z));
+                //jugador.reproducirSonido(Jugador.listener);
+                esVictima = true;
+                jugador.recibirDaño(Daño);
+            }
         }
         
     }

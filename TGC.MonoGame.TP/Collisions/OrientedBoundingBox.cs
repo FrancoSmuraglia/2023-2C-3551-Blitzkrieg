@@ -204,7 +204,95 @@ namespace TGC.MonoGame.Samples.Collisions
         /// </summary>
         /// <param name="box">The other OBB to test</param>
         /// <returns>True if the two boxes intersect</returns>
+        /// 
         public bool Intersects(OrientedBoundingBox box)
+        {
+            var test = new Vector3[15];
+            
+            test[0] = new (Orientation[0], Orientation[1], Orientation[2]);
+            test[1] = new (Orientation[4], Orientation[5], Orientation[6]);
+            test[2] = new (Orientation[8], Orientation[9], Orientation[10]);
+            test[3] = new (box.Orientation[0], box.Orientation[1], box.Orientation[2]);
+            test[4] = new (box.Orientation[4], box.Orientation[5], box.Orientation[6]);
+            test[5] = new (box.Orientation[8], box.Orientation[9], box.Orientation[10]);
+            
+                    
+            for (int i = 0; i < 3; ++i) 
+            {
+                // Fill out rest of axis
+                test[6 + i * 3 + 0] = Vector3.Cross(test[i], test[0]);
+                test[6 + i * 3 + 1] = Vector3.Cross(test[i], test[1]);
+                test[6 + i * 3 + 2] = Vector3.Cross(test[i], test[2]);
+            }
+
+            for (int i = 0; i < 15; ++i) 
+            {
+                if (!OverlapOnAxis(box, test[i])) 
+                {
+                    return false; // Seperating axis found
+                }
+            }
+
+            return true;
+        }
+        bool OverlapOnAxis(OrientedBoundingBox box, Vector3 axis) 
+        {
+            var a = GetIntervalOnAxis(this, axis);
+            var b = GetIntervalOnAxis(box, axis);
+            return (b.Min <= a.Max) && (a.Min <= b.Max);
+        }
+        static Interval GetIntervalOnAxis(OrientedBoundingBox box, Vector3 axis)
+        {
+            var vertex = new Vector3[8];
+
+            Vector3 center = box.Center;     // OBB Center
+            Vector3 extents = box.Extents; // OBB Extents
+            
+            Vector3[] orientation = 
+            {
+                // OBB Axis
+                box.Orientation.Right,
+                box.Orientation.Up,
+                box.Orientation.Backward,
+            };
+
+            vertex[0] = center + orientation[0] * extents.X + orientation[1] * extents.Y + orientation[2] * extents.Z;
+            vertex[1] = center - orientation[0] * extents.X + orientation[1] * extents.Y + orientation[2] * extents.Z;
+            vertex[2] = center + orientation[0] * extents.X - orientation[1] * extents.Y + orientation[2] * extents.Z;
+            vertex[3] = center + orientation[0] * extents.X + orientation[1] * extents.Y - orientation[2] * extents.Z;
+            vertex[4] = center - orientation[0] * extents.X - orientation[1] * extents.Y - orientation[2] * extents.Z;
+            vertex[5] = center + orientation[0] * extents.X - orientation[1] * extents.Y - orientation[2] * extents.Z;
+            vertex[6] = center - orientation[0] * extents.X + orientation[1] * extents.Y - orientation[2] * extents.Z;
+            vertex[7] = center - orientation[0] * extents.X - orientation[1] * extents.Y + orientation[2] * extents.Z;
+
+            Interval result;
+            result.Min = result.Max = Vector3.Dot(axis, vertex[0]);
+
+            for (int i = 1; i < 8; ++i) 
+            {
+                float projection = Vector3.Dot(axis, vertex[i]);
+                result.Min = (projection < result.Min) ? projection : result.Min;
+                result.Max = (projection > result.Max) ? projection : result.Max;
+            }
+
+            return result;
+        }
+
+        struct Interval
+        {
+            public float Min;
+            public float Max;
+
+            public Interval(float min, float max)
+            {
+                Min = min;
+                Max = max;
+            }
+        }
+
+
+
+        /*public bool Intersects(OrientedBoundingBox box)
         {
             float ra;
             float rb;
@@ -300,7 +388,7 @@ namespace TGC.MonoGame.Samples.Collisions
 
             // Since no separating axis is found, the OBBs must be intersecting
             return true;
-        }
+        }*/
 
 
         /// <summary>

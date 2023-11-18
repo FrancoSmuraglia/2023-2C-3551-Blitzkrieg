@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Particle3DSample;
 using TGC.MonoGame.Samples.Collisions;
 
 
@@ -14,6 +15,16 @@ namespace TGC.MonoGame.TP
 {    
     public class Tanque
     {
+        private enum EstadoRuedas{
+            Quieto,
+            Avance,
+            Retroceso,
+            GiroDerecha,
+            GiroIzquierda
+        }
+        private EstadoRuedas EstadoActualDeRuedas = EstadoRuedas.Quieto;
+        public ParticleSystem polvo;
+        public ParticleSystem rastroBala;
         public const float VidaMaxima = 10;
         // Colisión
         public OrientedBoundingBox TankBox { get; set; }
@@ -33,6 +44,7 @@ namespace TGC.MonoGame.TP
         public Matrix World { get; set; }
 
         protected Texture2D Texture { get; set; }
+        public Texture2D NormalTexture { get; set; }
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
         public Matrix OldRotation{ get; set; }
@@ -78,6 +90,17 @@ namespace TGC.MonoGame.TP
         public SoundEffect SonidoMovimiento { get; set; }
         public SoundEffectInstance InstanciaSonidoMovimiento { get; set; }
         public AudioListener listener {get;set;}
+        public Effect efectoTanque {  get; set;}
+
+        //bling
+        //public Effect efectoTanque {get;set;}
+
+        // ruedas
+
+        private Matrix[] RuedasMatriz {get; set; }
+        private ModelBone[] RuedasBones {get; set;}
+
+        private Texture2D Treadmill {get; set;}
 
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
         {
@@ -85,6 +108,7 @@ namespace TGC.MonoGame.TP
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
             
             Model = modelo;
+
 
             AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             TankBox = OrientedBoundingBox.FromAABB(AABB);
@@ -108,6 +132,22 @@ namespace TGC.MonoGame.TP
 
             Cannon = modelo.Bones["Cannon"];
             CannonMatrix = Cannon.Transform;
+
+            var a = modelo.Bones["Treadmill1"];
+            
+
+            // obtengo las ruedas
+
+            RuedasMatriz = new Matrix[16];
+            RuedasBones = new ModelBone[16];
+            for (int i = 1; i < 17; i++)
+            {
+                int posicionLogica = i - 1;
+                string nombreRueda = "Wheel";
+                nombreRueda += i;
+                RuedasBones[posicionLogica] = modelo.Bones[nombreRueda];
+                RuedasMatriz[posicionLogica] = RuedasBones[posicionLogica].Transform;
+            }
 
             TankDirection = Vector3.Forward;
 
@@ -144,7 +184,7 @@ namespace TGC.MonoGame.TP
 
             BulletTexture = texturaBala;
             BulletSpecialTexture = texturaBalaEspecial;
-
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["NormalMapping"];
             foreach (var mesh in Bullet.Meshes)
             {
                 foreach (var meshPart in mesh.MeshParts)
@@ -153,69 +193,158 @@ namespace TGC.MonoGame.TP
                 }
             }
 
+            //efectoTanque.CurrentTechnique = Effect.Techniques["Default"];
             foreach (var mesh in Model.Meshes)
             {
                 foreach (var meshPart in mesh.MeshParts)
                 {
-                    meshPart.Effect = Effect;
+                    meshPart.Effect = efectoTanque;
                 }
             }
         }
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        //public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        //{
+        //    // Tanto la vista como la proyección vienen de la cámara por parámetro
+        //    Effect.Parameters["View"].SetValue(view);
+        //    Effect.Parameters["Projection"].SetValue(projection);
+        //    Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+        //
+        //
+        //    var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+        //    Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+        //
+        //    // forma de girar la torreta con cañón
+        //    // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
+        //    // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
+        //
+        //    World = RotationMatrix * Matrix.CreateTranslation(Position);
+        //    foreach (var mesh in Model.Meshes)
+        //    {
+        //        var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
+        //        Effect.Parameters["World"].SetValue(meshWorld * World);
+        //        mesh.Draw();
+        //    }
+        //}
+
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
         {
+            AnimarRuedas();
+            updateTurret(gameTime);
+            actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
             // Tanto la vista como la proyección vienen de la cámara por parámetro
-            Effect.Parameters["View"].SetValue(view);
-            Effect.Parameters["Projection"].SetValue(projection);
-            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+            //Effect.Parameters["View"].SetValue(view);
+            //Effect.Parameters["Projection"].SetValue(projection);
+            //Effect.Parameters["ModelTexture"]?.SetValue(Texture);
 
             
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
             
-            // forma de girar la torreta con cañón
-            // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
-            // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
-            
+        
             World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                Effect.Parameters["World"].SetValue(meshWorld*World);
+                var finalWorld = meshWorld * World;
+                efectoTanque.Parameters["World"].SetValue(finalWorld);
+                efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(finalWorld)));
+                efectoTanque.Parameters["WorldViewProjection"].SetValue(finalWorld * view * projection);
                 mesh.Draw();
             }
+            
+        }
+        
+        public void actualizarEfecto(Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera){
+            efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+        
+            efectoTanque.Parameters["KAmbient"].SetValue(1f);
+            efectoTanque.Parameters["KDiffuse"].SetValue(1f);
+            efectoTanque.Parameters["KSpecular"].SetValue(0.8f);
+            efectoTanque.Parameters["shininess"].SetValue(100f);
+            efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
+        
+            efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
+            efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
+            efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
+
+
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["NormalMapping"];
+            efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
+            efectoTanque.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            efectoTanque.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
+        
         }
 
-        
-        
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["DepthPass"];
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            //World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = efectoTanque;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                efectoTanque.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
+        }
+
+
+
         float anguloVertical = 0;
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
         float tiempoEntreDisparo = 3;
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas)
         {
+
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
             // ** Movimiento del tanque ** //
+            
+            if(moduloVelocidadXZ <= .1)
+                EstadoActualDeRuedas = EstadoRuedas.Quieto;
 
             if (key.IsKeyDown(Keys.W))
             { //adeltante
                 Moving = true;
                 CurrentAcceleration = 1f;
                 Sentido = 1;
+                polvo.AddParticle(Position, -TankVelocity/3);
+                EstadoActualDeRuedas = EstadoRuedas.Avance;
             }
             if (key.IsKeyDown(Keys.S))
             { //reversa                
                 Moving = true;
                 CurrentAcceleration = 1f;
                 Sentido = -1;
+                EstadoActualDeRuedas = EstadoRuedas.Retroceso;
             }
             if (key.IsKeyDown(Keys.A))
             { // Giro a la izquierda 
                 RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
                 if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
+                    EstadoActualDeRuedas = EstadoRuedas.GiroIzquierda;
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque += .03f;
                 }
@@ -229,6 +358,7 @@ namespace TGC.MonoGame.TP
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
                 if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
+                    EstadoActualDeRuedas = EstadoRuedas.GiroDerecha;
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque -= .03f;
                 }
@@ -253,7 +383,7 @@ namespace TGC.MonoGame.TP
 
             if (tiempoEntreDisparo < tiempoEntreDisparoLimite)
                 tiempoEntreDisparo += deltaTime;
-            updateTurret(gameTime);
+            
             Disparo(key, balas);
 
             // ** Análisis de colisión ** //
@@ -270,15 +400,18 @@ namespace TGC.MonoGame.TP
             
             ChoqueDestructibles(ambiente);
             reproducirSonidoMovimiento(key.IsKeyDown(Keys.W) || key.IsKeyDown(Keys.S), gameTime.ElapsedGameTime);
+
             if (key.IsKeyDown(Keys.Escape))
             {
                 InstanciaSonidoMovimiento.Stop();
             }
+
             Moving = false;
 
             World = RotationMatrix * Matrix.CreateTranslation(Position);
 
             listener.Position = Position;
+            
         }
 
         TimeSpan progreso = TimeSpan.Zero;
@@ -320,16 +453,22 @@ namespace TGC.MonoGame.TP
                     (float)Math.Sin(-anguloVertical),
                     (float)Math.Sin(anguloHorizontaTotal - MathHelper.PiOver2));
 
-                b *= 5;
+                b *= 5; 
 
                 if (balaEspecial)
-                {   
-                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture, this);
+                {
+                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture, this)
+                    {
+                        Rastros = rastroBala
+                    };
                     balas.Add(a);
                 }
                 else
                 {
-                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture, this);
+                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture, this)
+                    {
+                        Rastros = rastroBala
+                    };
                     balas.Add(a);
                 }
                 tiempoEntreDisparo = 0;
@@ -448,6 +587,56 @@ namespace TGC.MonoGame.TP
         {
             Vida -= cantidad;
             Vida = Math.Clamp(Vida, 0, VidaMaxima);
+        }
+
+        float anguloGiroDeRuedas = 0;
+        float anguloGiro = 0;
+        float anguloGiroIzquierda = 0;
+        private void AnimarRuedas(){
+           
+            switch (EstadoActualDeRuedas)
+            {
+                case EstadoRuedas.Avance:
+                    anguloGiroDeRuedas += TankVelocity.Length()/100;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas) * RuedasMatriz[i];
+                    }
+                    break;
+                case EstadoRuedas.Retroceso:
+                    anguloGiroDeRuedas -= TankVelocity.Length()/100;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas) * RuedasMatriz[i];
+                    }
+                    break;
+                case EstadoRuedas.GiroDerecha:                        
+                    anguloGiro += 0.1f;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas + anguloGiro) * RuedasMatriz[i];
+                    }
+                    for (int i = 9; i < 15; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas - anguloGiro) * RuedasMatriz[i];
+                    }
+                    break;
+                case EstadoRuedas.GiroIzquierda:                        
+                    anguloGiro += 0.1f;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas - anguloGiro) * RuedasMatriz[i];
+                    }
+                    for (int i = 9; i < 15; i++)
+                    {
+                        RuedasBones[i].Transform = Matrix.CreateRotationX(anguloGiroDeRuedas + anguloGiro) * RuedasMatriz[i];
+                    }
+                    break;
+            
+                
+                default:
+                    break;
+            }
         }
     }
 }
