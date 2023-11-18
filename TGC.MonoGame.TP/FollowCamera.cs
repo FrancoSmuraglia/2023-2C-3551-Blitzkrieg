@@ -32,6 +32,8 @@ namespace TGC.MonoGame.TP
 
         private MouseState estadoAnteriorMouse;
 
+        public Vector3 CamaraPosition { get; set; }
+
         /// <summary>
         /// Crea una FollowCamera que sigue a una matriz de mundo
         /// </summary>
@@ -78,10 +80,9 @@ namespace TGC.MonoGame.TP
             Vector3 direccionCamara = new Vector3(MathF.Cos(yaw) * MathF.Cos(pitch), MathF.Sin(pitch),MathF.Sin(yaw) * MathF.Cos(pitch));
 
             //calculo la posicion con la direccion de la camara
-            posicionCamara = followedPosition - direccionCamara * AxisDistanceToTarget;
+            CamaraPosition = followedPosition - direccionCamara * AxisDistanceToTarget;
 
-            View = Matrix.CreateLookAt(posicionCamara, followedPosition, Vector3.Up);
-
+            View = Matrix.CreateLookAt(CamaraPosition, followedPosition, Vector3.Up);
             //Console.WriteLine("pitch: " + pitch);
         }
 

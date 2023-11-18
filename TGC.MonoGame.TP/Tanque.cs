@@ -44,6 +44,7 @@ namespace TGC.MonoGame.TP
         public Matrix World { get; set; }
 
         protected Texture2D Texture { get; set; }
+        public Texture2D NormalTexture { get; set; }
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
         public Matrix OldRotation{ get; set; }
@@ -89,6 +90,10 @@ namespace TGC.MonoGame.TP
         public SoundEffect SonidoMovimiento { get; set; }
         public SoundEffectInstance InstanciaSonidoMovimiento { get; set; }
         public AudioListener listener {get;set;}
+        public Effect efectoTanque {  get; set;}
+
+        //bling
+        //public Effect efectoTanque {get;set;}
 
         // ruedas
 
@@ -179,7 +184,7 @@ namespace TGC.MonoGame.TP
 
             BulletTexture = texturaBala;
             BulletSpecialTexture = texturaBalaEspecial;
-
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["NormalMapping"];
             foreach (var mesh in Bullet.Meshes)
             {
                 foreach (var meshPart in mesh.MeshParts)
@@ -188,20 +193,46 @@ namespace TGC.MonoGame.TP
                 }
             }
 
+            //efectoTanque.CurrentTechnique = Effect.Techniques["Default"];
             foreach (var mesh in Model.Meshes)
             {
                 foreach (var meshPart in mesh.MeshParts)
                 {
-                    meshPart.Effect = Effect;
+                    meshPart.Effect = efectoTanque;
                 }
             }
         }
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        //public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        //{
+        //    // Tanto la vista como la proyección vienen de la cámara por parámetro
+        //    Effect.Parameters["View"].SetValue(view);
+        //    Effect.Parameters["Projection"].SetValue(projection);
+        //    Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+        //
+        //
+        //    var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+        //    Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+        //
+        //    // forma de girar la torreta con cañón
+        //    // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
+        //    // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
+        //
+        //    World = RotationMatrix * Matrix.CreateTranslation(Position);
+        //    foreach (var mesh in Model.Meshes)
+        //    {
+        //        var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
+        //        Effect.Parameters["World"].SetValue(meshWorld * World);
+        //        mesh.Draw();
+        //    }
+        //}
+
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
         {
-            // Tanto la vista como la proyección vienen de la cámara por parámetro
             AnimarRuedas();
             updateTurret(gameTime);
+            actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
             Effect.Parameters["View"].SetValue(view);
             Effect.Parameters["Projection"].SetValue(projection);
             Effect.Parameters["ModelTexture"]?.SetValue(Texture);
@@ -210,27 +241,81 @@ namespace TGC.MonoGame.TP
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
             
-            // forma de girar la torreta con cañón
-            // Torreta.Transform = Torreta.Transform * Matrix.CreateRotationZ(0.006f);
-            // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
-            
+        
             World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                Effect.Parameters["World"].SetValue(meshWorld*World);
+                var finalWorld = meshWorld * World;
+                efectoTanque.Parameters["World"].SetValue(finalWorld);
+                efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(finalWorld)));
+                efectoTanque.Parameters["WorldViewProjection"].SetValue(finalWorld * view * projection);
                 mesh.Draw();
             }
+            
+        }
+        
+        public void actualizarEfecto(Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera){
+            efectoTanque.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            efectoTanque.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            efectoTanque.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+        
+            efectoTanque.Parameters["KAmbient"].SetValue(1f);
+            efectoTanque.Parameters["KDiffuse"].SetValue(1f);
+            efectoTanque.Parameters["KSpecular"].SetValue(0.8f);
+            efectoTanque.Parameters["shininess"].SetValue(100f);
+            efectoTanque.Parameters["eyePosition"].SetValue(camaraPosition);
+        
+            efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
+            efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
+            efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
+
+
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["NormalMapping"];
+            efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
+            efectoTanque.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            efectoTanque.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
+        
         }
 
-        
-        
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["DepthPass"];
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            //World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = efectoTanque;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                efectoTanque.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
+        }
+
+
+
         float anguloVertical = 0;
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
         float tiempoEntreDisparo = 3;
         public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas)
         {
+
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
             
@@ -326,6 +411,7 @@ namespace TGC.MonoGame.TP
             World = RotationMatrix * Matrix.CreateTranslation(Position);
 
             listener.Position = Position;
+            
         }
 
         TimeSpan progreso = TimeSpan.Zero;

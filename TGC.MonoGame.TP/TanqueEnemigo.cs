@@ -35,7 +35,7 @@ namespace TGC.MonoGame.TP
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
         protected float Rotation{ get; set; }
-        protected Effect Effect { get; set; }
+        public Effect Effect { get; set; }
 
         private ModelBone Torreta;
         private ModelBone Cannon;
@@ -46,6 +46,7 @@ namespace TGC.MonoGame.TP
         public bool estaMuerto { get; set; }
         public AudioEmitter Emitter {get;set;}
         public SoundEffect SonidoColision {get;set;}
+        public Texture2D NormalTexture { get; set; }
 
         private float velocidadGiro {get; set;} 
 
@@ -164,12 +165,12 @@ namespace TGC.MonoGame.TP
         }
 
         float anguloGiro = 0;
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection)
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, 
+            Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
         {
-            // Tanto la vista como la proyección vienen de la cámara por parámetro
-            Effect.Parameters["View"].SetValue(view);
-            Effect.Parameters["Projection"].SetValue(projection);
-            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+            actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+
+           
 
             for (int i = 0; i < 16; i++)
             {
@@ -191,9 +192,63 @@ namespace TGC.MonoGame.TP
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
+                var finalWorld = meshWorld * World;
                 Effect.Parameters["World"].SetValue(meshWorld * World);
+                Effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
+                Effect.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
                 mesh.Draw();
             }
+        }
+
+        public void actualizarEfecto(Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
+        {
+            Effect.Parameters["ambientColor"].SetValue(new Vector3(1f, 1f, 1f));
+            Effect.Parameters["diffuseColor"].SetValue(new Vector3(0.1f, 0.1f, 0.6f));
+            Effect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+
+            Effect.Parameters["KAmbient"].SetValue(1f);
+            Effect.Parameters["KDiffuse"].SetValue(1f);
+            Effect.Parameters["KSpecular"].SetValue(0.2f);
+            Effect.Parameters["shininess"].SetValue(100f);
+            Effect.Parameters["eyePosition"].SetValue(camaraPosition);
+
+            Effect.Parameters["ModelTexture"].SetValue(Texture);
+            Effect.Parameters["NormalTexture"].SetValue(NormalTexture);
+            Effect.Parameters["Tiling"].SetValue(Vector2.One);
+
+            Effect.CurrentTechnique = Effect.Techniques["NormalMapping"];
+            Effect.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
+            Effect.Parameters["lightPosition"].SetValue(lightPosition);
+            Effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
+            Effect.Parameters["LightViewProjection"].SetValue(TargetLightCamera.View * TargetLightCamera.Projection);
+        }
+
+        public void DrawShadows(GameTime gameTime, Matrix view, Matrix projection)
+        {
+            //actualizarLuz(camaraPosition);
+            // Tanto la vista como la proyección vienen de la cámara por parámetro
+            Effect.CurrentTechnique = Effect.Techniques["DepthPass"];
+
+            var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
+            Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
+
+            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            foreach (var modelMesh in Model.Meshes)
+            {
+                foreach (var part in modelMesh.MeshParts)
+                    part.Effect = Effect;
+
+                // We set the main matrices for each mesh to draw
+                var worldMatrix = modelMeshesBaseTransforms[modelMesh.ParentBone.Index];
+
+                // WorldViewProjection is used to transform from model space to clip space
+                Effect.Parameters["WorldViewProjection"]
+                    .SetValue(worldMatrix * World * view * projection);
+
+                // Once we set these matrices we draw
+                modelMesh.Draw();
+            }
+
         }
 
 
