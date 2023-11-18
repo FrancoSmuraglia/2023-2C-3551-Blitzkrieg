@@ -156,6 +156,7 @@ namespace TGC.MonoGame.TP
             Components.Add(explosionSmokeParticles);
             Components.Add(projectileTrailParticles);
             Components.Add(smokePlumeParticles);
+            
             // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
 
             // Apago el backface culling.
@@ -243,7 +244,8 @@ namespace TGC.MonoGame.TP
                     sonidoMovimiento
                     )
             {
-                polvo = smokePlumeParticles
+                polvo = smokePlumeParticles,
+                rastroBala = explosionSmokeParticles
             };
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
 
@@ -604,26 +606,35 @@ namespace TGC.MonoGame.TP
                     Content.Load<Effect>(ContentFolderEffects + "BasicShader"), 
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
             }*/
-            var tanque1 = new TanqueEnemigo(new Vector3(10000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
+            var sonidoDeColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1");
+            var tanque1 = new TanqueEnemigo(new Vector3(10000f, 255, 10000f), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
             {
-                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+                SonidoColision = sonidoDeColision,
+                polvo = smokePlumeParticles,
+                rastroBala = explosionSmokeParticles
             };
-            var tanque2 = new TanqueEnemigo(new Vector3(-10000f, 150, 0), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
+            var tanque2 = new TanqueEnemigo(new Vector3(-10000f, 255, -10000f), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
             {
-                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+                SonidoColision = sonidoDeColision,
+                polvo = smokePlumeParticles,
+                rastroBala = explosionSmokeParticles
             };
-            var tanque3 = new TanqueEnemigo(new Vector3(10000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
+            var tanque3 = new TanqueEnemigo(new Vector3(10000f, 255, -10000f), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
             {
-                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+                SonidoColision = sonidoDeColision,
+                polvo = smokePlumeParticles,
+                rastroBala = explosionSmokeParticles
             };
-            var tanque4 = new TanqueEnemigo(new Vector3(-10000f, 150, 1000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
+            var tanque4 = new TanqueEnemigo(new Vector3(-10000f, 255, 10000f), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
             {
-                SonidoColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1")
+                SonidoColision = sonidoDeColision,
+                polvo = smokePlumeParticles,
+                rastroBala = explosionSmokeParticles
             };
             Tanques.Add(tanque1);
-            //Tanques.Add(tanque2);
-            //Tanques.Add(tanque3);
-            //Tanques.Add(tanque4);
+            Tanques.Add(tanque2);
+            Tanques.Add(tanque3);
+            Tanques.Add(tanque4);
         }
 
         /// <summary>
@@ -692,7 +703,7 @@ namespace TGC.MonoGame.TP
             Console.WriteLine("Frames: " + 1000f/(float)(gameTime.ElapsedGameTime.TotalMilliseconds));*/
 
             //Console.WriteLine(EstadoActual);
-            //UpdateExplosions(gameTime);
+            UpdateExplosions(gameTime);
             //UpdateProjectiles(gameTime);
             smokePlumeParticles.SetCamera(FollowCamera.View, FollowCamera.Projection);
             explosionParticles.SetCamera(FollowCamera.View, FollowCamera.Projection);
@@ -843,6 +854,7 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.DepthStencilState = DepthStencilState.Default; 
             
             GraphicsDevice.Clear(Color.BlueViolet);
+            //GraphicsDevice.DrawPrimitives(PrimitiveType.LineList, , )
             
             //No hace falta analizar, siempre el tanque va estar en medio de la cámara
             //if(MainTanque.TankBox.Intersects(BoundingFrustum)) 

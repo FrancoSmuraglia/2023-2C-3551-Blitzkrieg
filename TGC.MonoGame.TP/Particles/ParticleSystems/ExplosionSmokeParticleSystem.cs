@@ -44,16 +44,16 @@ namespace Particle3DSample
 
             settings.EndVelocity = 0;
 
-            settings.MinColor = Color.LightGray;
+            settings.MinColor = Color.White;
             settings.MaxColor = Color.White;
 
             settings.MinRotateSpeed = -2;
             settings.MaxRotateSpeed = 2;
 
-            settings.MinStartSize = 7;
-            settings.MaxStartSize = 7;
+            //settings.MinStartSize = 7;
+            //settings.MaxStartSize = 7;
 
-            settings.MinEndSize = 70;
+            settings.MinEndSize = 100;
             settings.MaxEndSize = 140;
         }
     }

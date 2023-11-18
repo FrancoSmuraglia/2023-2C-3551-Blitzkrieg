@@ -24,6 +24,7 @@ namespace TGC.MonoGame.TP
         }
         private EstadoRuedas EstadoActualDeRuedas = EstadoRuedas.Quieto;
         public ParticleSystem polvo;
+        public ParticleSystem rastroBala;
         public const float VidaMaxima = 10;
         // Colisión
         public OrientedBoundingBox TankBox { get; set; }
@@ -366,16 +367,22 @@ namespace TGC.MonoGame.TP
                     (float)Math.Sin(-anguloVertical),
                     (float)Math.Sin(anguloHorizontaTotal - MathHelper.PiOver2));
 
-                b *= 5;
+                b *= 5; 
 
                 if (balaEspecial)
-                {   
-                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture, this);
+                {
+                    var a = new BalaEspecial(Position, b, Bullet, Effect, BulletSpecialTexture, this)
+                    {
+                        Rastros = rastroBala
+                    };
                     balas.Add(a);
                 }
                 else
                 {
-                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture, this);
+                    var a = new Bala(Position, b, Bullet, Effect, BulletTexture, this)
+                    {
+                        Rastros = rastroBala
+                    };
                     balas.Add(a);
                 }
                 tiempoEntreDisparo = 0;

@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Particle3DSample;
 using TGC.MonoGame.Samples.Collisions;
 
 
@@ -28,6 +29,8 @@ namespace TGC.MonoGame.TP
         protected Model Model { get; set; }
         public Matrix World { get; set; }
 
+        private Matrix Scale {get; set;}
+
         protected Texture2D Texture { get; set; }
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
@@ -45,7 +48,10 @@ namespace TGC.MonoGame.TP
         public SoundEffect SonidoColision {get;set;}
 
         private float velocidadGiro {get; set;} 
-        
+
+        public ParticleSystem polvo;
+
+        public ParticleSystem rastroBala;
 
         // bala 
 
@@ -70,18 +76,20 @@ namespace TGC.MonoGame.TP
             OldPosition = Position;
 
             World = Matrix.CreateWorld(Position, Vector3.Forward, Vector3.Up);
+            Scale = Matrix.CreateScale(1.7f);
             
             Model = modelo;
             RotationMatrix = Matrix.CreateRotationY(0f);
-            
+        
             var AABB = BoundingVolumesExtensions.CreateAABBFrom(Model);
             TankBox = OrientedBoundingBox.FromAABB(AABB);
             PuntoMedio = AABB.Max.Y / 3;
             TankBox.Center = Position;
             TankBox.Orientation = RotationMatrix;
+            TankBox.Extents *= 1.7f;
 
             Effect = efecto;
-
+            
             Texture = textura;
 
             TankDirection = Vector3.Forward;
@@ -179,7 +187,7 @@ namespace TGC.MonoGame.TP
             // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
 
 
-            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            World = Scale * RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
@@ -234,15 +242,17 @@ namespace TGC.MonoGame.TP
                 
                 var angulo = VectorAngle(distance, directionActual);
 
-                if(Math.Abs(angulo) > 0.2){
+                if(Math.Abs(angulo) >= 0.1f){
                     if(angulo > 0)
                         RotationMatrix *= Matrix.CreateRotationY(velocidadGiro);
                     else if (angulo < 0)
                         RotationMatrix *= Matrix.CreateRotationY(-velocidadGiro);
                 }
                 
-                if(distanceLongitud > 2000)
+                if(distanceLongitud > 2000){
                     TankVelocity += deltaTime * Vector3.Normalize(distance) * 100;
+                    polvo.AddParticle(Position, -TankVelocity*100);
+                }
                 
                 if(distanceLongitud < DistanciaMaximaDeVision/2 && tiempoEntreDisparo >= 5)
                     Disparar(balas, Vector3.Normalize(distance));
@@ -253,7 +263,10 @@ namespace TGC.MonoGame.TP
         }
         private void Disparar(List<Bala> balas, Vector3 velocidadDisparo)
         {
-            var balaObjeto = new Bala(Position, velocidadDisparo * 5, ModelBala, EfectoBala, TexturaBala, this);
+            var balaObjeto = new Bala(Position, velocidadDisparo * 5, ModelBala, EfectoBala, TexturaBala, this)
+            {
+                Rastros = rastroBala
+            };
             balas.Add(balaObjeto);
             tiempoEntreDisparo = 0;
         }
@@ -289,15 +302,16 @@ namespace TGC.MonoGame.TP
 
             foreach (Object itemEspecifico in ambiente){
                 if(Intersecta(itemEspecifico)){
-                    if(itemEspecifico.esEliminable){
-                        itemEspecifico.esVictima = true;
+                    /*if(itemEspecifico.esEliminable){
+                        
                     }                        
                     else{
                         Sentido *= -1;
                         Position = OldPosition;
                         TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
                         TankVelocity = -TankVelocity*.5f;
-                    }
+                    }*/
+                    itemEspecifico.esVictima = true;
                     itemEspecifico.reproducirSonido(jugador.listener);
                 }
             }
@@ -331,7 +345,7 @@ namespace TGC.MonoGame.TP
             foreach (var objeto in listaDeObjetos)
             {
                 if(TankBox.Intersects(objeto.Box) && objeto.esEliminable){
-                    objeto.esVictima = true;             
+                    objeto.esVictima = true;
                     return true;
                 }       
             }

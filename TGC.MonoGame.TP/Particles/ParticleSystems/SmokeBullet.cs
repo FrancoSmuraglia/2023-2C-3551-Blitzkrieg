@@ -19,9 +19,9 @@ namespace Particle3DSample
     /// <summary>
     /// Custom particle system for creating a giant plume of long lasting smoke.
     /// </summary>
-    class SmokePlumeParticleSystem : ParticleSystem
+    class SmokeBullet : ParticleSystem
     {
-        public SmokePlumeParticleSystem(Game game, ContentManager content)
+        public SmokeBullet(Game game, ContentManager content)
             : base(game, content)
         { }
 
@@ -30,20 +30,19 @@ namespace Particle3DSample
         {
             settings.TextureName = "smoke";
 
-            settings.MaxParticles = 1000;
+            settings.MaxParticles = 10;
 
-            settings.Duration = TimeSpan.FromSeconds(1);
+            settings.Duration = TimeSpan.FromSeconds(1.5);
 
             settings.MinHorizontalVelocity = 0;
-            settings.MaxHorizontalVelocity = 15;
+            settings.MaxHorizontalVelocity = 1;
 
             settings.MinVerticalVelocity = 10;
             settings.MaxVerticalVelocity = 20;
 
-            // Create a wind effect by tilting the gravity vector sideways.
-            settings.Gravity = new Vector3(-20, -5, 0);
+            settings.Gravity = new Vector3(0, -5, 0);
 
-            settings.EndVelocity = 0.75f;
+            settings.EndVelocity = 0.5f;
 
             settings.MinRotateSpeed = -1;
             settings.MaxRotateSpeed = 1;
@@ -51,8 +50,8 @@ namespace Particle3DSample
             settings.MinStartSize = 40;
             settings.MaxStartSize = 70;
 
-            settings.MinEndSize = 350;
-            settings.MaxEndSize = 700;
+            settings.MinEndSize = 35;
+            settings.MaxEndSize = 70;
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Particle3DSample;
 using TGC.MonoGame.Samples.Collisions;
 
 
@@ -42,6 +43,8 @@ namespace TGC.MonoGame.TP
 
         public Tanque Jugador {get; set;}
         public TanqueEnemigo EnemigoEspecifico {get; set;}
+
+        public ParticleSystem Rastros;
 
 
         public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, Tanque Main){
@@ -126,6 +129,7 @@ namespace TGC.MonoGame.TP
                 var delta = (float)gameTime.ElapsedGameTime.Milliseconds;
                 tiempoDeVida += delta;
                 Position += Velocity * delta;
+                Rastros.AddParticle(Position, -Velocity);
             }       
 
             foreach (var tanqueEnemigo in enemigos)
@@ -155,6 +159,7 @@ namespace TGC.MonoGame.TP
                 var delta = (float)gameTime.ElapsedGameTime.Milliseconds;
                 tiempoDeVida += delta;
                 Position += Velocity * delta;
+                Rastros.AddParticle(Position, -Velocity);
             }   
 
             foreach (var ambiente in ambientaciones){
@@ -173,8 +178,6 @@ namespace TGC.MonoGame.TP
                 esVictima = true;
                 jugador.recibirDaño(Daño);
             }
-
-
         }
         
     }
