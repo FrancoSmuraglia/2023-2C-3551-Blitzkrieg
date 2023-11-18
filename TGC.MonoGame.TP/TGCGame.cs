@@ -138,7 +138,7 @@ namespace TGC.MonoGame.TP
 
         private readonly float LightCameraFarPlaneDistance = 15000f;
 
-        private readonly float LightCameraNearPlaneDistance = 50f;
+        private readonly float LightCameraNearPlaneDistance = 50;
         private TargetCamera TargetLightCamera { get; set; }
         private RenderTarget2D ShadowMapRenderTarget;
 
@@ -150,6 +150,12 @@ namespace TGC.MonoGame.TP
         ParticleSystem projectileTrailParticles;
 
         SmokePlumeParticleSystem smokePlumeParticles { get; set; }
+
+        //Muro
+        private Muro Muro1 { get; set; }
+        private Muro Muro2 { get; set; }
+        private Muro Muro3 { get; set; }
+        private Muro Muro4 { get; set; }
 
 
 
@@ -321,6 +327,19 @@ namespace TGC.MonoGame.TP
             //Shadows
             ShadowMapRenderTarget = new RenderTarget2D(GraphicsDevice, ShadowmapSize, ShadowmapSize, false,
                 SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PlatformContents);
+
+            //Muro
+            Muro1 = new Muro(GraphicsDevice, Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_basecolor"), 
+                Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_normal"),0);
+
+            Muro2 = new Muro(GraphicsDevice, Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_basecolor"),
+                Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_normal"),1);
+
+            Muro3 = new Muro(GraphicsDevice, Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_basecolor"),
+                Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_normal"),2);
+
+            Muro4 = new Muro(GraphicsDevice, Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_basecolor"),
+                Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_normal"),3);
 
             base.LoadContent();
         }
@@ -904,7 +923,7 @@ namespace TGC.MonoGame.TP
             DrawShadowMap(gameTime);
             DrawScene(gameTime);
 
-            
+            base.Draw(gameTime);
         }
 
         private void DrawShadowMap(GameTime gameTime)
@@ -916,7 +935,13 @@ namespace TGC.MonoGame.TP
 
             //EffectLight.Parameters["lightPosition"].SetValue(lightPosition);
             Quad.DrawShadows(EffectLight, FloorWorld, TargetLightCamera.View, TargetLightCamera.Projection);
-            base.Draw(gameTime);
+
+            //Muros
+            Muro1.DrawShadows(EffectLight, Matrix.Identity, TargetLightCamera.View, TargetLightCamera.Projection);
+            Muro2.DrawShadows(EffectLight, Matrix.Identity, TargetLightCamera.View, TargetLightCamera.Projection);
+            Muro3.DrawShadows(EffectLight, Matrix.Identity, TargetLightCamera.View, TargetLightCamera.Projection);
+            Muro4.DrawShadows(EffectLight, Matrix.Identity, TargetLightCamera.View, TargetLightCamera.Projection);
+
 
             //MainTanque.efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
             MainTanque.DrawShadows(gameTime, TargetLightCamera.View, TargetLightCamera.Projection);
@@ -1014,9 +1039,19 @@ namespace TGC.MonoGame.TP
             Quad.Draw(EffectLight, FloorWorld, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, ShadowMapRenderTarget, 
                 lightPosition, ShadowmapSize, TargetLightCamera);
 
+            //dibujo los muros
+            Muro1.Draw(EffectLight, Matrix.Identity, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition, 
+                ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+            Muro2.Draw(EffectLight, Matrix.Identity, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition,
+                ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+            Muro3.Draw(EffectLight, Matrix.Identity, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition,
+                ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+            Muro4.Draw(EffectLight, Matrix.Identity, FollowCamera.View, FollowCamera.Projection, FollowCamera.CamaraPosition,
+                ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
+
             LightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
 
-            base.Draw(gameTime);
+           
             switch (EstadoActual)
             {
                 case GameState.Pause:
@@ -1039,6 +1074,7 @@ namespace TGC.MonoGame.TP
 
             
             FollowCamera.Update(gameTime, MainTanque.World);
+
 
             GraphicsDevice.BlendState = BlendState.Opaque;
         }
