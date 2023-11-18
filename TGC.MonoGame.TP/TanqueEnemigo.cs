@@ -318,7 +318,7 @@ namespace TGC.MonoGame.TP
         }
         private void Disparar(List<Bala> balas, Vector3 velocidadDisparo)
         {
-            var balaObjeto = new Bala(Position, velocidadDisparo * 5, ModelBala, EfectoBala, TexturaBala, this)
+            var balaObjeto = new Bala(Position, velocidadDisparo * 5, ModelBala, Effect, TexturaBala, this)
             {
                 Rastros = rastroBala
             };

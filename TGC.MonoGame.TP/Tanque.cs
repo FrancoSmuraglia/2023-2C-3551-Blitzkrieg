@@ -233,9 +233,9 @@ namespace TGC.MonoGame.TP
             updateTurret(gameTime);
             actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
             // Tanto la vista como la proyección vienen de la cámara por parámetro
-            Effect.Parameters["View"].SetValue(view);
-            Effect.Parameters["Projection"].SetValue(projection);
-            Effect.Parameters["ModelTexture"]?.SetValue(Texture);
+            //Effect.Parameters["View"].SetValue(view);
+            //Effect.Parameters["Projection"].SetValue(projection);
+            //Effect.Parameters["ModelTexture"]?.SetValue(Texture);
 
             
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
