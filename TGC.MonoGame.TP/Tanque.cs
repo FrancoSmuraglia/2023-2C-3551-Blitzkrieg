@@ -227,10 +227,13 @@ namespace TGC.MonoGame.TP
         //    }
         //}
 
-        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
+        public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, 
+                            RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera, bool estatico)
         {
-            AnimarRuedas();
-            updateTurret(gameTime);
+            if(!estatico){
+                AnimarRuedas();
+                updateTurret(gameTime);
+            }
             actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
             // Tanto la vista como la proyección vienen de la cámara por parámetro
             //Effect.Parameters["View"].SetValue(view);
@@ -313,7 +316,7 @@ namespace TGC.MonoGame.TP
         float anguloHorizontalTorreta = 0;
         float anguloHorizontalTanque = 0;
         float tiempoEntreDisparo = 3;
-        public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas)
+        public void Update(GameTime gameTime, KeyboardState key, List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Bala> balas, List<Muro> muros)
         {
 
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
@@ -343,7 +346,7 @@ namespace TGC.MonoGame.TP
             { // Giro a la izquierda 
                 RotationMatrix *= Matrix.CreateRotationY(.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(.03f));
-                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
+                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos, muros)){
                     EstadoActualDeRuedas = EstadoRuedas.GiroIzquierda;
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque += .03f;
@@ -357,7 +360,7 @@ namespace TGC.MonoGame.TP
             { // Giro a la izquierda 
                 RotationMatrix *= Matrix.CreateRotationY(-.03f);
                 TankBox.Rotate(Matrix.CreateRotationY(-.03f));
-                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos)){
+                if(!ChoqueConObjetosSinDestruccion(ambiente, enemigos, muros)){
                     EstadoActualDeRuedas = EstadoRuedas.GiroDerecha;
                     TankDirection = RotationMatrix.Forward;
                     anguloHorizontalTanque -= .03f;
@@ -388,7 +391,7 @@ namespace TGC.MonoGame.TP
 
             // ** Análisis de colisión ** //
 
-            if (!ChoqueConObjetosSinDestruccion(ambiente, enemigos))
+            if (!ChoqueConObjetosSinDestruccion(ambiente, enemigos, muros))
             {
                 OldPosition = Position;
                 //TankBox.Center = Position + Vector3.Up * PuntoMedio;
@@ -495,6 +498,9 @@ namespace TGC.MonoGame.TP
         public bool Intersecta(Object objeto){
             return TankBox.Intersects(objeto.Box);
         }
+        public bool Intersecta(Muro muro){
+            return TankBox.Intersects(muro.Colision);
+        }
         public void ChoqueDestructibles(List<Object> ambiente){
             foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == true)){
                 if(Intersecta(itemEspecifico)){
@@ -503,7 +509,7 @@ namespace TGC.MonoGame.TP
                 }
             }
         }
-        public bool ChoqueConObjetosSinDestruccion(List<Object> ambiente, List<TanqueEnemigo> enemigos){
+        public bool ChoqueConObjetosSinDestruccion(List<Object> ambiente, List<TanqueEnemigo> enemigos, List<Muro> muros){
             foreach (Object itemEspecifico in ambiente.Where(x => x.esEliminable == false)){
                 if(Intersecta(itemEspecifico)){
                     if(TankVelocity.Length() > 5f)
@@ -533,6 +539,16 @@ namespace TGC.MonoGame.TP
                     return true;
                 }
             }
+
+            foreach (Muro muro in muros)
+            {
+                if(Intersecta(muro)){
+                    TankVelocity = -TankVelocity*.5f;
+                    TankBox.Center = OldPosition + Vector3.Up * PuntoMedio;
+                    return true;
+                }
+            }
+
             TankBox.Center = Position + Vector3.Up * PuntoMedio;
             return false;
         }

@@ -213,6 +213,7 @@ namespace TGC.MonoGame.TP
                     }
                     ambiente.reproducirSonido(jugador.listener);
                     esVictima = true;   
+                    return;
                 }
             }      
 

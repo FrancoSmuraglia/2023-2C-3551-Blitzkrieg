@@ -8,6 +8,7 @@ namespace TGC.MonoGame.TP
     ///     The quad is like a plane but its made by two triangle and the surface is oriented in the XY plane of the local
     ///     coordinate space.
     /// </summary>
+    
     public class QuadPrimitive
     {
         public Texture2D Textura;
@@ -20,6 +21,7 @@ namespace TGC.MonoGame.TP
         {
             CreateVertexBuffer(graphicsDevice);
             CreateIndexBuffer(graphicsDevice);
+
 
             Effect = new BasicEffect(graphicsDevice);
             Effect.TextureEnabled = true;

@@ -188,7 +188,7 @@ namespace TGC.MonoGame.TP
             // Cannon.Transform = Cannon.Transform * Matrix.CreateRotationZ(0.006f);
 
 
-            World = Scale * RotationMatrix * Matrix.CreateTranslation(Position);
+            //World = Scale * RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
@@ -208,7 +208,7 @@ namespace TGC.MonoGame.TP
 
             Effect.Parameters["KAmbient"].SetValue(1f);
             Effect.Parameters["KDiffuse"].SetValue(1f);
-            Effect.Parameters["KSpecular"].SetValue(0.2f);
+            Effect.Parameters["KSpecular"].SetValue(0.8f);
             Effect.Parameters["shininess"].SetValue(100f);
             Effect.Parameters["eyePosition"].SetValue(camaraPosition);
 
@@ -232,7 +232,7 @@ namespace TGC.MonoGame.TP
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
 
-            World = RotationMatrix * Matrix.CreateTranslation(Position);
+            World = Scale * RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var modelMesh in Model.Meshes)
             {
                 foreach (var part in modelMesh.MeshParts)

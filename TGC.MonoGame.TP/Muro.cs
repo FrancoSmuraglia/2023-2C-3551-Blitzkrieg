@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using BepuPhysics.Constraints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,6 +25,7 @@ namespace TGC.MonoGame.TP
         //private IndexBuffer Indices4 { get; set; }
 
         private int NroMuro {  get; set; }
+        public BoundingBox Colision;
 
         public Muro(GraphicsDevice graphicsDevice, Texture2D textura, Texture2D normal, int nroMuro)
         {
@@ -32,8 +34,12 @@ namespace TGC.MonoGame.TP
 
             NroMuro = nroMuro;
 
+            Colision = new BoundingBox();
+
             CreateVertexBuffer(graphicsDevice);
             CreateIndexBuffer(graphicsDevice);
+            
+            
         }
 
         private void CreateVertexBuffer(GraphicsDevice graphicsDevice)
@@ -42,6 +48,7 @@ namespace TGC.MonoGame.TP
             var textureCoordinateLowerRight = Vector2.UnitX;
             var textureCoordinateUpperLeft = Vector2.UnitY;
             var textureCoordinateUpperRight = Vector2.One;
+            float multiplicacionTextura = 4f;
 
             VertexPositionNormalTexture[] vertices = new VertexPositionNormalTexture[0]; ; 
             switch(NroMuro)
@@ -49,55 +56,117 @@ namespace TGC.MonoGame.TP
                 case 0:
                     vertices = new[]
                     {
-                        //adelante, abajo, derecha 0 (1,1,0)
-                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)*10000f,Vector3.Up, textureCoordinateUpperRight*3f),
+                        //
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)*10000f,Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
                         //1
-                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateUpperLeft*3f),
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
                         //2
-                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/3 + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerRight * 3f),
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
                         //3
-                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/3 + Vector3.UnitZ)*10000f, Vector3.Up, textureCoordinateLowerLeft*3f)
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ)*10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
                     };
+                    Colision.Min = vertices[2].Position + Vector3.UnitZ * 100;
+                    Colision.Max = vertices[1].Position;
                     break;
                 case 1:
                     vertices = new[]
                     {
                         //0
-                        new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateUpperRight * 3f),
+                        new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
                         //1
-                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/3 - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * 3f),
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
                         //2
-                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * 3),
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
                         //3
-                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/3 + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerLeft * 3f)
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
                     };
+                    //Colisiones.Add(new BoundingBox(vertices[0].Position, vertices[2].Position));
+                    Colision.Min = vertices[0].Position - Vector3.UnitX * 100;
+                    Colision.Max = vertices[3].Position;
                     break;
                 case 2:
                     vertices = new[]
                     {
                         //0
-                        new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperRight * 3f),
+                        new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
                         //1
-                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/3 - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * 3f),
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
                         //2
-                        new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft *3f),
+                        new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
                         //3
-                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/3 - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerLeft * 3f)
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
                     };
+                    Colision.Min = vertices[0].Position - Vector3.UnitZ * 100;
+                    Colision.Max = vertices[3].Position;
                     break;
                 case 3:
                     vertices = new[]
                     {
                         //0
-                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperRight * 3f),
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
                         //1
-                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/3 + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * 3f),
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
                         //2
-                        new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft *3f),
+                        new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
                         //3
-                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/3 - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerLeft * 3f)
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
+                    };
+                    Colision.Min = vertices[2].Position + Vector3.UnitX * 100;
+                    Colision.Max = vertices[1].Position;
+                    break;
+                case 4:
+                    vertices = new[]
+                    {
+                        //adelante, abajo, derecha 0 (1,1,0)
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)*10000f,Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
+                        //1
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
+                        //2
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
+                        //3
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ)*10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
                     };
                     break;
+                case 5:
+                    vertices = new[]
+                    {
+                        //0
+                        new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
+                        //1
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
+                        //2
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
+                        //3
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
+                    };
+                    break;
+                case 6:
+                    vertices = new[]
+                    {
+                        //0
+                        new VertexPositionNormalTexture((-Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
+                        //1
+                        new VertexPositionNormalTexture((-Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
+                        //2
+                        new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
+                        //3
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
+                    };
+                    break;
+                case 7:
+                    vertices = new[]
+                    {
+                        //0
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperRight * multiplicacionTextura),
+                        //1
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 + Vector3.UnitZ) * 10000f, Vector3.Up, textureCoordinateLowerRight * multiplicacionTextura),
+                        //2
+                        new VertexPositionNormalTexture((Vector3.UnitX - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateUpperLeft * multiplicacionTextura),
+                        //3
+                        new VertexPositionNormalTexture((Vector3.UnitX + Vector3.UnitY/10 - Vector3.UnitZ)* 10000f, Vector3.Up, textureCoordinateLowerLeft * multiplicacionTextura)
+                    };
+                    break;
+
             }
             Vertices = new VertexBuffer(graphicsDevice, VertexPositionNormalTexture.VertexDeclaration, vertices.Length,
                 BufferUsage.WriteOnly);
@@ -109,7 +178,7 @@ namespace TGC.MonoGame.TP
             // Set the index buffer for each vertex, using clockwise winding
             var indices = new ushort[0];
 
-            if(NroMuro == 2)
+            if(NroMuro == 2 || NroMuro == 4 || NroMuro == 5 || NroMuro == 7)
             {
                 indices = new ushort[]
                 {
@@ -199,6 +268,20 @@ namespace TGC.MonoGame.TP
             {
                 effectPass.Apply();
                 graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Indices.IndexCount / 3);
+            }
+        }
+
+        public void Update(List<Bala> balasEnemigas, List<Bala> balasJugador){
+            foreach (var bala in balasEnemigas)
+            {
+                if(bala.BalaBox.Intersects(Colision))
+                    bala.esVictima = true;
+            }
+            
+            foreach (var bala in balasJugador   )
+            {
+                if(bala.BalaBox.Intersects(Colision))
+                    bala.esVictima = true;
             }
         }
     }
