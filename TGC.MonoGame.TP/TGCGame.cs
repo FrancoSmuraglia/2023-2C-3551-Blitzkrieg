@@ -849,7 +849,6 @@ namespace TGC.MonoGame.TP
                     //smokePlumeParticles.Draw(gameTime);
                     if(BotonPresionado(Keys.G)){
                         GizmosActivado = !GizmosActivado;
-                        isGod = !isGod;
                     }
                         
 
