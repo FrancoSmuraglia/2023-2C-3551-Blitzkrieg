@@ -124,6 +124,8 @@ namespace TGC.MonoGame.TP
         public Song Musica { get; set; }
         TimeSpan tiempoMusicaPrincipal = TimeSpan.Zero;
         public Song MusicaMenu { get; set; }
+        
+        bool SonidoActivado = true;
         internal FireParticleSystem fireParticles { get; private set; }
 
         TimeSpan tiempoMusicaMenu = TimeSpan.Zero;
@@ -146,6 +148,8 @@ namespace TGC.MonoGame.TP
         private readonly float LightCameraNearPlaneDistance = 50;
         private TargetCamera TargetLightCamera { get; set; }
         private RenderTarget2D ShadowMapRenderTarget;
+        private RenderTarget2D pixel;
+
 
         // particula 
         
@@ -217,7 +221,6 @@ namespace TGC.MonoGame.TP
             Graphics.PreferredBackBufferWidth = (int)PantallaResolucion.X;
             Graphics.PreferredBackBufferHeight = (int)PantallaResolucion.Y;
             Graphics.ApplyChanges();
-
             Gizmos = new Gizmos
             {
                 Enabled = true
@@ -252,7 +255,7 @@ namespace TGC.MonoGame.TP
                 MathHelper.PiOver2);
 
             FreeCamera = new FreeCamera(GraphicsDevice.Viewport.AspectRatio, new Vector3(0,1000f,0));
-
+            
             base.Initialize();
         }
 
@@ -343,6 +346,9 @@ namespace TGC.MonoGame.TP
             ShadowMapRenderTarget = new RenderTarget2D(GraphicsDevice, ShadowmapSize, ShadowmapSize, false,
                 SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PlatformContents);
 
+            //
+            pixel = new RenderTarget2D(GraphicsDevice, (int)PantallaResolucion.X/5, (int)PantallaResolucion.Y/5);
+
             //Muro
 
             Muro1 = new Muro(GraphicsDevice, Content.Load<Texture2D>(ContentFolderTextures + "ParedPiso/Catacomb_Wall_001_basecolor"), 
@@ -377,12 +383,12 @@ namespace TGC.MonoGame.TP
         {
             Texture2D boton = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton");
             var clickSound = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/ButtonIsClicked");
-            var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .2f)
+            var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .3f)
             {
                 Click = x => x.EstadoActual = GameState.Begin,
                 ClickSound = clickSound
             };
-            var salir = new Button(boton, PantallaResolucion / 2 + Vector2.UnitY * 100, "Salir", .2f)
+            var salir = new Button(boton, PantallaResolucion / 2 + Vector2.UnitY * 200, "Salir", .3f)
             {
                 Click = x => {
                             Thread.Sleep(clickSound.Duration);
@@ -390,6 +396,24 @@ namespace TGC.MonoGame.TP
                             },
                 ClickSound = clickSound
             };
+            string mensaje = "Desactivar sonido";
+            
+            var sonido = new Button(boton, 
+                                    PantallaResolucion / 2 + Vector2.UnitY * 100, 
+                                    mensaje, 
+                                    .3f)
+            {
+                ClickSound = clickSound
+            };
+            Action<TGCGame> function = x => {
+                        SonidoActivado = !SonidoActivado;
+                        SoundEffect.MasterVolume = SonidoActivado ? 1 : 0;
+                        sonido.Text = SonidoActivado ? "Desactivar sonido" : "Activar sonido";
+                        MediaPlayer.IsMuted = !SonidoActivado;
+                            };
+            sonido.Click = function;
+            // no me juzguen, funca (que dios bendiga los punteros) :(
+
             var godSound = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/Grito");
             var botonAngelical = Content.Load<Texture2D>(ContentFolderTextures + "Menu/BotonAngelical");
             var god = new Button(botonAngelical, 
@@ -427,7 +451,8 @@ namespace TGC.MonoGame.TP
             List<Button> botones = new(){
                 continuar,
                 salir,
-                god/*,
+                god,
+                sonido/*,
                 arribaIzquierda,
                 arribaDerecha,
                 abajoIzquierda,
@@ -983,8 +1008,6 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.Clear(Color.BlueViolet);
             DrawShadowMap(gameTime);
             DrawScene(gameTime);
-
-            base.Draw(gameTime);
         }
 
         private void DrawShadowMap(GameTime gameTime)
@@ -1127,7 +1150,7 @@ namespace TGC.MonoGame.TP
                 Gizmos.DrawCube((box.Max+box.Min)/2f,(box.Max-box.Min), Color.Green);
             LightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
 
-           
+           base.Draw(gameTime);
             switch (EstadoActual)
             {
                 case GameState.Pause:
