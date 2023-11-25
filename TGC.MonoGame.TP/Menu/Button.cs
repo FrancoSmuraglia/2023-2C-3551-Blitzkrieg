@@ -55,6 +55,10 @@ namespace TGC.MonoGame.TP
 
         }
 
+        public void cambiarTextura(Texture2D nuevaTextura){
+            Texture = nuevaTextura;
+        }
+
         public void Draw(SpriteBatch spriteBatch, SpriteFont fuente = null)
         {
             if (IsSelected)

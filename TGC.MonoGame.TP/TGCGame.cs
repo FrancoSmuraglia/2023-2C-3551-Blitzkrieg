@@ -469,14 +469,39 @@ namespace TGC.MonoGame.TP
                 CortinaImpacto = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/MetalImpact").CreateInstance()
             };
             
+            // Pantalla de inicio
+
             var iniciar = new Button(boton, PantallaResolucion / 2, "Comenzar", .3f)
             {
                 Click = x => x.EstadoActual = GameState.Begin,
                 ClickSound = clickSound
             };
+            var salida = new Button(boton, PantallaResolucion / 2 + Vector2.UnitY * 125, "Salir", .3f)
+            {
+                Click = x => {
+                            Thread.Sleep(clickSound.Duration);
+                            x.Exit();
+                            },
+                ClickSound = clickSound
+            };
 
+            var apagado = Content.Load<Texture2D>(ContentFolderTextures + "Menu/SonidoApagado");
+            var encendido = Content.Load<Texture2D>(ContentFolderTextures + "Menu/SonidoEncendido");
+            var sonidoInicio = new Button(encendido,new Vector2(PantallaResolucion.X, 0) + new Vector2(-encendido.Width, encendido.Height) * .15f / 2,null,.15f){
+                ClickSound = clickSound
+            };
+            Action<TGCGame> funcionSonido = x => {
+                SonidoActivado = !SonidoActivado;
+                SoundEffect.MasterVolume = SonidoActivado ? 1 : 0;
+                MediaPlayer.IsMuted = !SonidoActivado;
+                var boton = SonidoActivado ? encendido : apagado;
+                sonidoInicio.cambiarTextura(boton);
+            };
+            sonidoInicio.Click = funcionSonido;
             List<Button> botonesInicio = new(){
-                iniciar
+                iniciar,
+                salida,
+                sonidoInicio
             };
 
             MenuInicio = new MenuInicio(GraphicsDevice, PantallaResolucion, botonesInicio, Font)

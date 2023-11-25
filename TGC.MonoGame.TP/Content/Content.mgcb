@@ -1122,6 +1122,30 @@
 /processorParam:TextureFormat=Color
 /build:Textures/Menu/Reja.png
 
+#begin Textures/Menu/SonidoApagado.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/Menu/SonidoApagado.png
+
+#begin Textures/Menu/SonidoEncendido.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/Menu/SonidoEncendido.png
+
 #begin Textures/Menu/WallpaperInicio.jpg
 /importer:TextureImporter
 /processor:TextureProcessor
