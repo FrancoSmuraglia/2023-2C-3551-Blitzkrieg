@@ -25,6 +25,7 @@ namespace TGC.MonoGame.TP
     {
         public enum GameState
         {
+            InitialMenu,
             Begin,
             Pause,
             Finished,
@@ -98,6 +99,7 @@ namespace TGC.MonoGame.TP
         public Vector2 PantallaResolucion {get; set;}
         public GameState EstadoActual {get; set;}
         public MenuPausa MenuPausa { get; set; }
+        public MenuInicio MenuInicio { get; set; }
 
         //Frustum para delimitar dibujo
         private BoundingFrustum BoundingFrustum { get; set; }
@@ -234,7 +236,7 @@ namespace TGC.MonoGame.TP
             /*Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
             estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);*/
 
-            EstadoActual = GameState.Begin;
+            EstadoActual = GameState.InitialMenu;
 
 
 
@@ -448,7 +450,7 @@ namespace TGC.MonoGame.TP
                 "abajoDerecha",
                 .3f);
 
-            List<Button> botones = new(){
+            List<Button> botonesPausa = new(){
                 continuar,
                 salir,
                 god,
@@ -459,12 +461,29 @@ namespace TGC.MonoGame.TP
                 abajoDerecha*/
             };
 
-            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botones, Font)
+            MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botonesPausa, Font)
             {
                 juego = this,
                 Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg"),
                 Cortina = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/Chains").CreateInstance(),
                 CortinaImpacto = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/MetalImpact").CreateInstance()
+            };
+            
+            var iniciar = new Button(boton, PantallaResolucion / 2, "Comenzar", .3f)
+            {
+                Click = x => x.EstadoActual = GameState.Begin,
+                ClickSound = clickSound
+            };
+
+            List<Button> botonesInicio = new(){
+                iniciar
+            };
+
+            MenuInicio = new MenuInicio(GraphicsDevice, PantallaResolucion, botonesInicio, Font)
+            {
+                juego = this,
+                Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg"),
+                Fondo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/WallpaperInicio")
             };
 
             MenuPausa.IniciarCortina();
@@ -857,7 +876,11 @@ namespace TGC.MonoGame.TP
             BoundingFrustum.Matrix = FollowCamera.View * FollowCamera.Projection;
 
             switch (EstadoActual)
-            {
+            {   
+                case GameState.InitialMenu:
+                    
+                    MenuInicio.Update(Mouse.GetState());
+                    break;
                 case GameState.Begin:
                     //HUD.update(gametime);
                     if(FollowCamera.Frenado)
@@ -1153,6 +1176,9 @@ namespace TGC.MonoGame.TP
            base.Draw(gameTime);
             switch (EstadoActual)
             {
+                case GameState.InitialMenu:
+                    MenuInicio.Draw(SpriteBatch);
+                break;
                 case GameState.Pause:
                     MenuPausa.Draw(SpriteBatch);
                 break;

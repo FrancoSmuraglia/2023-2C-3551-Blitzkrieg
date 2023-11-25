@@ -232,8 +232,8 @@ namespace TGC.MonoGame.TP
         {
             if(!estatico){
                 AnimarRuedas();
-                updateTurret(gameTime);
             }
+            updateTurret(gameTime,estatico);
             actualizarEfecto(camaraPosition, ShadowMapRenderTarget, lightPosition, ShadowmapSize, TargetLightCamera);
             // Tanto la vista como la proyección vienen de la cámara por parámetro
             //Effect.Parameters["View"].SetValue(view);
@@ -553,12 +553,12 @@ namespace TGC.MonoGame.TP
             return false;
         }
 
-        public void updateTurret(GameTime gameTime)
+        public void updateTurret(GameTime gameTime, bool permitirMovimiento)
         {
             MouseState currentMouseState = Mouse.GetState();
             //updateVertical(currentMouseState, gameTime);
-            Matrix anguloH = updateHorizontal(currentMouseState, gameTime);
-            Matrix anguloV = updateVertical(currentMouseState,gameTime);
+            Matrix anguloH = updateHorizontal(currentMouseState, gameTime, !permitirMovimiento);
+            Matrix anguloV = updateVertical(currentMouseState,gameTime, !permitirMovimiento);
 
 
             Cannon.Transform = _initialCannon * anguloH;
@@ -569,12 +569,12 @@ namespace TGC.MonoGame.TP
             estadoAnteriorDelMouse = new Vector2(currentMouseState.X,currentMouseState.Y);
         }
 
-        public Matrix updateHorizontal(MouseState currentMouseState, GameTime gameTime)
+        public Matrix updateHorizontal(MouseState currentMouseState, GameTime gameTime, bool permitirMovimiento)
         {
             float rotationSpeed = 0.01f;
             mouseX = currentMouseState.X;
             var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
-            if (currentMouseState.RightButton.Equals(ButtonState.Pressed))
+            if (currentMouseState.RightButton.Equals(ButtonState.Pressed) && permitirMovimiento)
             {
                 float deltaX = mouseX - estadoAnteriorDelMouse.X;
 
@@ -584,11 +584,11 @@ namespace TGC.MonoGame.TP
 
         }
 
-        public Matrix updateVertical(MouseState currentMouseState, GameTime gameTime) {
+        public Matrix updateVertical(MouseState currentMouseState, GameTime gameTime, bool permitirMovimiento) {
             mouseY = currentMouseState.Y;
             var elapsedTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
 
-            if(currentMouseState.RightButton.Equals(ButtonState.Pressed)){
+            if(currentMouseState.RightButton.Equals(ButtonState.Pressed) && permitirMovimiento){
                 float deltaY = mouseY - estadoAnteriorDelMouse.Y;
 
                 anguloVertical += elapsedTime * deltaY;
