@@ -124,6 +124,7 @@ namespace TGC.MonoGame.TP
         public Texture2D Fondo { get; set; }
         // Musica
         public Song Musica { get; set; }
+        public Song MusicaFinal { get; set; }
         TimeSpan tiempoMusicaPrincipal = TimeSpan.Zero;
         public Song MusicaMenu { get; set; }
         
@@ -316,14 +317,18 @@ namespace TGC.MonoGame.TP
 
             InitializeHUD();
 
-            Fondo = Content.Load<Texture2D>(ContentFolderTextures + "fondoNegro");
-            PantallaFinal = new PantallaFinal(PantallaResolucion, Fondo, Font);
+            Fondo = Content.Load<Texture2D>(ContentFolderTextures + "PantallaFinal/fondoEstrellas");
+            PantallaFinal = new PantallaFinal(PantallaResolucion, Fondo, Font)
+            {
+                Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg")
+            };
 
             BalasMain = new List<Bala>();
             BalasEnemigas = new List<Bala>();
 
             Musica = Content.Load<Song>(ContentFolderMusic + "Ambient/MainGame");
             MusicaMenu = Content.Load<Song>(ContentFolderMusic + "Ambient/MenuPause");
+            MusicaFinal = Content.Load<Song>(ContentFolderMusic + "Ambient/FinalScene");
             InitializeAmbient();
 
             Tanques.ForEach(o => o.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Effect>(ContentFolderEffects + "BlinnPhong")));
@@ -954,8 +959,11 @@ namespace TGC.MonoGame.TP
                 case GameState.Lost:
                     if (!FollowCamera.Frenado)
                     {
-                        FollowCamera.FrenarCamara();
+                        FollowCamera.FrenarCamara();    
+                        MediaPlayer.Stop();
+                        MediaPlayer.Play(MusicaFinal);
                     }
+                    PantallaFinal.Update(gameTime);
                     if(BotonPresionado(Keys.Escape))
                         Exit();
                     break;
@@ -993,6 +1001,15 @@ namespace TGC.MonoGame.TP
                 //Exit();
                 EstadoActual = GameState.Pause;
                 return;
+            }
+
+            if(BotonPresionado(Keys.M))
+            {
+                EstadoActual = GameState.Lost;
+            }
+            if(BotonPresionado(Keys.N))
+            {
+                EstadoActual = GameState.Finished;
             }
 
             

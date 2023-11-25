@@ -808,6 +808,12 @@
 /processorParam:TextureFormat=Compressed
 /build:Models/tgc-logo/tgc-logo.fbx
 
+#begin Music/Ambient/FinalScene.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:Music/Ambient/FinalScene.mp3
+
 #begin Music/Ambient/MainGame.mp3
 /importer:Mp3Importer
 /processor:SongProcessor
@@ -1169,6 +1175,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Textures/Mushroom.png
+
+#begin Textures/PantallaFinal/fondoEstrellas.jpeg
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Textures/PantallaFinal/fondoEstrellas.jpeg
 
 #begin Textures/ParedPiso/Catacomb_Wall_001_basecolor.jpg
 /importer:TextureImporter
