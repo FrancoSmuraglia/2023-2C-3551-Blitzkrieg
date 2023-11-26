@@ -353,8 +353,11 @@ namespace TGC.MonoGame.TP
             ShadowMapRenderTarget = new RenderTarget2D(GraphicsDevice, ShadowmapSize, ShadowmapSize, false,
                 SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PlatformContents);
 
-            //
-            pixel = new RenderTarget2D(GraphicsDevice, (int)PantallaResolucion.X/5, (int)PantallaResolucion.Y/5);
+            pixel =  new RenderTarget2D(GraphicsDevice, (int)(PantallaResolucion.X/2.5), (int)(PantallaResolucion.Y/2.5), true,
+            GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24,
+            GraphicsDevice.PresentationParameters.MultiSampleCount, RenderTargetUsage.PlatformContents);
+            //pixel = new RenderTarget2D(GraphicsDevice, (int)PantallaResolucion.X/2, (int)PantallaResolucion.Y/2);
+
 
             //Muro
 
@@ -928,9 +931,16 @@ namespace TGC.MonoGame.TP
                     if(BotonPresionado(Keys.G)){
                         GizmosActivado = !GizmosActivado;
                     }
-                        
+                    if(!isGod)
+                        MainGame(gameTime);
 
-                    MainGame(gameTime);
+                    
+                    if (BotonPresionado(Keys.Escape))
+                    {
+                        //Exit();
+                        EstadoActual = GameState.Pause;
+                        //return;
+                    }
 
                     break;
                 case GameState.Pause:
@@ -976,7 +986,7 @@ namespace TGC.MonoGame.TP
             LightBoxWorld = Matrix.CreateTranslation(lightPosition);
 
 
-            if(EstadoActual.Equals(GameState.Begin))
+            if(EstadoActual.Equals(GameState.Begin) && !isGod)
                 base.Update(gameTime);
         }
 
@@ -994,13 +1004,6 @@ namespace TGC.MonoGame.TP
             {
                 juegoTerminado = true;
                 EstadoActual = GameState.Lost;
-            }
-
-            if (BotonPresionado(Keys.Escape))
-            {
-                //Exit();
-                EstadoActual = GameState.Pause;
-                return;
             }
 
             if(BotonPresionado(Keys.M))
@@ -1128,6 +1131,8 @@ namespace TGC.MonoGame.TP
         private void DrawScene(GameTime gameTime)
         {
             GraphicsDevice.SetRenderTarget(null);
+            
+            GraphicsDevice.SetRenderTarget(pixel);
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
 
             var originalRasterizerState = GraphicsDevice.RasterizerState;
@@ -1136,6 +1141,7 @@ namespace TGC.MonoGame.TP
             Graphics.GraphicsDevice.RasterizerState = rasterizerState;
             SkyBox.Draw(FollowCamera.View, FollowCamera.Projection, posicionUsada);
             GraphicsDevice.RasterizerState = originalRasterizerState;
+
 
             bool quedarseQuieto = isGod || EstadoActual == GameState.Pause;
             MainTanque.Draw(gameTime, vistaUsada, proyeccionUsada, posicionUsada, ShadowMapRenderTarget, 
@@ -1214,8 +1220,13 @@ namespace TGC.MonoGame.TP
                 box = Muro4.Colision;
                 Gizmos.DrawCube((box.Max+box.Min)/2f,(box.Max-box.Min), Color.Green);
             LightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
+            base.Draw(gameTime);
+            
+            GraphicsDevice.SetRenderTarget(null);
 
-           base.Draw(gameTime);
+            SpriteBatch.Begin(samplerState: SamplerState.PointWrap);
+            SpriteBatch.Draw(pixel, new Rectangle(0,0, (int)PantallaResolucion.X, (int)PantallaResolucion.Y), new Color(1,1,1,.2f));
+            SpriteBatch.End();
             switch (EstadoActual)
             {
                 case GameState.InitialMenu:

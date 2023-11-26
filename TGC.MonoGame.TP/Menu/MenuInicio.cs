@@ -54,14 +54,21 @@ namespace TGC.MonoGame.TP
             posicionesOriginales = botones.Select(boton => boton.Position).ToList();
             
             FondoRect = new Rectangle(0, 0, (int)PantallaTamanio.X, (int)PantallaTamanio.Y);
-            giroLogo = new BasicEffect(graphicsDevice);
-            
+            giroLogo = new BasicEffect(graphicsDevice){
+                TextureEnabled = true,
+                VertexColorEnabled = true,
+
+            };
+            giroLogo.World = Matrix.Identity;
+            giroLogo.View = Matrix.Identity;
+            giroLogo.Projection = Matrix.CreateOrthographicOffCenter(0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height, 0, 0, 2);
         }
 
         float giro = 0f;
+        Matrix transform = Matrix.Identity;
         public void Draw(SpriteBatch spriteBatch){
-            
-            spriteBatch.Begin();    
+            //giroLogo.World *= Matrix.CreateRotationZ(0.1f);// Matrix.CreateFromYawPitchRoll(0,.001f,0);
+            spriteBatch.Begin(0, null, null, null, null, null, transform);    
             spriteBatch.Draw(Fondo, FondoRect, new Color(1,1,1,1f));
             LogoRect = new Rectangle((int)PantallaTamanio.X / 2 - Logo.Width / 3 / 2, Logo.Height / 3 / 2, Logo.Width / 3, Logo.Height / 3);
             //spriteBatch.Draw(Logo, LogoRect, new Color(1,1,1,1f));
