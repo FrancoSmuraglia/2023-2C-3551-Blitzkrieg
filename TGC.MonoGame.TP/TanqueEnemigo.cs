@@ -197,6 +197,16 @@ namespace TGC.MonoGame.TP
                 Effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
                 Effect.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
                 mesh.Draw();
+                if(mesh.ParentBone.Name.Contains("Treadmill")){
+                    if(mesh.ParentBone.Name == "Treadmill1"){
+                        Effect.Parameters["Rapidez"]?.SetValue(anguloGiro);
+                    }
+                    else{
+                        Effect.Parameters["Rapidez"]?.SetValue(anguloGiro);
+                    }
+                }
+                mesh.Draw();
+                Effect.Parameters["Rapidez"]?.SetValue(0);    
             }
         }
 

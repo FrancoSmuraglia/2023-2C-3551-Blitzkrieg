@@ -21,6 +21,8 @@ float shininess;
 float3 lightPosition;
 float3 eyePosition; // Camera position
 float2 Tiling;
+bool girar;
+float Rapidez;
 
 float4x4 LightViewProjection;
 float2 shadowMapSize;
@@ -131,6 +133,8 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     output.Normal = mul(float4(normalize(input.Normal.xyz), 1.0), InverseTransposeWorld);
     output.TextureCoordinates = input.TextureCoordinates * Tiling;
     output.LightSpacePosition = mul(output.WorldPosition, LightViewProjection);
+
+
 	
 	return output;
 }
@@ -169,7 +173,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     
     finalColor.rgb *= 0.5 + 0.5 * notInShadow;
     
-     
+
     return finalColor;
 
 }
@@ -182,8 +186,8 @@ VertexShaderOutput NormalMapVS(in VertexShaderInput input)
     output.WorldPosition = mul(input.Position, World);
     output.Normal = mul(input.Normal, InverseTransposeWorld);
     output.TextureCoordinates = input.TextureCoordinates * Tiling;
+	output.TextureCoordinates += input.TextureCoordinates * Rapidez;
     output.LightSpacePosition = mul(output.WorldPosition, LightViewProjection);
-	
     return output;
 }
 
@@ -220,6 +224,7 @@ float4 NormalMapPS(VertexShaderOutput input) : COLOR
     float notInShadow = step(lightSpacePosition.z, shadowMapDepth);
     
     finalColor.rgb *= 0.5 + 0.5 * notInShadow;
+
     
     return finalColor;
 

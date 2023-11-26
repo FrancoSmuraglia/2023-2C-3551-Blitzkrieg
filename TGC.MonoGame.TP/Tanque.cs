@@ -45,6 +45,9 @@ namespace TGC.MonoGame.TP
 
         protected Texture2D Texture { get; set; }
         public Texture2D NormalTexture { get; set; }
+        
+        public Texture2D TreadmillTexture { get; set; }
+        public Texture2D TreadmillNormalTexture { get; set; }
         public Vector3 Position{ get; set; }
         public Vector3 OldPosition{ get; set; }
         public Matrix OldRotation{ get; set; }
@@ -100,7 +103,6 @@ namespace TGC.MonoGame.TP
         private Matrix[] RuedasMatriz {get; set; }
         private ModelBone[] RuedasBones {get; set;}
 
-        private Texture2D Treadmill {get; set;}
 
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
         {
@@ -250,10 +252,25 @@ namespace TGC.MonoGame.TP
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
                 var finalWorld = meshWorld * World;
+                
                 efectoTanque.Parameters["World"].SetValue(finalWorld);
                 efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(finalWorld)));
                 efectoTanque.Parameters["WorldViewProjection"].SetValue(finalWorld * view * projection);
+                
+                if(mesh.ParentBone.Name.Contains("Treadmill")){
+                    efectoTanque.Parameters["ModelTexture"].SetValue(TreadmillTexture);
+                    efectoTanque.Parameters["NormalTexture"].SetValue(TreadmillNormalTexture);    
+                    if(mesh.ParentBone.Name == "Treadmill1"){
+                        efectoTanque.Parameters["Rapidez"]?.SetValue(anguloGiroDeRuedas + anguloGiro);
+                    }
+                    else{
+                        efectoTanque.Parameters["Rapidez"]?.SetValue(anguloGiroDeRuedas - anguloGiro);
+                    }
+                }
                 mesh.Draw();
+                efectoTanque.Parameters["Rapidez"]?.SetValue(0);    
+                efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
+                efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
             }
             
         }

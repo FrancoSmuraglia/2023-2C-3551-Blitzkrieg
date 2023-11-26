@@ -299,7 +299,9 @@ namespace TGC.MonoGame.TP
                 efectoTanque = EffectLight,
                 NormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/normal"),
                 polvo = smokePlumeParticles,
-                rastroBala = explosionSmokeParticles
+                rastroBala = explosionSmokeParticles,
+                TreadmillTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/treadmills"),
+                TreadmillNormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/treadmills_normal")
             };
 
             MainTanque.LoadContent(Content.Load<Model>(ContentFolder3D + "Bullet/Bullet"), null, Content.Load<Texture2D>(ContentFolderTextures + "gold"));
@@ -785,28 +787,28 @@ namespace TGC.MonoGame.TP
                     Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB")));
             }*/
             var sonidoDeColision = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/Tank/TankBeingFired_1");
-            var tanque1 = new TanqueEnemigo(new Vector3(8000f, 255, 8000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
+            var tanque1 = new TanqueEnemigo(new Vector3(8000f, 300, 8000f), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"))
             {
                 NormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/normal"),
                 SonidoColision = sonidoDeColision,
                 polvo = smokePlumeParticles,
                 rastroBala = explosionSmokeParticles
             };
-            var tanque2 = new TanqueEnemigo(new Vector3(-8000, 255, -8000), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
+            var tanque2 = new TanqueEnemigo(new Vector3(-8000, 300, -8000), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullB"))
             {
                 NormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/normal"),
                 SonidoColision = sonidoDeColision,
                 polvo = smokePlumeParticles,
                 rastroBala = explosionSmokeParticles
             };
-            var tanque3 = new TanqueEnemigo(new Vector3(8000f, 255, -8000), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
+            var tanque3 = new TanqueEnemigo(new Vector3(8000f, 300, -8000), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullC"))
             {
                 NormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/normal"),
                 SonidoColision = sonidoDeColision,
                 polvo = smokePlumeParticles,
                 rastroBala = explosionSmokeParticles
             };
-            var tanque4 = new TanqueEnemigo(new Vector3(-8000, 255, 8000), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
+            var tanque4 = new TanqueEnemigo(new Vector3(-8000, 300, 8000), Content.Load<Model>(ContentFolder3D + "T90"), Content.Load<Effect>(ContentFolderEffects + "BlinnPhong"), Content.Load<Texture2D>(ContentFolder3D + "textures_mod/mask"))
             {
                 NormalTexture = Content.Load<Texture2D>(ContentFolder3D + "textures_mod/normal"),
                 SonidoColision = sonidoDeColision,
