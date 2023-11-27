@@ -212,13 +212,13 @@ namespace TGC.MonoGame.TP
             var rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.CullClockwiseFace;
             GraphicsDevice.RasterizerState = rasterizerState;
-
+            Graphics.IsFullScreen = true;
 
             // Seria hasta aca.
             PantallaResolucion = new Vector2
             {
-                X = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100,
-                Y = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100
+                X = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width,
+                Y = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height
             };
 
             Graphics.PreferredBackBufferWidth = (int)PantallaResolucion.X;
@@ -356,8 +356,8 @@ namespace TGC.MonoGame.TP
                 SurfaceFormat.Single, DepthFormat.Depth24, 0, RenderTargetUsage.PlatformContents);
 
             pixel =  new RenderTarget2D(GraphicsDevice, (int)(PantallaResolucion.X/2.5), (int)(PantallaResolucion.Y/2.5), true,
-            GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24,
-            GraphicsDevice.PresentationParameters.MultiSampleCount, RenderTargetUsage.PlatformContents);
+            GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24Stencil8,
+            GraphicsDevice.PresentationParameters.MultiSampleCount, RenderTargetUsage.PreserveContents);
             //pixel = new RenderTarget2D(GraphicsDevice, (int)PantallaResolucion.X/2, (int)PantallaResolucion.Y/2);
 
 

@@ -29,6 +29,11 @@ float2 shadowMapSize;
 static const float modulatedEpsilon = 0.000041200182749889791011810302734375;
 static const float maxEpsilon = 0.000023200045689009130001068115234375;
 
+static const float MAX_IMPACTOS = 10;
+float3 impactos[MAX_IMPACTOS];
+float impactosCantidad;
+
+
 texture ModelTexture;
 sampler2D textureSampler = sampler_state
 {
@@ -182,8 +187,12 @@ VertexShaderOutput NormalMapVS(in VertexShaderInput input)
 {
     VertexShaderOutput output = (VertexShaderOutput) 0;
 
-    output.Position = mul(input.Position, WorldViewProjection);
+
     output.WorldPosition = mul(input.Position, World);
+
+    
+    
+    output.Position = mul(input.Position, WorldViewProjection);
     output.Normal = mul(input.Normal, InverseTransposeWorld);
     output.TextureCoordinates = input.TextureCoordinates * Tiling;
 	output.TextureCoordinates += input.TextureCoordinates * Rapidez;

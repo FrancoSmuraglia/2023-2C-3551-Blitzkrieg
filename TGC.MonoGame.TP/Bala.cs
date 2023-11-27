@@ -222,6 +222,7 @@ namespace TGC.MonoGame.TP
                 //jugador.reproducirSonido(Jugador.listener);
                 esVictima = true;
                 jugador.recibirDaño(Daño);
+                jugador.agregarImpacto(this.Position);
             }
         }
         

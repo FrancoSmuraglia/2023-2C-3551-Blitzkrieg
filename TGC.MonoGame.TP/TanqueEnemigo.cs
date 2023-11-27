@@ -295,6 +295,7 @@ namespace TGC.MonoGame.TP
         }
 
         float tiempoEntreDisparo;
+        double angulo;
         private void BusquedaYPersecucion(Vector3 playerposition, List<Bala> balas, float deltaTime){
             Vector3 distance = playerposition - Position;
             var distanceLongitud = distance.Length();
@@ -305,14 +306,15 @@ namespace TGC.MonoGame.TP
                 IsMoving = true;
                 var directionActual = RotationMatrix.Forward;
                 
-                var angulo = VectorAngle(distance, directionActual);
 
+                angulo = VectorAngle(distance, directionActual);
                 if(Math.Abs(angulo) >= 0.1f){
                     if(angulo > 0)
                         RotationMatrix *= Matrix.CreateRotationY(velocidadGiro);
                     else if (angulo < 0)
                         RotationMatrix *= Matrix.CreateRotationY(-velocidadGiro);
                 }
+                
                 
                 if(distanceLongitud > 2000){
                     TankVelocity += deltaTime * Vector3.Normalize(distance) * 100;

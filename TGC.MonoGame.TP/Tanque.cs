@@ -22,6 +22,10 @@ namespace TGC.MonoGame.TP
             GiroDerecha,
             GiroIzquierda
         }
+        private List<Vector3> Colisiones;
+        private Vector3[] ColisionesArray;
+        int posArrayVictima = 0;
+        int posLlena = 0;
         private EstadoRuedas EstadoActualDeRuedas = EstadoRuedas.Quieto;
         public ParticleSystem polvo;
         public ParticleSystem rastroBala;
@@ -171,6 +175,9 @@ namespace TGC.MonoGame.TP
             
             InstanciaSonidoMovimiento = sonidoMovimiento.CreateInstance();
             InstanciaSonidoMovimiento.Volume = 0.05f;
+
+            Colisiones = new List<Vector3>();
+            ColisionesArray = new Vector3[10];
         }
 
 
@@ -228,7 +235,17 @@ namespace TGC.MonoGame.TP
         //        mesh.Draw();
         //    }
         //}
-
+        public void agregarImpacto(Vector3 posicionBala){
+            if(posLlena < 10){
+                var hullTransform = Model.Meshes.First(m => m.Name == "Hull").ParentBone.Transform;
+                ColisionesArray[posArrayVictima] = Vector3.Transform(posicionBala, (Matrix.Invert(World)));
+                posArrayVictima = (posArrayVictima < 10) ? posArrayVictima + 1 : 0;
+                posLlena = (posLlena < 10) ? posLlena + 1 : 9;
+            }
+            
+            /*if(Colisiones.Count() < 10)
+                Colisiones.Add(posicionBala);*/
+        }
         public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, 
                             RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera, bool estatico)
         {
@@ -246,7 +263,7 @@ namespace TGC.MonoGame.TP
             var modelMeshesBaseTransforms = new Matrix[Model.Bones.Count];
             Model.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
             
-        
+
             World = RotationMatrix * Matrix.CreateTranslation(Position);
             foreach (var mesh in Model.Meshes)
             {
@@ -267,10 +284,12 @@ namespace TGC.MonoGame.TP
                         efectoTanque.Parameters["Rapidez"]?.SetValue(anguloGiroDeRuedas - anguloGiro);
                     }
                 }
+
                 mesh.Draw();
                 efectoTanque.Parameters["Rapidez"]?.SetValue(0);    
                 efectoTanque.Parameters["ModelTexture"].SetValue(Texture);
                 efectoTanque.Parameters["NormalTexture"].SetValue(NormalTexture);
+                Effect.Parameters["impactosCantidad"]?.SetValue(0);
             }
             
         }
@@ -431,6 +450,10 @@ namespace TGC.MonoGame.TP
             World = RotationMatrix * Matrix.CreateTranslation(Position);
 
             listener.Position = Position;
+            
+
+            /**/
+            //ColisionesArray = Colisiones.GetRange(0,10).ToArray();
             
         }
 
