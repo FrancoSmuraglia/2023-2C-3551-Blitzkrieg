@@ -64,6 +64,8 @@ namespace TGC.MonoGame.TP
 
         private Matrix[] RuedasMatriz {get; set; }
         private ModelBone[] RuedasBones {get; set;}
+        public List<Vector3> Impactos { get; set;}
+        int posLlena = 0;
 
 
 
@@ -113,6 +115,8 @@ namespace TGC.MonoGame.TP
                 RuedasBones[posicionLogica] = modelo.Bones[nombreRueda];
                 RuedasMatriz[posicionLogica] = RuedasBones[posicionLogica].Transform;
             }
+
+            Impactos = new List<Vector3>();
 
         }
 
@@ -189,6 +193,7 @@ namespace TGC.MonoGame.TP
 
 
             //World = Scale * RotationMatrix * Matrix.CreateTranslation(Position);
+            Effect.CurrentTechnique = Effect.Techniques["Deformaciones"];
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
@@ -196,6 +201,15 @@ namespace TGC.MonoGame.TP
                 Effect.Parameters["World"].SetValue(meshWorld * World);
                 Effect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(meshWorld * World)));
                 Effect.Parameters["WorldViewProjection"].SetValue(meshWorld * World * view * projection);
+                Effect.Parameters["View"]?.SetValue(view);
+                Effect.Parameters["Projection"]?.SetValue(projection);
+
+                if(mesh.Name == "Hull")
+                {
+                    Effect.Parameters["impactos"]?.SetValue(this.Impactos.ToArray());
+                    Effect.Parameters["impactosCantidad"]?.SetValue(this.Impactos.Count);
+                }
+
                 mesh.Draw();
                 if(mesh.ParentBone.Name.Contains("Treadmill")){
                     if(mesh.ParentBone.Name == "Treadmill1"){
@@ -208,6 +222,20 @@ namespace TGC.MonoGame.TP
                 mesh.Draw();
                 Effect.Parameters["Rapidez"]?.SetValue(0);    
             }
+        }
+
+        public void agregarImpacto(Vector3 posicionBala){
+            if(posLlena < 10){
+                var hullTransform = Model.Meshes.First(m => m.Name == "Hull").ParentBone.Transform;
+                Impactos.Add(Vector3.Transform(posicionBala, Matrix.Invert(hullTransform * World)));
+
+                posLlena = (posLlena < 10) ? posLlena + 1 : 9;
+            }
+            
+
+
+            /*if(Colisiones.Count() < 10)
+                Colisiones.Add(posicionBala);*/
         }
 
         public void actualizarEfecto(Vector3 camaraPosition, RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera)
@@ -226,7 +254,7 @@ namespace TGC.MonoGame.TP
             Effect.Parameters["NormalTexture"].SetValue(NormalTexture);
             Effect.Parameters["Tiling"].SetValue(Vector2.One);
 
-            Effect.CurrentTechnique = Effect.Techniques["NormalMapping"];
+            Effect.CurrentTechnique = Effect.Techniques["Deformaciones"];
             Effect.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
             Effect.Parameters["lightPosition"].SetValue(lightPosition);
             Effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);
@@ -321,7 +349,7 @@ namespace TGC.MonoGame.TP
                     polvo.AddParticle(Position, -TankVelocity*100);
                 }
                 
-                if(distanceLongitud < DistanciaMaximaDeVision/2 && tiempoEntreDisparo >= 5)
+                if(distanceLongitud < DistanciaMaximaDeVision/2 && tiempoEntreDisparo >= 2)
                     Disparar(balas, Vector3.Normalize(distance));
             }
             

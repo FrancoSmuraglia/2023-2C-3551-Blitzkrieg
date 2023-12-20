@@ -107,6 +107,9 @@ namespace TGC.MonoGame.TP
         private Matrix[] RuedasMatriz {get; set; }
         private ModelBone[] RuedasBones {get; set;}
 
+        public List<Vector3> Impactos { get; set;}
+        public List<Vector3> DireccionImpactos { get; set;}
+
 
         public Tanque(Vector3 Position, Model modelo, Effect efecto, Texture2D textura, Vector2 estadoInicialMouse,SoundEffect sonidoDisparo, SoundEffect sonidoMovimiento)
         {
@@ -178,6 +181,8 @@ namespace TGC.MonoGame.TP
 
             Colisiones = new List<Vector3>();
             ColisionesArray = new Vector3[10];
+
+            Impactos = new List<Vector3>();
         }
 
 
@@ -238,14 +243,25 @@ namespace TGC.MonoGame.TP
         public void agregarImpacto(Vector3 posicionBala){
             if(posLlena < 10){
                 var hullTransform = Model.Meshes.First(m => m.Name == "Hull").ParentBone.Transform;
-                ColisionesArray[posArrayVictima] = Vector3.Transform(posicionBala, (Matrix.Invert(World)));
-                posArrayVictima = (posArrayVictima < 10) ? posArrayVictima + 1 : 0;
+                Impactos.Add(Vector3.Transform(posicionBala, Matrix.Invert(hullTransform * World)));
+
                 posLlena = (posLlena < 10) ? posLlena + 1 : 9;
             }
             
+
+
             /*if(Colisiones.Count() < 10)
                 Colisiones.Add(posicionBala);*/
         }
+                        
+                
+                
+                /*var impactDir = Vector3.Transform(direccionBala, Matrix.CreateRotationY(anguloHorizontalTanque));
+                var direction = new Vector3(impactDir.X * -1, 150, impactDir.Z * -1);
+                direction.Normalize();
+                DireccionImpactos.Add(direction);*/
+                //posArrayVictima = (posArrayVictima < 10) ? posArrayVictima + 1 : 0;
+
         public void Draw(GameTime gameTime, Matrix view, Matrix projection, Vector3 camaraPosition, 
                             RenderTarget2D ShadowMapRenderTarget, Vector3 lightPosition, int ShadowmapSize, TargetCamera TargetLightCamera, bool estatico)
         {
@@ -265,6 +281,7 @@ namespace TGC.MonoGame.TP
             
 
             World = RotationMatrix * Matrix.CreateTranslation(Position);
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["Deformaciones"];
             foreach (var mesh in Model.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
@@ -273,6 +290,8 @@ namespace TGC.MonoGame.TP
                 efectoTanque.Parameters["World"].SetValue(finalWorld);
                 efectoTanque.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(finalWorld)));
                 efectoTanque.Parameters["WorldViewProjection"].SetValue(finalWorld * view * projection);
+                efectoTanque.Parameters["View"]?.SetValue(view);
+                efectoTanque.Parameters["Projection"]?.SetValue(projection);
                 
                 if(mesh.ParentBone.Name.Contains("Treadmill")){
                     efectoTanque.Parameters["ModelTexture"].SetValue(TreadmillTexture);
@@ -284,6 +303,15 @@ namespace TGC.MonoGame.TP
                         efectoTanque.Parameters["Rapidez"]?.SetValue(anguloGiroDeRuedas - anguloGiro);
                     }
                 }
+
+
+                if(mesh.Name == "Hull")
+                {
+                    efectoTanque.Parameters["impactos"]?.SetValue(this.Impactos.ToArray());
+                    efectoTanque.Parameters["impactosCantidad"]?.SetValue(this.Impactos.Count);
+                }
+                
+                //efectoTanque.Parameters["direccionImpactos"]?.SetValue(this.DireccionImpactos.ToArray());
 
                 mesh.Draw();
                 efectoTanque.Parameters["Rapidez"]?.SetValue(0);    
@@ -310,7 +338,7 @@ namespace TGC.MonoGame.TP
             efectoTanque.Parameters["Tiling"].SetValue(Vector2.One);
 
 
-            efectoTanque.CurrentTechnique = efectoTanque.Techniques["NormalMapping"];
+            efectoTanque.CurrentTechnique = efectoTanque.Techniques["Deformaciones"];
             efectoTanque.Parameters["shadowMap"].SetValue(ShadowMapRenderTarget);
             efectoTanque.Parameters["lightPosition"].SetValue(lightPosition);
             efectoTanque.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowmapSize);

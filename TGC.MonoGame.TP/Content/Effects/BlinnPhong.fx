@@ -10,6 +10,8 @@
 float4x4 WorldViewProjection;
 float4x4 World;
 float4x4 InverseTransposeWorld;
+float4x4 View;
+float4x4 Projection;
 
 float3 ambientColor; // Light's Ambient Color
 float3 diffuseColor; // Light's Diffuse Color
@@ -31,7 +33,7 @@ static const float maxEpsilon = 0.000023200045689009130001068115234375;
 
 static const float MAX_IMPACTOS = 10;
 float3 impactos[MAX_IMPACTOS];
-float impactosCantidad;
+float impactosCantidad = 0;
 
 
 texture ModelTexture;
@@ -112,6 +114,85 @@ float4 DepthPS(in DepthPassVertexShaderOutput input) : COLOR
     float depth = input.ScreenSpacePosition.z / input.ScreenSpacePosition.w;
     return float4(depth, depth, depth, 1.0);
 }
+
+struct DeformVertexShaderInput
+{
+    float4 Position : POSITION0;
+	float3 Normal : NORMAL;
+	float2 TextureCoordinates : TEXCOORD0;
+};
+
+struct DeformVertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+	float2 TextureCoordinates : TEXCOORD0;
+	float4 WorldPosition : TEXCOORD1;
+	float4 LightSpacePosition : TEXCOORD2;
+    float4 Normal : TEXCOORD3;
+};
+
+DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
+{
+    DeformVertexShaderOutput output;
+    output.WorldPosition = mul(input.Position, World);
+    float Distance = 0;
+    for(int i=0; i < MAX_IMPACTOS; i++) 
+    {
+        if(i >= impactosCantidad)
+            break;
+        Distance = distance(input.Position.xyz, impactos[i]);
+        if(length(Distance) < 50){
+            input.Position.xyz = input.Position.xyz * .95f;
+        }
+    }
+    input.Position = mul(input.Position, World);
+    input.Position = mul(input.Position, View);
+    output.Position = mul(input.Position, Projection);
+    output.Normal = mul(float4(input.Normal, 1), InverseTransposeWorld);
+    output.TextureCoordinates = input.TextureCoordinates;
+    output.LightSpacePosition = mul(output.WorldPosition, LightViewProjection);
+    return output;
+}
+
+float4 DeformPS(in DeformVertexShaderOutput input) : COLOR
+{
+    // Base vectors
+    float3 lightDirection = normalize(lightPosition - input.WorldPosition.xyz);
+    float3 viewDirection = normalize(eyePosition - input.WorldPosition.xyz);
+    float3 halfVector = normalize(lightDirection + viewDirection);
+    float3 normal =  getNormalFromMap(input.TextureCoordinates, input.WorldPosition.xyz, normalize(input.Normal.xyz));
+
+	// Get the texture texel
+    float4 texelColor = tex2D(textureSampler, input.TextureCoordinates);
+    
+	// Calculate the diffuse light
+    float NdotL = saturate(dot(normal, lightDirection));
+    float3 diffuseLight = KDiffuse * diffuseColor * NdotL;
+
+	// Calculate the specular light
+    float NdotH = dot(normal, halfVector);
+    float3 specularLight = KSpecular * specularColor * pow(NdotH, shininess);
+    
+    // Final calculation
+    float4 finalColor = float4(saturate(ambientColor * KAmbient + diffuseLight) * texelColor.rgb + specularLight, texelColor.a);
+    
+    //shadows
+    float3 lightSpacePosition = input.LightSpacePosition.xyz / input.LightSpacePosition.w;
+    float2 shadowMapTextureCoordinates = 0.5 * lightSpacePosition.xy + float2(0.5, 0.5);
+    shadowMapTextureCoordinates.y = 1.0f - shadowMapTextureCoordinates.y;
+    
+    float inclinationBias = max(modulatedEpsilon * (1.0 - dot(normal, lightDirection)), maxEpsilon);
+    float shadowMapDepth = tex2D(shadowMapSampler, shadowMapTextureCoordinates).r + inclinationBias;
+    
+    float notInShadow = step(lightSpacePosition.z, shadowMapDepth);
+    
+    finalColor.rgb *= 0.5 + 0.5 * notInShadow;
+
+    
+    return finalColor;
+}
+
+
 
 struct VertexShaderInput
 {
@@ -383,5 +464,14 @@ technique DrawShadowedPCF
     {
         VertexShader = compile VS_SHADERMODEL MainVS();
         PixelShader = compile PS_SHADERMODEL ShadowedPCFPS();
+    }
+};
+
+technique Deformaciones
+{
+    pass Pass0
+    {
+        VertexShader = compile VS_SHADERMODEL DeformVS();
+        PixelShader = compile PS_SHADERMODEL DeformPS();
     }
 };

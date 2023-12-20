@@ -46,6 +46,8 @@ namespace TGC.MonoGame.TP
 
         public ParticleSystem Rastros;
 
+        public Vector3 Direction {get; set;}
+
 
         public Bala(Vector3 Position, Vector3 velocidad, Model modelo, Effect efecto, Texture2D textura, Tanque Main){
             this.Position = Position;
@@ -183,6 +185,7 @@ namespace TGC.MonoGame.TP
                     tanqueEnemigo.reproducirSonido(Jugador.listener);
                     esVictima = true;
                     tanqueEnemigo.recibirDaño(Daño);
+                    tanqueEnemigo.agregarImpacto(this.Position);
                 }
             }   
 
