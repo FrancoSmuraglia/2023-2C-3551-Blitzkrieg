@@ -33,7 +33,7 @@ static const float maxEpsilon = 0.000023200045689009130001068115234375;
 
 static const float MAX_IMPACTOS = 10;
 float3 impactos[MAX_IMPACTOS];
-float impactosCantidad = 0;
+int impactosCantidad = 0;
 
 
 texture ModelTexture;
@@ -129,22 +129,25 @@ struct DeformVertexShaderOutput
 	float4 WorldPosition : TEXCOORD1;
 	float4 LightSpacePosition : TEXCOORD2;
     float4 Normal : TEXCOORD3;
+    float4 PositionLocal : TEXCOORD4;
 };
 
 DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
 {
     DeformVertexShaderOutput output;
-    output.WorldPosition = mul(input.Position, World);
+    output.PositionLocal = input.Position;
+
     float Distance = 0;
     for(int i=0; i < MAX_IMPACTOS; i++) 
     {
         if(i >= impactosCantidad)
             break;
         Distance = distance(input.Position.xyz, impactos[i]);
-        if(length(Distance) < 50){
-            input.Position.xyz = input.Position.xyz * .95f;
+        if(Distance < .5){
+            input.Position.xyz = input.Position.xyz * .75f;
         }
     }
+    output.WorldPosition = mul(input.Position, World);
     input.Position = mul(input.Position, World);
     input.Position = mul(input.Position, View);
     output.Position = mul(input.Position, Projection);
@@ -156,6 +159,17 @@ DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
 
 float4 DeformPS(in DeformVertexShaderOutput input) : COLOR
 {
+    /*float Distance = 0;
+    for(int i=0; i < MAX_IMPACTOS; i++) 
+    {
+        if(i >= impactosCantidad)
+            break;
+        Distance = distance(input.Position.xyz, impactos[i]);
+        if(Distance < 500){
+            input.Position.xyz = input.Position.xyz * .95f;
+        }
+    }*/
+
     // Base vectors
     float3 lightDirection = normalize(lightPosition - input.WorldPosition.xyz);
     float3 viewDirection = normalize(eyePosition - input.WorldPosition.xyz);
@@ -187,6 +201,17 @@ float4 DeformPS(in DeformVertexShaderOutput input) : COLOR
     float notInShadow = step(lightSpacePosition.z, shadowMapDepth);
     
     finalColor.rgb *= 0.5 + 0.5 * notInShadow;
+
+    float Distance = 0;
+    for(int i=0; i < MAX_IMPACTOS; i++) 
+    {
+        if(i >= impactosCantidad)
+            break;
+        Distance = distance(input.PositionLocal.xyz, impactos[i]);
+        if(Distance < .7){
+            finalColor.rgb = float3(0, 0, 1);//float3(finalColor.r - .2, finalColor.g - .2, finalColor.b - .2);
+        }
+    }
 
     
     return finalColor;

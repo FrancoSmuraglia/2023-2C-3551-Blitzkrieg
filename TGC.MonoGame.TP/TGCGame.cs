@@ -56,7 +56,7 @@ namespace TGC.MonoGame.TP
             // Maneja la configuracion y la administracion del dispositivo grafico.
             Graphics = new GraphicsDeviceManager(this);
             // Para que el juego sea pantalla completa se puede usar Graphics IsFullScreen.
-            Graphics.IsFullScreen = true;
+            Graphics.IsFullScreen = false;
             // Carpeta raiz donde va a estar toda la Media.
             Content.RootDirectory = "Content";
             // Hace que el mouse sea visible.
@@ -217,8 +217,8 @@ namespace TGC.MonoGame.TP
             // Seria hasta aca.
             PantallaResolucion = new Vector2
             {
-                X = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width,
-                Y = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height
+                X = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100,
+                Y = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100
             };
 
             Graphics.PreferredBackBufferWidth = (int)PantallaResolucion.X;
@@ -391,8 +391,13 @@ namespace TGC.MonoGame.TP
             base.LoadContent();
         }
 
+        private AdornoMenu3D nuevoObjetoAdorno3D(){
+            return new AdornoMenu3D(Content.Load<Texture2D>(ContentFolder3D + "textures_mod/hullA"), T90, Content.Load<Effect>(ContentFolderEffects + "BasicShader"));
+        }
         private void InitializeMenus()
         {
+            
+            Dictionary<String, AdornoMenu3D> diccionarioMenuPausa = new Dictionary<string, AdornoMenu3D>();
             Texture2D boton = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Boton");
             var clickSound = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/ButtonIsClicked");
             var continuar = new Button(boton, PantallaResolucion / 2, "Continuar", .3f)
@@ -470,6 +475,10 @@ namespace TGC.MonoGame.TP
                 abajoIzquierda,
                 abajoDerecha*/
             };
+            var continuar3D = nuevoObjetoAdorno3D();
+            var salir3D = nuevoObjetoAdorno3D();
+            diccionarioMenuPausa.Add("Continuar", continuar3D);
+            diccionarioMenuPausa.Add("Salir", salir3D);
 
             MenuPausa = new MenuPausa(Content.Load<Texture2D>(ContentFolderTextures + "Menu/Reja"), PantallaResolucion, botonesPausa, Font)
             {
@@ -478,6 +487,8 @@ namespace TGC.MonoGame.TP
                 Cortina = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/Chains").CreateInstance(),
                 CortinaImpacto = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/MetalImpact").CreateInstance()
             };
+
+            MenuPausa.adornosDict = diccionarioMenuPausa;
             
             // Pantalla de inicio
 
@@ -987,7 +998,6 @@ namespace TGC.MonoGame.TP
 
             LightBoxWorld = Matrix.CreateTranslation(lightPosition);
 
-
             if(EstadoActual.Equals(GameState.Begin) && !isGod)
                 base.Update(gameTime);
         }
@@ -1076,8 +1086,12 @@ namespace TGC.MonoGame.TP
         {
 
             GraphicsDevice.Clear(Color.BlueViolet);
+            
+
+            
             DrawShadowMap(gameTime);
             DrawScene(gameTime);
+            
         }
 
         private void DrawShadowMap(GameTime gameTime)
@@ -1135,6 +1149,7 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.SetRenderTarget(null);
             
             GraphicsDevice.SetRenderTarget(pixel);
+            
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1f, 0);
 
             var originalRasterizerState = GraphicsDevice.RasterizerState;
@@ -1222,10 +1237,10 @@ namespace TGC.MonoGame.TP
                 box = Muro4.Colision;
                 Gizmos.DrawCube((box.Max+box.Min)/2f,(box.Max-box.Min), Color.Green);
             LightBox.Draw(LightBoxWorld, FollowCamera.View, FollowCamera.Projection);
+            
             base.Draw(gameTime);
             
             GraphicsDevice.SetRenderTarget(null);
-
             SpriteBatch.Begin(samplerState: SamplerState.PointWrap);
             SpriteBatch.Draw(pixel, new Rectangle(0,0, (int)PantallaResolucion.X, (int)PantallaResolucion.Y), new Color(1,1,1,.2f));
             SpriteBatch.End();
@@ -1235,7 +1250,11 @@ namespace TGC.MonoGame.TP
                     MenuInicio.Draw(SpriteBatch);
                 break;
                 case GameState.Pause:
+                {
                     MenuPausa.Draw(SpriteBatch);
+                    MenuPausa.Draw3D(FollowCamera.CamaraPosition, FollowCamera.direccionCamara, FollowCamera.upDirection, FollowCamera.rightDirection, 
+                                        FollowCamera.View, FollowCamera.Projection);
+                }
                 break;
                 case GameState.Begin:
                     Hud.Draw(SpriteBatch, MainTanque.Vida, tiempoRestante);

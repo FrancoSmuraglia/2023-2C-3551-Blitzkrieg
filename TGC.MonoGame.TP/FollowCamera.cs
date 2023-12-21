@@ -55,6 +55,7 @@ namespace TGC.MonoGame.TP
         /// <param name="followedWorld">The World matrix to follow</param>
         public bool Frenado = false;
         public Vector3 posicionCamara;
+        public Vector3 direccionCamara, upDirection, rightDirection;
         public void Update(GameTime gameTime, Matrix followedWorld)
         {
             
@@ -77,8 +78,9 @@ namespace TGC.MonoGame.TP
 
 
             //vector direccion de la camara
-            Vector3 direccionCamara = new Vector3(MathF.Cos(yaw) * MathF.Cos(pitch), MathF.Sin(pitch),MathF.Sin(yaw) * MathF.Cos(pitch));
-
+            direccionCamara = new Vector3(MathF.Cos(yaw) * MathF.Cos(pitch), MathF.Sin(pitch),MathF.Sin(yaw) * MathF.Cos(pitch));
+            rightDirection = Vector3.Normalize(Vector3.Cross(direccionCamara, Vector3.Up));
+            upDirection = Vector3.Normalize(Vector3.Cross(rightDirection, direccionCamara));
             //calculo la posicion con la direccion de la camara
             CamaraPosition = followedPosition - direccionCamara * AxisDistanceToTarget;
 

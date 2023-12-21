@@ -69,7 +69,7 @@ namespace TGC.MonoGame.TP
         public void Draw(SpriteBatch spriteBatch){
             //giroLogo.World *= Matrix.CreateRotationZ(0.1f);// Matrix.CreateFromYawPitchRoll(0,.001f,0);
             spriteBatch.Begin(0, null, null, null, null, null, transform);    
-            spriteBatch.Draw(Fondo, FondoRect, new Color(1,1,1,1f));
+            //spriteBatch.Draw(Fondo, FondoRect, new Color(1,1,1,1f));
             LogoRect = new Rectangle((int)PantallaTamanio.X / 2 - Logo.Width / 3 / 2, Logo.Height / 3 / 2, Logo.Width / 3, Logo.Height / 3);
             //spriteBatch.Draw(Logo, LogoRect, new Color(1,1,1,1f));
             

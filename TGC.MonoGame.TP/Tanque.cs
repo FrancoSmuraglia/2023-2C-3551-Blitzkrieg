@@ -29,7 +29,7 @@ namespace TGC.MonoGame.TP
         private EstadoRuedas EstadoActualDeRuedas = EstadoRuedas.Quieto;
         public ParticleSystem polvo;
         public ParticleSystem rastroBala;
-        public const float VidaMaxima = 10;
+        public const float VidaMaxima = 100;
         // Colisión
         public OrientedBoundingBox TankBox { get; set; }
         private BoundingCylinder Cilindro { get; set; }
@@ -242,8 +242,13 @@ namespace TGC.MonoGame.TP
         //}
         public void agregarImpacto(Vector3 posicionBala){
             if(posLlena < 10){
-                var hullTransform = Model.Meshes.First(m => m.Name == "Hull").ParentBone.Transform;
-                Impactos.Add(Vector3.Transform(posicionBala, Matrix.Invert(hullTransform * World)));
+                var meshes = Model.Meshes;
+                
+                //var hullTransform = Model.Meshes.First(m => m.Name == "Hull").ParentBone.Transform;
+                Matrix[] hullTransform = new Matrix[Model.Bones.Count];
+                this.Model.CopyAbsoluteBoneTransformsTo(hullTransform);
+                var mundo = World;
+                Impactos.Add(Vector3.Transform(posicionBala, Matrix.Invert(hullTransform[2] * World)));
 
                 posLlena = (posLlena < 10) ? posLlena + 1 : 9;
             }

@@ -13,6 +13,8 @@ namespace TGC.MonoGame.TP
 {    
     public class MenuPausa
     {
+        public Dictionary<String, AdornoMenu3D> adornosDict;
+        public List<AdornoMenu3D> adornos;
         public enum EstadoMenuPausa{
             Bajando,
             Quieto,
@@ -42,7 +44,8 @@ namespace TGC.MonoGame.TP
             Font = fuente;
             SeccionDeBotones = new MenuBotones(pantalla, botones, fuente);
             posicionesOriginales = botones.Select(boton => boton.Position).ToList();
-            Estado = EstadoMenuPausa.Bajando;            
+            Estado = EstadoMenuPausa.Bajando;         
+            adornos = new List<AdornoMenu3D>();   
         }
 
         public void Draw(SpriteBatch spriteBatch){
@@ -65,6 +68,21 @@ namespace TGC.MonoGame.TP
             SeccionDeBotones.Draw(spriteBatch);
             
             spriteBatch.End();
+        }
+
+        public void Draw3D(Vector3 positionCamera, Vector3 direction, Vector3 up, Vector3 right, Matrix View, Matrix Projection){
+            foreach (var item in adornosDict)
+            {
+                if(item.Key == "Continuar"){
+                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, 550);
+                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, -550);
+                }
+                else if(item.Key == "Salir"){
+                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, 550, SeccionDeBotones.Botones[1].Position.Y);
+                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, -550, SeccionDeBotones.Botones[1].Position.Y);
+                }
+
+            }
         }
 
         public void IniciarCortina()
@@ -92,13 +110,32 @@ namespace TGC.MonoGame.TP
                 Cortina.Stop();
             }
             Console.WriteLine(FondoRect.X + " " + FondoRect.Y);
-
-            
         }
 
         public void Update(MouseState currentMouseState){
             SeccionDeBotones.Update(currentMouseState, juego);
-
+            for (int i = 0; i < SeccionDeBotones.Botones.Count; i++)
+            {
+                switch (i)
+                {
+                    case 0: //Continuar
+                        if(SeccionDeBotones.Botones[i].IsSelected){
+                            adornosDict["Continuar"].IsSelected = true;
+                        }
+                        else{
+                            adornosDict["Continuar"].IsSelected = false;
+                        }
+                        break;                    
+                    case 1: //Salir
+                        if(SeccionDeBotones.Botones[i].IsSelected){
+                            adornosDict["Salir"].IsSelected = true;
+                        }
+                        else{
+                            adornosDict["Salir"].IsSelected = false;
+                        }
+                        break;    
+                }
+            }
             //mouse.Location.X = new Point(currentMouseState.Position.X, currentMouseState.Position.Y) ;
         }
 

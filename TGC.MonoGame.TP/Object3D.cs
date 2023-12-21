@@ -148,8 +148,8 @@ namespace TGC.MonoGame.TP
         {
             var a = Colision?.CreateInstance();
             a?.Apply3D(listener,Emitter);
-            Console.WriteLine(listener.Position);
-            Console.WriteLine(Emitter.Position);
+            /*Console.WriteLine(listener.Position);
+            Console.WriteLine(Emitter.Position);*/
             a?.Play();
         }
     }
