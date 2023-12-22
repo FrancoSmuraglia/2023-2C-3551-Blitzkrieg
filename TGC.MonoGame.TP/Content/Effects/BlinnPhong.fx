@@ -157,7 +157,7 @@ DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
     output.PositionLocal = input.Position;
 
     /// Deformación del tanque, mucho más notorio en los tanques enemigos que son más grandes
-    input.Position.xyz = deformation(input.Position.xyz, input.Position.xyz, input.Position.xyz * .5f, RADIO_DEFORMACION);
+    input.Position.xyz = deformation(input.Position.xyz, input.Position.xyz, input.Position.xyz * .2f, RADIO_DEFORMACION);
 
     output.WorldPosition = mul(input.Position, World);
     input.Position = mul(input.Position, World);

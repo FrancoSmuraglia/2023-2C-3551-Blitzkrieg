@@ -28,7 +28,7 @@ namespace TGC.MonoGame.TP
         private Vector3 PastRightVector { get; set; } = Vector3.Backward;
 
         private float yaw = 0f;
-        private float pitch = 0f;
+        private float pitch = -MathHelper.PiOver4;
 
         private MouseState estadoAnteriorMouse;
 
@@ -56,6 +56,10 @@ namespace TGC.MonoGame.TP
         public bool Frenado = false;
         public Vector3 posicionCamara;
         public Vector3 direccionCamara, upDirection, rightDirection;
+
+        public void GiroDeCamara(GameTime gameTime){
+            yaw += 0.5f * Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
+        }
         public void Update(GameTime gameTime, Matrix followedWorld)
         {
             

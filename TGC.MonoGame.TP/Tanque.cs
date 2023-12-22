@@ -310,11 +310,11 @@ namespace TGC.MonoGame.TP
                 }
 
 
-                if(mesh.Name == "Hull")
-                {
+                /*if(mesh.Name == "Hull" || mesh.Name == "Turret")
+                {*/
                     efectoTanque.Parameters["impactos"]?.SetValue(this.Impactos.ToArray());
                     efectoTanque.Parameters["impactosCantidad"]?.SetValue(this.Impactos.Count);
-                }
+                //}
                 
                 //efectoTanque.Parameters["direccionImpactos"]?.SetValue(this.DireccionImpactos.ToArray());
 

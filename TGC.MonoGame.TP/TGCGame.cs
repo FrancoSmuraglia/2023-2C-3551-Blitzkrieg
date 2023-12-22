@@ -903,18 +903,7 @@ namespace TGC.MonoGame.TP
             //Console.WriteLine(EstadoActual);
             UpdateExplosions(gameTime);
             //UpdateProjectiles(gameTime);
-            if(isGod){
-                FreeCamera.Update(gameTime);
-                vistaUsada = FreeCamera.View;
-                proyeccionUsada = FreeCamera.Projection;
-                posicionUsada = FreeCamera.Position;
-            }
-            else{
-                FollowCamera.Update(gameTime, MainTanque.World);
-                vistaUsada = FollowCamera.View;
-                proyeccionUsada = FollowCamera.Projection;
-                posicionUsada = FollowCamera.CamaraPosition;
-            }
+            
             smokePlumeParticles.SetCamera(vistaUsada, proyeccionUsada);
             explosionParticles.SetCamera(vistaUsada, proyeccionUsada);
             explosionSmokeParticles.SetCamera(vistaUsada, proyeccionUsada);
@@ -926,6 +915,11 @@ namespace TGC.MonoGame.TP
                 case GameState.InitialMenu:
                     
                     MenuInicio.Update(Mouse.GetState());
+                    FollowCamera.GiroDeCamara(gameTime);
+                    if(!FollowCamera.Frenado)
+                        FollowCamera.FrenarCamara();
+                    tiempoMusicaPrincipal = MediaPlayer.PlayPosition;
+
                     break;
                 case GameState.Begin:
                     //HUD.update(gametime);
@@ -991,6 +985,20 @@ namespace TGC.MonoGame.TP
                         Exit();
                     break;
             }
+
+            if(isGod){
+                FreeCamera.Update(gameTime);
+                vistaUsada = FreeCamera.View;
+                proyeccionUsada = FreeCamera.Projection;
+                posicionUsada = FreeCamera.Position;
+            }
+            else{
+                FollowCamera.Update(gameTime, MainTanque.World);
+                vistaUsada = FollowCamera.View;
+                proyeccionUsada = FollowCamera.Projection;
+                posicionUsada = FollowCamera.CamaraPosition;
+            }
+
             Gizmos.UpdateViewProjection(vistaUsada, proyeccionUsada);
             estadoAnterior = Keyboard.GetState();
 
