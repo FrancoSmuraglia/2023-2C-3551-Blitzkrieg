@@ -135,22 +135,29 @@ struct DeformVertexShaderOutput
     float4 PositionLocal : TEXCOORD4;
 };
 
+
+float3 deformation(float3 origin, float3 originalState, float3 deformation, float radius){
+    float Distance = 0;
+    float3 result = originalState;
+    for(int i=0; i < MAX_IMPACTOS; i++) 
+    {
+        if(i >= impactosCantidad)
+            break;
+        Distance = distance(origin, impactos[i]);
+        float distanceRelative = (Distance/radius);
+        distanceRelative = clamp(distanceRelative, 0, 1);
+        result = lerp(deformation, result, distanceRelative);
+    }
+    return result;
+}
+
 DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
 {
     DeformVertexShaderOutput output;
     output.PositionLocal = input.Position;
 
     /// Deformación del tanque, mucho más notorio en los tanques enemigos que son más grandes
-    float Distance = 0;
-    for(int i=0; i < MAX_IMPACTOS; i++) 
-    {
-        if(i >= impactosCantidad)
-            break;
-        Distance = distance(input.Position.xyz, impactos[i]);
-        float distanceRelative = (Distance/RADIO_DEFORMACION);
-        distanceRelative = clamp(distanceRelative, 0, 1);
-        input.Position.xyz = lerp(input.Position.xyz * .5f, input.Position.xyz, distanceRelative);
-    }
+    input.Position.xyz = deformation(input.Position.xyz, input.Position.xyz, input.Position.xyz * .5f, RADIO_DEFORMACION);
 
     output.WorldPosition = mul(input.Position, World);
     input.Position = mul(input.Position, World);
@@ -197,16 +204,7 @@ float4 DeformPS(in DeformVertexShaderOutput input) : COLOR
     finalColor.rgb *= 0.5 + 0.5 * notInShadow;
 
     // Ennegrecimiento del tanque en base a los disparos recibidos, se nota mucho sobretodo en el tanque enemigo verde
-    float Distance = 0;
-    for(int i=0; i < MAX_IMPACTOS; i++) 
-    {
-        if(i >= impactosCantidad)
-            break;
-        Distance = distance(input.PositionLocal.xyz, impactos[i]);
-        float distanceRelative = (Distance/RADIO_DEFORMACION_ENNEGRECIMIENTO);
-        distanceRelative = clamp(distanceRelative, 0, 1);
-        finalColor.rgb = lerp(finalColor.rgb - float3(.5,.5,.5), finalColor.rgb, distanceRelative);
-    }
+    finalColor.rgb = deformation(input.PositionLocal.xyz, finalColor.rgb, finalColor.rgb - float3(.8,.8,.8), RADIO_DEFORMACION_ENNEGRECIMIENTO);
 
     
     return finalColor;
