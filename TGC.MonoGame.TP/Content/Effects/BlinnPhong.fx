@@ -31,7 +31,10 @@ float2 shadowMapSize;
 static const float modulatedEpsilon = 0.000041200182749889791011810302734375;
 static const float maxEpsilon = 0.000023200045689009130001068115234375;
 
+// Deformación
 static const float MAX_IMPACTOS = 10;
+static const float RADIO_DEFORMACION = .5;
+static const float RADIO_DEFORMACION_ENNEGRECIMIENTO = .7;
 float3 impactos[MAX_IMPACTOS];
 int impactosCantidad = 0;
 
@@ -137,16 +140,18 @@ DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
     DeformVertexShaderOutput output;
     output.PositionLocal = input.Position;
 
+    /// Deformación del tanque, mucho más notorio en los tanques enemigos que son más grandes
     float Distance = 0;
     for(int i=0; i < MAX_IMPACTOS; i++) 
     {
         if(i >= impactosCantidad)
             break;
         Distance = distance(input.Position.xyz, impactos[i]);
-        if(Distance < .5){
-            input.Position.xyz = input.Position.xyz * .75f;
-        }
+        float distanceRelative = (Distance/RADIO_DEFORMACION);
+        distanceRelative = clamp(distanceRelative, 0, 1);
+        input.Position.xyz = lerp(input.Position.xyz * .5f, input.Position.xyz, distanceRelative);
     }
+
     output.WorldPosition = mul(input.Position, World);
     input.Position = mul(input.Position, World);
     input.Position = mul(input.Position, View);
@@ -159,17 +164,6 @@ DeformVertexShaderOutput DeformVS(in DeformVertexShaderInput input)
 
 float4 DeformPS(in DeformVertexShaderOutput input) : COLOR
 {
-    /*float Distance = 0;
-    for(int i=0; i < MAX_IMPACTOS; i++) 
-    {
-        if(i >= impactosCantidad)
-            break;
-        Distance = distance(input.Position.xyz, impactos[i]);
-        if(Distance < 500){
-            input.Position.xyz = input.Position.xyz * .95f;
-        }
-    }*/
-
     // Base vectors
     float3 lightDirection = normalize(lightPosition - input.WorldPosition.xyz);
     float3 viewDirection = normalize(eyePosition - input.WorldPosition.xyz);
@@ -202,15 +196,16 @@ float4 DeformPS(in DeformVertexShaderOutput input) : COLOR
     
     finalColor.rgb *= 0.5 + 0.5 * notInShadow;
 
+    // Ennegrecimiento del tanque en base a los disparos recibidos, se nota mucho sobretodo en el tanque enemigo verde
     float Distance = 0;
     for(int i=0; i < MAX_IMPACTOS; i++) 
     {
         if(i >= impactosCantidad)
             break;
         Distance = distance(input.PositionLocal.xyz, impactos[i]);
-        if(Distance < .7){
-            finalColor.rgb = float3(0, 0, 1);//float3(finalColor.r - .2, finalColor.g - .2, finalColor.b - .2);
-        }
+        float distanceRelative = (Distance/RADIO_DEFORMACION_ENNEGRECIMIENTO);
+        distanceRelative = clamp(distanceRelative, 0, 1);
+        finalColor.rgb = lerp(finalColor.rgb - float3(.5,.5,.5), finalColor.rgb, distanceRelative);
     }
 
     

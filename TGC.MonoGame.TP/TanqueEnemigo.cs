@@ -226,8 +226,10 @@ namespace TGC.MonoGame.TP
 
         public void agregarImpacto(Vector3 posicionBala){
             if(posLlena < 10){
-                var hullTransform = Model.Meshes.First(m => m.Name == "Hull").ParentBone.Transform;
-                Impactos.Add(Vector3.Transform(posicionBala, Matrix.Invert(hullTransform * World)));
+                Matrix[] hullTransform = new Matrix[Model.Bones.Count];
+                this.Model.CopyAbsoluteBoneTransformsTo(hullTransform);
+                var mundo = World;
+                Impactos.Add(Vector3.Transform(posicionBala, Matrix.Invert(hullTransform[2] * World)));
 
                 posLlena = (posLlena < 10) ? posLlena + 1 : 9;
             }
