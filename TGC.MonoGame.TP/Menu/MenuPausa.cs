@@ -13,6 +13,8 @@ namespace TGC.MonoGame.TP
 {    
     public class MenuPausa
     {
+        private bool SeleccionadoDeAlgo = false;
+        public AdornoMenu3D adornoVuelta;
         public Dictionary<String, AdornoMenu3D> adornosDict;
         public List<AdornoMenu3D> adornos;
         public enum EstadoMenuPausa{
@@ -27,7 +29,6 @@ namespace TGC.MonoGame.TP
         public SpriteFont Font {get; set;}
         public MenuBotones SeccionDeBotones {get; set;}
         public TGCGame juego {get; set;}
-        
         private Rectangle FondoRect {get; set;}
         private Rectangle LogoRect {get; set;}
         List<Vector2> posicionesOriginales;
@@ -37,6 +38,10 @@ namespace TGC.MonoGame.TP
         public SoundEffectInstance Cortina { get; set; }
         
         public SoundEffectInstance CortinaImpacto { get; set; }
+
+        // Adornos 3D
+        public RenderTarget2D canvasTanques {get; set;}
+        public GraphicsDevice graphicsDevice {get; set;}
         
         public MenuPausa(Texture2D fondo, Vector2 pantalla, List<Button> botones, SpriteFont fuente = null){
             Fondo = fondo;
@@ -71,17 +76,9 @@ namespace TGC.MonoGame.TP
         }
 
         public void Draw3D(Vector3 positionCamera, Vector3 direction, Vector3 up, Vector3 right, Matrix View, Matrix Projection){
-            foreach (var item in adornosDict)
-            {
-                if(item.Key == "Continuar"){
-                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, 550);
-                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, -550);
-                }
-                else if(item.Key == "Salir"){
-                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, 550, SeccionDeBotones.Botones[1].Position.Y);
-                    item.Value.Draw(positionCamera, direction, up, right, View, Projection, -550, SeccionDeBotones.Botones[1].Position.Y);
-                }
-
+            if(SeleccionadoDeAlgo){
+                adornoVuelta.Draw(positionCamera, direction, up, right, View, Projection, -1000);
+                adornoVuelta.Draw(positionCamera, direction, up, right, View, Projection, 1000);
             }
         }
 
@@ -114,29 +111,7 @@ namespace TGC.MonoGame.TP
 
         public void Update(MouseState currentMouseState){
             SeccionDeBotones.Update(currentMouseState, juego);
-            for (int i = 0; i < SeccionDeBotones.Botones.Count; i++)
-            {
-                switch (i)
-                {
-                    case 0: //Continuar
-                        if(SeccionDeBotones.Botones[i].IsSelected){
-                            adornosDict["Continuar"].IsSelected = true;
-                        }
-                        else{
-                            adornosDict["Continuar"].IsSelected = false;
-                        }
-                        break;                    
-                    case 1: //Salir
-                        if(SeccionDeBotones.Botones[i].IsSelected){
-                            adornosDict["Salir"].IsSelected = true;
-                        }
-                        else{
-                            adornosDict["Salir"].IsSelected = false;
-                        }
-                        break;    
-                }
-            }
-            //mouse.Location.X = new Point(currentMouseState.Position.X, currentMouseState.Position.Y) ;
+            SeleccionadoDeAlgo = SeccionDeBotones.Botones.Any(boton => boton.IsSelected);
         }
 
     }

@@ -14,21 +14,14 @@ namespace TGC.MonoGame.TP
     public class AdornoMenu3D
     {
 
-        // 3D
+        // Te juro que me siento como el jugador de béisbol que el Sr. Burns le dice "CÓRTESE LAS PATILLAS" con esto del menú 3D
+
         public Model modelo;
-        private Matrix mundo, vista, proyeccion;
-        private Effect efectoBasico;
+        private Matrix mundo;
+        private Effect efecto;
 
         public float Scale = 0.3f;
         private Texture2D Texture;
-
-        
-        public SoundEffect ClickSound { get; set; }
-        public Action<TGCGame> Click;
-
-        public bool Clicked { get; protected set; }
-
-        public bool IsSelected;
 
         public Vector2 Position { get; set; }
 
@@ -37,16 +30,13 @@ namespace TGC.MonoGame.TP
         {
             Texture = texture;
             this.modelo = modelo;
-            this.efectoBasico = efectoBasico;
+            this.efecto = efectoBasico;
             mundo = Matrix.Identity;
-            IsSelected = false;
         }
 
         float giro = 0;
-        public void Draw(Vector3 positionCamera, Vector3 direction, Vector3 up, Vector3 right, Matrix View, Matrix Projection, float EjeX = 0, float EjeY = 0, float Distance = 2000)
+        public void Draw(Vector3 positionCamera, Vector3 direction, Vector3 up, Vector3 right, Matrix View, Matrix Projection, float EjeX = 0, float EjeY = 0, float Distance = 5000)
         {
-            if(!IsSelected)
-                return; 
             giro += .1f;
             
             // Tanto la vista como la proyección vienen de la cámara por parámetro
@@ -54,38 +44,30 @@ namespace TGC.MonoGame.TP
             {
                 foreach (var meshPart in mesh.MeshParts)
                 {
-                    meshPart.Effect = efectoBasico;
+                    meshPart.Effect = efecto;
                 }
             }
 
-            efectoBasico.Parameters["View"].SetValue(View);
-            efectoBasico.Parameters["Projection"].SetValue(Projection);
-            efectoBasico.Parameters["ModelTexture"]?.SetValue(Texture);
+            efecto.Parameters["View"].SetValue(View);
+            efecto.Parameters["Projection"].SetValue(Projection);
+            efecto.Parameters["ModelTexture"]?.SetValue(Texture);
 
 
             var modelMeshesBaseTransforms = new Matrix[modelo.Bones.Count];
             modelo.CopyAbsoluteBoneTransformsTo(modelMeshesBaseTransforms);
 
-            //var Position = Vector3.Up * 300;
             var Position = positionCamera + direction * Distance - right * EjeX - up * EjeY;
+            var Reposicionamiento = Matrix.CreateWorld(Position, up, Vector3.Up);
+            var giroMatriz = Matrix.CreateRotationZ(this.giro);
 
-            mundo = Matrix.CreateRotationY(giro) * Matrix.CreateScale(.5f) * Matrix.CreateWorld(Position, -direction, Vector3.Up);
+            mundo = giroMatriz * Reposicionamiento;
             foreach (var mesh in modelo.Meshes)
             {
                 var meshWorld = modelMeshesBaseTransforms[mesh.ParentBone.Index];
-                efectoBasico.Parameters["World"].SetValue(meshWorld * mundo);
+                efecto.Parameters["World"].SetValue(meshWorld * mundo);
                 mesh.Draw();
             }
-    
-
         }
-
-    public Vector2 Origin { get; set; }
-
-    public string Text { get; set; }
-
-    public Color PenColour { get; set; } = Color.Red;
-
 
     }
 }

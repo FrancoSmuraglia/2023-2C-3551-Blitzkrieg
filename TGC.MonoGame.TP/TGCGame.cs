@@ -217,8 +217,8 @@ namespace TGC.MonoGame.TP
             // Seria hasta aca.
             PantallaResolucion = new Vector2
             {
-                X = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100,
-                Y = (int)GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100
+                X = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width /1.2f,
+                Y = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height /1.2f
             };
 
             Graphics.PreferredBackBufferWidth = (int)PantallaResolucion.X;
@@ -485,7 +485,8 @@ namespace TGC.MonoGame.TP
                 juego = this,
                 Logo = Content.Load<Texture2D>(ContentFolderTextures + "Menu/Blitzkrieg"),
                 Cortina = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/Chains").CreateInstance(),
-                CortinaImpacto = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/MetalImpact").CreateInstance()
+                CortinaImpacto = Content.Load<SoundEffect>(ContentFolderMusic + "SFX/MenuPause/MetalImpact").CreateInstance(),
+                adornoVuelta = nuevoObjetoAdorno3D()
             };
 
             MenuPausa.adornosDict = diccionarioMenuPausa;
@@ -1259,6 +1260,7 @@ namespace TGC.MonoGame.TP
                 break;
                 case GameState.Pause:
                 {
+                    GraphicsDevice.Viewport = new Viewport(0,0, (int)PantallaResolucion.X, (int)PantallaResolucion.Y);
                     MenuPausa.Draw(SpriteBatch);
                     MenuPausa.Draw3D(FollowCamera.CamaraPosition, FollowCamera.direccionCamara, FollowCamera.upDirection, FollowCamera.rightDirection, 
                                         FollowCamera.View, FollowCamera.Projection);
