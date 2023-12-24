@@ -347,7 +347,7 @@ namespace TGC.MonoGame.TP
                 
                 
                 if(distanceLongitud > 2000){
-                    TankVelocity += deltaTime * Vector3.Normalize(distance) * 100;
+                    TankVelocity += deltaTime * Vector3.Normalize(new Vector3(distance.X, 0, distance.Z)) * 100;
                     polvo.AddParticle(Position, -TankVelocity*100);
                 }
                 
@@ -376,15 +376,15 @@ namespace TGC.MonoGame.TP
             TankVelocity += (backwards_friction + lateral_friction) * deltaTime;
             TankAcceleration = TankDirection * CurrentAcceleration * 30;
         }
-
         public void Update(GameTime gameTime, List<Object> ambiente, Tanque jugador, List<Bala> balasEnemigas){
             
 
 
             float deltaTime = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
             float moduloVelocidadXZ = new Vector3(TankVelocity.X, 0f, TankVelocity.Z).Length();
-            
+           
             Position += TankVelocity;                               // Actualizo la posición en función de la velocidad actual
+            
             TankBox.Center = Position + Vector3.Up * PuntoMedio;
             
             TankBox.Orientation = RotationMatrix;
