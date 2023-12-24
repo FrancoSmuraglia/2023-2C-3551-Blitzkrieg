@@ -56,7 +56,7 @@ namespace TGC.MonoGame.TP
             // Maneja la configuracion y la administracion del dispositivo grafico.
             Graphics = new GraphicsDeviceManager(this);
             // Para que el juego sea pantalla completa se puede usar Graphics IsFullScreen.
-            Graphics.IsFullScreen = false;
+            Graphics.IsFullScreen = true;
             // Carpeta raiz donde va a estar toda la Media.
             Content.RootDirectory = "Content";
             // Hace que el mouse sea visible.
@@ -217,8 +217,8 @@ namespace TGC.MonoGame.TP
             // Seria hasta aca.
             PantallaResolucion = new Vector2
             {
-                X = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width /1.2f,
-                Y = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height /1.2f
+                X = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width,
+                Y = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height
             };
 
             Graphics.PreferredBackBufferWidth = (int)PantallaResolucion.X;
@@ -234,8 +234,6 @@ namespace TGC.MonoGame.TP
             Mouse.SetPosition((int)PantallaResolucion.X  / 2, (int)PantallaResolucion.Y  / 2);
             estadoInicialMouse = PantallaResolucion/2;
 
-            /*Mouse.SetPosition(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);
-            estadoInicialMouse = new Vector2(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width / 2, GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height / 2);*/
 
             EstadoActual = GameState.InitialMenu;
 
